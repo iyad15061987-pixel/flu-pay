@@ -1,0 +1,5 @@
+node_modules
+flowpay-backend/node_modules
+flowpay-frontend/node_modules
+.env
+.next
