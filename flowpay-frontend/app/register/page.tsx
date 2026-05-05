@@ -8,13 +8,17 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
 
   const handleRegister = async () => {
-    const data = await api.register(email, password);
+    try {
+      const data = await api.register(email, password);
 
-    if (data.message) {
-      alert("Account created successfully");
-      window.location.href = "/login";
-    } else {
-      alert("Error creating account");
+      if (data.message) {
+        alert("Account created successfully");
+        window.location.href = "/login";
+      } else {
+        alert("Error creating account");
+      }
+    } catch (err) {
+      alert("Server error");
     }
   };
 
