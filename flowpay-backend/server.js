@@ -39,9 +39,15 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", UserSchema);
 
-// ===== TEST =====
+// ===== ROOT =====
 app.get("/", (req, res) => {
   res.send("API is running 🚀");
+});
+
+// ===== TEST (مهم جدًا للتشخيص) =====
+app.get("/test", (req, res) => {
+  console.log("🔥 TEST HIT");
+  res.send("TEST OK");
 });
 
 // ===== REGISTER =====
@@ -56,8 +62,8 @@ app.post("/register", async (req, res) => {
       return res.status(400).json({ message: "Missing email or password" });
     }
 
-    // 🔥 تحقق إذا المستخدم موجود
     const existingUser = await User.findOne({ email });
+
     if (existingUser) {
       console.log("❌ User already exists");
       return res.status(400).json({ message: "User already exists" });
@@ -75,7 +81,7 @@ app.post("/register", async (req, res) => {
     res.json({ message: "User created" });
 
   } catch (err) {
-    console.log("❌ REGISTER ERROR:", err);
+    console.log("❌ REGISTER ERROR FULL:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
