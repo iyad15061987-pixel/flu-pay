@@ -82,7 +82,7 @@ app.post("/register", async (req, res) => {
 
   } catch (err) {
     console.log("❌ REGISTER ERROR FULL:", err);
-    res.status(500).json({ message: "Server error" });
+   res.status(500).json({ message: err.message, full: err });
   }
 });
 
