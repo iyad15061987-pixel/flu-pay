@@ -6,27 +6,19 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// MongoDB
-const MONGO_URI =
-  process.env.MONGO_URI ||
-  "mongodb://127.0.0.1:27017/flowpay";
+console.log("🚀 NEW VERSION WORKING");
 
-console.log("⏳ Connecting to MongoDB...");
-
-mongoose
-  .connect(MONGO_URI)
+// Mongo
+mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log("✅ MongoDB Connected");
 
-    const PORT = process.env.PORT || 5000;
-
-    app.listen(PORT, () => {
-      console.log("🚀 Server running on port " + PORT);
+    app.listen(process.env.PORT || 5000, () => {
+      console.log("🚀 Server running");
     });
   })
-  .catch((err) => console.log("❌ Mongo Error:", err));
+  .catch(err => console.log(err));
 
-// Test route
 app.get("/", (req, res) => {
-  res.send("API is running 🚀");
+  res.send("NEW DEPLOY WORKING ✅");
 });
