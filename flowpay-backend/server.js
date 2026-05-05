@@ -58,14 +58,12 @@ app.post("/register", async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      console.log("❌ Missing data");
       return res.status(400).json({ message: "Missing email or password" });
     }
 
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
-      console.log("❌ User already exists");
       return res.status(400).json({ message: "User already exists" });
     }
 
@@ -76,13 +74,15 @@ app.post("/register", async (req, res) => {
 
     await user.save();
 
-    console.log("✅ User saved");
-
     res.json({ message: "User created" });
 
   } catch (err) {
     console.log("❌ REGISTER ERROR FULL:", err);
-   res.status(500).json({ message: err.message, full: err });
+
+    return res.status(500).json({
+      message: err.message,
+      stack: err.stack
+    });
   }
 });
 
