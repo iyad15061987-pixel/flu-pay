@@ -4,28 +4,17 @@ const cors = require("cors");
 
 const app = express();
 
-// 🔥 حل CORS نهائي
-app.use(cors({
-  origin: "*"
-}));
-
+app.use(cors());
 app.use(express.json());
-
-console.log("🚀 SERVER STARTING...");
 
 const MONGO_URI = process.env.MONGO_URI;
 
+// ===== CONNECT =====
 mongoose.connect(MONGO_URI)
-  .then(() => {
-    console.log("✅ MongoDB Connected");
-
-    app.listen(process.env.PORT || 5000, () => {
-      console.log("🚀 Server running");
-    });
-  })
+  .then(() => console.log("✅ MongoDB Connected"))
   .catch(err => console.log(err));
 
-// ================= USER MODEL =================
+// ===== MODEL =====
 const UserSchema = new mongoose.Schema({
   email: String,
   password: String,
@@ -34,7 +23,12 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", UserSchema);
 
-// ================= REGISTER =================
+// ===== TEST =====
+app.get("/", (req, res) => {
+  res.send("API is running 🚀");
+});
+
+// ===== REGISTER =====
 app.post("/register", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -43,13 +37,14 @@ app.post("/register", async (req, res) => {
     await user.save();
 
     res.json({ message: "User created" });
+
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// ================= LOGIN =================
+// ===== LOGIN =====
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -63,24 +58,6 @@ app.post("/login", async (req, res) => {
   res.json({ userId: user._id });
 });
 
-// ================= BALANCE =================
-app.get("/balance/:id", async (req, res) => {
-  const user = await User.findById(req.params.id);
-  res.json({ balance: user.balance });
-});
-
-// ================= ADD =================
-app.post("/add-balance", async (req, res) => {
-  const { userId, amount } = req.body;
-
-  const user = await User.findById(userId);
-  user.balance += amount;
-  await user.save();
-
-  res.json({ balance: user.balance });
-});
-
-// ================= TEST =================
-app.get("/", (req, res) => {
-  res.send("API is running 🚀");
-});
+// ===== START =====
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`));
