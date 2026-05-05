@@ -8,8 +8,10 @@ app.use(express.json());
 
 console.log("🚀 NEW VERSION WORKING");
 
-// Mongo
-mongoose.connect(process.env.MONGO_URI)
+// 🔥 Mongo Atlas فقط (بدون localhost)
+const MONGO_URI = process.env.MONGO_URI;
+
+mongoose.connect(MONGO_URI)
   .then(() => {
     console.log("✅ MongoDB Connected");
 
@@ -17,8 +19,9 @@ mongoose.connect(process.env.MONGO_URI)
       console.log("🚀 Server running");
     });
   })
-  .catch(err => console.log(err));
+  .catch(err => console.log("❌ Mongo Error:", err));
 
+// Test
 app.get("/", (req, res) => {
   res.send("NEW DEPLOY WORKING ✅");
 });
