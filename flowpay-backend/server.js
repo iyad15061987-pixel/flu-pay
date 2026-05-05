@@ -6,12 +6,20 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-console.log("🚀 NEW VERSION WORKING");
+console.log("🚀 SERVER STARTING...");
 
-// 🔥 Mongo Atlas فقط (بدون localhost)
+// 🔥 مهم جدًا: لا يوجد localhost نهائيًا
 const MONGO_URI = process.env.MONGO_URI;
 
-mongoose.connect(MONGO_URI)
+if (!MONGO_URI) {
+  console.log("❌ ERROR: MONGO_URI NOT FOUND");
+  process.exit(1);
+}
+
+console.log("🔗 Using Mongo URI:", MONGO_URI.substring(0, 30) + "...");
+
+mongoose
+  .connect(MONGO_URI)
   .then(() => {
     console.log("✅ MongoDB Connected");
 
@@ -19,9 +27,10 @@ mongoose.connect(MONGO_URI)
       console.log("🚀 Server running");
     });
   })
-  .catch(err => console.log("❌ Mongo Error:", err));
+  .catch((err) => {
+    console.log("❌ Mongo Error:", err);
+  });
 
-// Test
 app.get("/", (req, res) => {
-  res.send("NEW DEPLOY WORKING ✅");
+  res.send("DEPLOY WORKING ✅");
 });
