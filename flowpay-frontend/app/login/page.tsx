@@ -2,54 +2,112 @@
 
 import { useState } from "react";
 
+import { api } from "@/lib/api";
+
 export default function LoginPage() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] =
+    useState("");
 
-  const login = async () => {
-    const res = await fetch("http://localhost:5000/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ username, password }),
-    });
+  const [password, setPassword] =
+    useState("");
 
-    const data = await res.json();
+  const handleLogin = async () => {
+    try {
+      const data = await api.login(
+        email,
+        password
+      );
 
-    if (data.token) {
-      localStorage.setItem("token", data.token);
+      if (data.token) {
+        localStorage.setItem(
+          "token",
+          data.token
+        );
 
-      alert("Login successful ✅");
+        localStorage.setItem(
+          "userId",
+          data.userId
+        );
 
-      window.location.href = "/dashboard";
-    } else {
-      alert("Login failed ❌");
+        localStorage.setItem(
+          "email",
+          data.email
+        );
+
+        window.location.href =
+          "/dashboard";
+
+      } else {
+        alert(data.message);
+      }
+
+    } catch (err) {
+      alert("Server error");
     }
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Login</h1>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#0f172a",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <div
+        style={{
+          background: "white",
+          padding: 40,
+          borderRadius: 20,
+          width: 400,
+        }}
+      >
+        <h1>Login</h1>
 
-      <input
-        placeholder="Username"
-        onChange={(e) => setUsername(e.target.value)}
-      />
+        <br />
 
-      <br /><br />
+        <input
+          type="email"
+          placeholder="Email"
+          onChange={(e) =>
+            setEmail(e.target.value)
+          }
+          style={{
+            width: "100%",
+            padding: 15,
+            marginBottom: 15,
+          }}
+        />
 
-      <input
-        type="password"
-        placeholder="Password"
-        onChange={(e) => setPassword(e.target.value)}
-      />
+        <input
+          type="password"
+          placeholder="Password"
+          onChange={(e) =>
+            setPassword(e.target.value)
+          }
+          style={{
+            width: "100%",
+            padding: 15,
+            marginBottom: 15,
+          }}
+        />
 
-      <br /><br />
-
-      <button onClick={login}>
-        Login
-      </button>
+        <button
+          onClick={handleLogin}
+          style={{
+            width: "100%",
+            padding: 15,
+            background: "#2563eb",
+            color: "white",
+            border: "none",
+            borderRadius: 10,
+          }}
+        >
+          Login
+        </button>
+      </div>
     </div>
   );
 }

@@ -1,41 +1,83 @@
 "use client";
 
-import { useState } from "react";
-import { api } from "@/lib/api";
-
-export default function RegisterPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const handleRegister = async () => {
-    const data = await api.register(email, password);
-
-    if (data.message) {
-      alert("Account created successfully");
-      window.location.href = "/login";
-    } else {
-      alert("Error creating account");
-    }
-  };
-
+export default function HomePage() {
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Create Account</h2>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#0f172a",
+        color: "white",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        fontFamily: "Arial",
+      }}
+    >
+      <div
+        style={{
+          textAlign: "center",
+          maxWidth: 600,
+        }}
+      >
+        <h1
+          style={{
+            fontSize: 60,
+            marginBottom: 20,
+          }}
+        >
+          🚀 FlowPay
+        </h1>
 
-      <input
-        placeholder="Email"
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <br /><br />
+        <p
+          style={{
+            fontSize: 22,
+            color: "#cbd5e1",
+            marginBottom: 40,
+          }}
+        >
+          Modern Digital Wallet System
+        </p>
 
-      <input
-        placeholder="Password"
-        type="password"
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <br /><br />
+        <div
+          style={{
+            display: "flex",
+            gap: 20,
+            justifyContent: "center",
+          }}
+        >
+          <a href="/login">
+            <button
+              style={{
+                padding: "15px 35px",
+                background: "#2563eb",
+                color: "white",
+                border: "none",
+                borderRadius: 10,
+                fontSize: 18,
+                cursor: "pointer",
+              }}
+            >
+              Login
+            </button>
+          </a>
 
-      <button onClick={handleRegister}>Register</button>
+          <a href="/register">
+            <button
+              style={{
+                padding: "15px 35px",
+                background: "#16a34a",
+                color: "white",
+                border: "none",
+                borderRadius: 10,
+                fontSize: 18,
+                cursor: "pointer",
+              }}
+            >
+              Create Account
+            </button>
+          </a>
+        </div>
+      </div>
     </div>
   );
 }

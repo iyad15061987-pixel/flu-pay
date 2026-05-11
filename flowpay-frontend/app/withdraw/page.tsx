@@ -16,7 +16,7 @@ export default function Withdraw() {
   const requestWithdraw = async () => {
     const token = localStorage.getItem("token");
 
-    await fetch("http://localhost:5000/withdraw", {
+    await fetch("import API_URL from "@/lib/api";/withdraw", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
