@@ -5,6 +5,10 @@ import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:5000";
+
 export default function AdminPage() {
   const [users, setUsers] = useState<any[]>([]);
 
@@ -30,7 +34,7 @@ export default function AdminPage() {
     token: string
   ) => {
     const res = await fetch(
-      "import API_URL from "@/lib/api";/admin/users",
+      `${API_URL}/admin/users`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -47,7 +51,7 @@ export default function AdminPage() {
     token: string
   ) => {
     const res = await fetch(
-      "import API_URL from "@/lib/api";/admin/transactions",
+      `${API_URL}/admin/transactions`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -89,7 +93,7 @@ export default function AdminPage() {
           <br />
           <br />
 
-          {/* ===== USERS ===== */}
+          {/* USERS */}
 
           <div
             style={{
@@ -126,7 +130,7 @@ export default function AdminPage() {
             ))}
           </div>
 
-          {/* ===== TRANSACTIONS ===== */}
+          {/* TRANSACTIONS */}
 
           <div
             style={{
