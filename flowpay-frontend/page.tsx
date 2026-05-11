@@ -91,7 +91,7 @@ export default function DashboardPage() {
     token: string
   ) => {
     const res = await fetch(
-      `import API_URL from "@/lib/api";http://localhost:5000/transactions/${email}`,
+      `import API_URL from "@/lib/api";import API_URL from "@/lib/api";/transactions/${email}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,

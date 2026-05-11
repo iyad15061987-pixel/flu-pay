@@ -11,35 +11,83 @@ export default function RegisterPage() {
     try {
       const data = await api.register(email, password);
 
-      if (data.message) {
-        alert("Account created successfully");
+      alert(data.message);
+
+      if (data.message === "Account created successfully") {
         window.location.href = "/login";
-      } else {
-        alert("Error creating account");
       }
+
     } catch (err) {
       alert("Server error");
     }
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Create Account</h2>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#0f172a",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        fontFamily: "Arial",
+      }}
+    >
+      <div
+        style={{
+          background: "white",
+          padding: 40,
+          borderRadius: 15,
+          width: 400,
+        }}
+      >
+        <h1
+          style={{
+            textAlign: "center",
+            marginBottom: 30,
+          }}
+        >
+          Create Account
+        </h1>
 
-      <input
-        placeholder="Email"
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <br /><br />
+        <input
+          type="email"
+          placeholder="Email"
+          onChange={(e) => setEmail(e.target.value)}
+          style={{
+            width: "100%",
+            padding: 12,
+            marginBottom: 20,
+          }}
+        />
 
-      <input
-        placeholder="Password"
-        type="password"
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <br /><br />
+        <input
+          type="password"
+          placeholder="Password"
+          onChange={(e) => setPassword(e.target.value)}
+          style={{
+            width: "100%",
+            padding: 12,
+            marginBottom: 20,
+          }}
+        />
 
-      <button onClick={handleRegister}>Register</button>
+        <button
+          onClick={handleRegister}
+          style={{
+            width: "100%",
+            padding: 15,
+            background: "#16a34a",
+            color: "white",
+            border: "none",
+            borderRadius: 10,
+            cursor: "pointer",
+            fontSize: 16,
+          }}
+        >
+          Create Account
+        </button>
+      </div>
     </div>
   );
 }
