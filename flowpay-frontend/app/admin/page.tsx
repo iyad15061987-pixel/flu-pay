@@ -2,9 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-import Sidebar from "../components/Sidebar";
-import Navbar from "../components/Navbar";
-
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   "http://localhost:5000";
@@ -12,33 +9,29 @@ const API_URL =
 export default function AdminPage() {
   const [users, setUsers] = useState<any[]>([]);
 
-  const [transactions, setTransactions] =
-    useState<any[]>([]);
-
   useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
     const token =
       localStorage.getItem("token");
 
-    if (!token) {
-      window.location.href = "/login";
-      return;
+    const headers: HeadersInit = {
+      "Content-Type":
+        "application/json",
+    };
+
+    if (token) {
+      headers[
+        "Authorization"
+      ] = `Bearer ${token}`;
     }
 
-    loadUsers(token);
-
-    loadTransactions(token);
-
-  }, []);
-
-  const loadUsers = async (
-    token: string
-  ) => {
     const res = await fetch(
       `${API_URL}/admin/users`,
       {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers,
       }
     );
 
@@ -47,140 +40,40 @@ export default function AdminPage() {
     setUsers(data || []);
   };
 
-  const loadTransactions = async (
-    token: string
-  ) => {
-    const res = await fetch(
-      `${API_URL}/admin/transactions`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    const data = await res.json();
-
-    setTransactions(data || []);
-  };
-
   return (
     <div
       style={{
-        display: "flex",
         background: "#0f172a",
         minHeight: "100vh",
+        padding: 30,
+        color: "white",
       }}
     >
-      <Sidebar />
+      <h1>🛠 Admin Dashboard</h1>
 
-      <div
-        style={{
-          marginLeft: 250,
-          width: "100%",
-        }}
-      >
-        <Navbar />
+      <br />
 
+      {users.map((user, index) => (
         <div
+          key={index}
           style={{
-            padding: 30,
-            color: "white",
+            background: "#111827",
+            padding: 20,
+            borderRadius: 15,
+            marginBottom: 15,
           }}
         >
-          <h1>🛠 Admin Dashboard</h1>
+          <p>
+            <strong>Email:</strong>{" "}
+            {user.email}
+          </p>
 
-          <br />
-          <br />
-
-          {/* USERS */}
-
-          <div
-            style={{
-              background: "#111827",
-              padding: 25,
-              borderRadius: 20,
-              marginBottom: 30,
-            }}
-          >
-            <h2>👥 Users</h2>
-
-            <br />
-
-            {users.map((user, index) => (
-              <div
-                key={index}
-                style={{
-                  background: "#1f2937",
-                  padding: 20,
-                  borderRadius: 15,
-                  marginBottom: 15,
-                }}
-              >
-                <p>
-                  <strong>Email:</strong>{" "}
-                  {user.email}
-                </p>
-
-                <p>
-                  <strong>Balance:</strong> $
-                  {user.balance}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          {/* TRANSACTIONS */}
-
-          <div
-            style={{
-              background: "#111827",
-              padding: 25,
-              borderRadius: 20,
-            }}
-          >
-            <h2>📜 All Transactions</h2>
-
-            <br />
-
-            {transactions.map(
-              (tx, index) => (
-                <div
-                  key={index}
-                  style={{
-                    background: "#1f2937",
-                    padding: 20,
-                    borderRadius: 15,
-                    marginBottom: 15,
-                  }}
-                >
-                  <p>
-                    <strong>From:</strong>{" "}
-                    {tx.fromEmail}
-                  </p>
-
-                  <p>
-                    <strong>To:</strong>{" "}
-                    {tx.toEmail}
-                  </p>
-
-                  <p>
-                    <strong>Amount:</strong> $
-                    {tx.amount}
-                  </p>
-
-                  <p>
-                    <strong>Date:</strong>{" "}
-                    {new Date(
-                      tx.createdAt
-                    ).toLocaleString()}
-                  </p>
-                </div>
-              )
-            )}
-          </div>
+          <p>
+            <strong>Balance:</strong> $
+            {user.balance}
+          </p>
         </div>
-      </div>
+      ))}
     </div>
   );
 }
