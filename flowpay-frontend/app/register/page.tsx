@@ -1,15 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { api } from "@/lib/api";
-
+import API_URL_URL_URL from "@/lib/API_URL_URL";
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleRegister = async () => {
     try {
-      const data = await api.register(email, password);
+      const data = await API_URL_URL_URL.register(email, password);
 
       alert(data.message);
 

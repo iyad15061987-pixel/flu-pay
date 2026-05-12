@@ -29,7 +29,7 @@ export default function SearchUsers({
     }
 
     const res = await fetch(
-      `import API_URL from "@/lib/api";/search-users?query=${value}`,
+      `import API_URL_URL_URL_URL from "@/lib/API_URL_URL_URL";/search-users?query=${value}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
