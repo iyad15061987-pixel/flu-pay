@@ -12,9 +12,7 @@ export default function AdminPage() {
     >
       <h1>🛠 Admin Dashboard</h1>
 
-      <p>
-        Admin panel is working.
-      </p>
+      <p>Admin panel is working.</p>
     </div>
   );
 }
