@@ -13,8 +13,11 @@ import NotificationCard from "../components/NotificationCard";
 import CurrencyCard from "../components/CurrencyCard";
 import SearchUsers from "../components/SearchUsers";
 
+import API_URL from "@/lib/api";
+
 export default function DashboardPage() {
-  const [balance, setBalance] = useState(0);
+  const [balance, setBalance] =
+    useState(0);
 
   const [transactions, setTransactions] =
     useState<any[]>([]);
@@ -25,11 +28,14 @@ export default function DashboardPage() {
   const [transferAmount, setTransferAmount] =
     useState("");
 
-  const [userId, setUserId] = useState("");
+  const [userId, setUserId] =
+    useState("");
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail] =
+    useState("");
 
-  const [token, setToken] = useState("");
+  const [token, setToken] =
+    useState("");
 
   useEffect(() => {
     const savedUserId =
@@ -46,14 +52,14 @@ export default function DashboardPage() {
       !savedEmail ||
       !savedToken
     ) {
-      window.location.href = "/login";
+      window.location.href =
+        "/login";
+
       return;
     }
 
     setUserId(savedUserId);
-
     setEmail(savedEmail);
-
     setToken(savedToken);
 
     loadBalance(
@@ -65,7 +71,6 @@ export default function DashboardPage() {
       savedEmail,
       savedToken
     );
-
   }, []);
 
   const loadBalance = async (
@@ -73,7 +78,7 @@ export default function DashboardPage() {
     token: string
   ) => {
     const res = await fetch(
-      `import API_URL_URL_URL_URL from "@/lib/API_URL_URL_URL";/balance/${id}`,
+      `${API_URL}/balance/${id}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -81,37 +86,47 @@ export default function DashboardPage() {
       }
     );
 
-    const data = await res.json();
+    const data =
+      await res.json();
 
-    setBalance(data.balance || 0);
-  };
-
-  const loadTransactions = async (
-    email: string,
-    token: string
-  ) => {
-    const res = await fetch(
-      `import API_URL_URL_URL_URL from "@/lib/API_URL_URL_URL";import API_URL_URL_URL_URL from "@/lib/API_URL_URL_URL";/transactions/${email}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+    setBalance(
+      data.balance || 0
     );
-
-    const data = await res.json();
-
-    setTransactions(data || []);
   };
+
+  const loadTransactions =
+    async (
+      email: string,
+      token: string
+    ) => {
+      const res =
+        await fetch(
+          `${API_URL}/transactions/${email}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+      const data =
+        await res.json();
+
+      setTransactions(data || []);
+    };
 
   const sendMoney = async () => {
-    if (!transferEmail || !transferAmount) {
+    if (
+      !transferEmail ||
+      !transferAmount
+    ) {
       alert("Fill all fields");
+
       return;
     }
 
     const res = await fetch(
-      "import API_URL_URL_URL_URL from "@/lib/API_URL_URL_URL";/transfer",
+      `${API_URL}/transfer`,
       {
         method: "POST",
 
@@ -119,7 +134,8 @@ export default function DashboardPage() {
           "Content-Type":
             "application/json",
 
-          Authorization: `Bearer ${token}`,
+          Authorization:
+            `Bearer ${token}`,
         },
 
         body: JSON.stringify({
@@ -130,16 +146,19 @@ export default function DashboardPage() {
       }
     );
 
-    const data = await res.json();
+    const data =
+      await res.json();
 
     alert(data.message);
 
     loadBalance(userId, token);
 
-    loadTransactions(email, token);
+    loadTransactions(
+      email,
+      token
+    );
 
     setTransferEmail("");
-
     setTransferAmount("");
   };
 
@@ -175,21 +194,16 @@ export default function DashboardPage() {
             Dashboard
           </h1>
 
-          {/* ===== USER ===== */}
-
           <UserCard />
 
           <br />
           <br />
-
-          {/* ===== TOP GRID ===== */}
 
           <div
             style={{
               display: "grid",
               gridTemplateColumns:
                 "repeat(auto-fit,minmax(300px,1fr))",
-
               gap: 20,
             }}
           >
@@ -209,26 +223,19 @@ export default function DashboardPage() {
           <br />
           <br />
 
-          {/* ===== CHART ===== */}
-
           <BalanceChart />
 
           <br />
           <br />
-
-          {/* ===== SECOND GRID ===== */}
 
           <div
             style={{
               display: "grid",
               gridTemplateColumns:
                 "repeat(auto-fit,minmax(350px,1fr))",
-
               gap: 20,
             }}
           >
-            {/* ===== SEND MONEY ===== */}
-
             <div
               style={{
                 background: "#111827",
@@ -237,13 +244,19 @@ export default function DashboardPage() {
                 color: "white",
               }}
             >
-              <h2>💸 Send Money</h2>
+              <h2>
+                💸 Send Money
+              </h2>
 
               <br />
 
               <SearchUsers
-                onSelect={(email) =>
-                  setTransferEmail(email)
+                onSelect={(
+                  email
+                ) =>
+                  setTransferEmail(
+                    email
+                  )
                 }
               />
 
@@ -252,7 +265,9 @@ export default function DashboardPage() {
               <input
                 type="email"
                 placeholder="Receiver Email"
-                value={transferEmail}
+                value={
+                  transferEmail
+                }
                 onChange={(e) =>
                   setTransferEmail(
                     e.target.value
@@ -270,7 +285,9 @@ export default function DashboardPage() {
               <input
                 type="number"
                 placeholder="Amount"
-                value={transferAmount}
+                value={
+                  transferAmount
+                }
                 onChange={(e) =>
                   setTransferAmount(
                     e.target.value
@@ -290,7 +307,8 @@ export default function DashboardPage() {
                 style={{
                   width: "100%",
                   padding: 15,
-                  background: "#2563eb",
+                  background:
+                    "#2563eb",
                   color: "white",
                   border: "none",
                   borderRadius: 10,
@@ -301,84 +319,25 @@ export default function DashboardPage() {
               </button>
             </div>
 
-            {/* ===== QR ===== */}
-
-            <QRCard email={email} />
+            <QRCard
+              email={email}
+            />
           </div>
 
           <br />
           <br />
-
-          {/* ===== THIRD GRID ===== */}
 
           <div
             style={{
               display: "grid",
               gridTemplateColumns:
                 "repeat(auto-fit,minmax(300px,1fr))",
-
               gap: 20,
             }}
           >
             <NotificationCard />
 
             <CurrencyCard />
-          </div>
-
-          <br />
-          <br />
-
-          {/* ===== TRANSACTIONS ===== */}
-
-          <div
-            style={{
-              background: "#111827",
-              borderRadius: 20,
-              padding: 25,
-              color: "white",
-            }}
-          >
-            <h2>📜 Recent Transactions</h2>
-
-            <br />
-
-            {transactions.length === 0 && (
-              <p>No transactions yet.</p>
-            )}
-
-            {transactions.map((tx, index) => (
-              <div
-                key={index}
-                style={{
-                  background: "#1f2937",
-                  padding: 20,
-                  borderRadius: 15,
-                  marginBottom: 15,
-                }}
-              >
-                <p>
-                  <strong>From:</strong>{" "}
-                  {tx.fromEmail}
-                </p>
-
-                <p>
-                  <strong>To:</strong>{" "}
-                  {tx.toEmail}
-                </p>
-
-                <p>
-                  <strong>Amount:</strong> $
-                  {tx.amount}
-                </p>
-
-                <p>
-                  <strong>Date:</strong>{" "}
-                  {new Date(
-                    tx.createdAt
-                  ).toLocaleString()}
-                </p>
-              </div>
-            ))}
           </div>
         </div>
       </div>
