@@ -73,7 +73,7 @@ export default function DashboardPage() {
     token: string
   ) => {
     const res = await fetch(
-      `import API_URL from "@/lib/api";/balance/${id}`,
+      `import API_URL_URL_URL_URL from "@/lib/API_URL_URL_URL";/balance/${id}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -91,7 +91,7 @@ export default function DashboardPage() {
     token: string
   ) => {
     const res = await fetch(
-      `import API_URL from "@/lib/api";import API_URL from "@/lib/api";/transactions/${email}`,
+      `import API_URL_URL_URL_URL from "@/lib/API_URL_URL_URL";import API_URL_URL_URL_URL from "@/lib/API_URL_URL_URL";/transactions/${email}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -111,7 +111,7 @@ export default function DashboardPage() {
     }
 
     const res = await fetch(
-      "import API_URL from "@/lib/api";/transfer",
+      "import API_URL_URL_URL_URL from "@/lib/API_URL_URL_URL";/transfer",
       {
         method: "POST",
 

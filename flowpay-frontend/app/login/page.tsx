@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 
-import { api } from "@/lib/api";
-
+import API_URL_URL_URL_URL from "@/lib/API_URL_URL_URL";
 export default function LoginPage() {
   const [email, setEmail] =
     useState("");
@@ -13,7 +12,7 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     try {
-      const data = await api.login(
+      const data = await API_URL_URL_URL.login(
         email,
         password
       );

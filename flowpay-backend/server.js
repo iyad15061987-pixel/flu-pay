@@ -101,7 +101,7 @@ const auth = (
 
 // ===== HOME =====
 app.get("/", (req, res) => {
-  res.send("API is running 🚀");
+  res.send("API_URL_URL_URL is running 🚀");
 });
 
 // ===== REGISTER =====

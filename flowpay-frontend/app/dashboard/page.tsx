@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import API_URL from "@/lib/api";
+
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import WalletCard from "../components/WalletCard";
@@ -65,7 +67,6 @@ export default function DashboardPage() {
       savedEmail,
       savedToken
     );
-
   }, []);
 
   const loadBalance = async (
@@ -73,7 +74,7 @@ export default function DashboardPage() {
     token: string
   ) => {
     const res = await fetch(
-      `import API_URL from "@/lib/api";/balance/${id}`,
+      `${API_URL}/balance/${id}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -91,7 +92,7 @@ export default function DashboardPage() {
     token: string
   ) => {
     const res = await fetch(
-      `import API_URL from "@/lib/api";http://localhost:5000/transactions/${email}`,
+      `${API_URL}/transactions/${email}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -111,7 +112,7 @@ export default function DashboardPage() {
     }
 
     const res = await fetch(
-      "import API_URL from "@/lib/api";/transfer",
+      `${API_URL}/transfer`,
       {
         method: "POST",
 
@@ -175,14 +176,10 @@ export default function DashboardPage() {
             Dashboard
           </h1>
 
-          {/* ===== USER ===== */}
-
           <UserCard />
 
           <br />
           <br />
-
-          {/* ===== TOP GRID ===== */}
 
           <div
             style={{
@@ -209,14 +206,10 @@ export default function DashboardPage() {
           <br />
           <br />
 
-          {/* ===== CHART ===== */}
-
           <BalanceChart />
 
           <br />
           <br />
-
-          {/* ===== SECOND GRID ===== */}
 
           <div
             style={{
@@ -227,8 +220,6 @@ export default function DashboardPage() {
               gap: 20,
             }}
           >
-            {/* ===== SEND MONEY ===== */}
-
             <div
               style={{
                 background: "#111827",
@@ -301,15 +292,11 @@ export default function DashboardPage() {
               </button>
             </div>
 
-            {/* ===== QR ===== */}
-
             <QRCard email={email} />
           </div>
 
           <br />
           <br />
-
-          {/* ===== THIRD GRID ===== */}
 
           <div
             style={{
@@ -327,8 +314,6 @@ export default function DashboardPage() {
 
           <br />
           <br />
-
-          {/* ===== TRANSACTIONS ===== */}
 
           <div
             style={{
