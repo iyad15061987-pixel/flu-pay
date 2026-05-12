@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 
-import API_URL_URL_URL_URL from "@/lib/API_URL_URL_URL";
+import API_URL from "@/lib/api";
+
 export default function LoginPage() {
   const [email, setEmail] =
     useState("");
@@ -12,10 +13,24 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     try {
-      const data = await API_URL_URL_URL.login(
-        email,
-        password
+      const res = await fetch(
+        `${API_URL}/login`,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+        }
       );
+
+      const data = await res.json();
 
       if (data.token) {
         localStorage.setItem(
@@ -33,13 +48,16 @@ export default function LoginPage() {
           data.email
         );
 
+        alert("Login successful");
+
         window.location.href =
           "/dashboard";
-
       } else {
-        alert(data.message);
+        alert(
+          data.message ||
+            "Login failed"
+        );
       }
-
     } catch (err) {
       alert("Server error");
     }
@@ -53,19 +71,25 @@ export default function LoginPage() {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
+        fontFamily: "Arial",
       }}
     >
       <div
         style={{
           background: "white",
           padding: 40,
-          borderRadius: 20,
+          borderRadius: 15,
           width: 400,
         }}
       >
-        <h1>Login</h1>
-
-        <br />
+        <h1
+          style={{
+            textAlign: "center",
+            marginBottom: 30,
+          }}
+        >
+          Login
+        </h1>
 
         <input
           type="email"
@@ -75,8 +99,8 @@ export default function LoginPage() {
           }
           style={{
             width: "100%",
-            padding: 15,
-            marginBottom: 15,
+            padding: 12,
+            marginBottom: 20,
           }}
         />
 
@@ -84,12 +108,14 @@ export default function LoginPage() {
           type="password"
           placeholder="Password"
           onChange={(e) =>
-            setPassword(e.target.value)
+            setPassword(
+              e.target.value
+            )
           }
           style={{
             width: "100%",
-            padding: 15,
-            marginBottom: 15,
+            padding: 12,
+            marginBottom: 20,
           }}
         />
 
@@ -102,6 +128,8 @@ export default function LoginPage() {
             color: "white",
             border: "none",
             borderRadius: 10,
+            cursor: "pointer",
+            fontSize: 16,
           }}
         >
           Login
