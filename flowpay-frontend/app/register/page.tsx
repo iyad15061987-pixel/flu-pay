@@ -1,21 +1,46 @@
 "use client";
 
 import { useState } from "react";
-import API_URL_URL_URL from "@/lib/API_URL_URL";
+
+import API_URL from "@/lib/api";
+
 export default function RegisterPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] =
+    useState("");
+
+  const [password, setPassword] =
+    useState("");
 
   const handleRegister = async () => {
     try {
-      const data = await API_URL_URL_URL.register(email, password);
+      const res = await fetch(
+        `${API_URL}/register`,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+        }
+      );
+
+      const data = await res.json();
 
       alert(data.message);
 
-      if (data.message === "Account created successfully") {
-        window.location.href = "/login";
+      if (
+        data.message ===
+        "Account created successfully"
+      ) {
+        window.location.href =
+          "/login";
       }
-
     } catch (err) {
       alert("Server error");
     }
@@ -52,7 +77,9 @@ export default function RegisterPage() {
         <input
           type="email"
           placeholder="Email"
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) =>
+            setEmail(e.target.value)
+          }
           style={{
             width: "100%",
             padding: 12,
@@ -63,7 +90,11 @@ export default function RegisterPage() {
         <input
           type="password"
           placeholder="Password"
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) =>
+            setPassword(
+              e.target.value
+            )
+          }
           style={{
             width: "100%",
             padding: 12,
