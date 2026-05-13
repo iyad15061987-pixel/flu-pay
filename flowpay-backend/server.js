@@ -234,6 +234,13 @@ app.post(
         });
       }
 
+      if (user.frozen) {
+        return res.status(403).json({
+          message:
+            "Account frozen",
+        });
+      }
+
       const isMatch =
         await bcrypt.compare(
           password,
@@ -430,6 +437,59 @@ app.post(
 );
 
 // =========================
+// FREEZE USER
+// =========================
+
+app.post(
+  "/freeze-user",
+  auth,
+  async (req, res) => {
+    try {
+      const { userId } =
+        req.body;
+
+      const user =
+        await User.findById(
+          userId
+        );
+
+      if (!user) {
+        return res.status(404).json({
+          message:
+            "User not found",
+        });
+      }
+
+      user.frozen =
+        !user.frozen;
+
+      await user.save();
+
+      res.json({
+        message:
+          user.frozen
+            ? "User frozen"
+            : "User unfrozen",
+
+        frozen:
+          user.frozen,
+      });
+
+    } catch (err) {
+      console.log(
+        "FREEZE ERROR:",
+        err
+      );
+
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+
+// =========================
 // TRANSFER
 // =========================
 
@@ -462,6 +522,13 @@ app.post(
         return res.status(404).json({
           message:
             "User not found",
+        });
+      }
+
+      if (sender.frozen) {
+        return res.status(403).json({
+          message:
+            "Account frozen",
         });
       }
 
