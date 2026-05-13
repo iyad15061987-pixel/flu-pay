@@ -20,7 +20,10 @@ const JWT_SECRET =
 const MONGO_URI =
   process.env.MONGO_URI;
 
-// ===== CONNECT =====
+// =========================
+// CONNECT MONGODB
+// =========================
+
 console.log("⏳ Connecting to MongoDB...");
 
 mongoose
@@ -36,7 +39,10 @@ mongoose
     console.log("❌ Mongo Error:", err);
   });
 
-// ===== USER MODEL =====
+// =========================
+// USER MODEL
+// =========================
+
 const UserSchema = new mongoose.Schema({
   email: {
     type: String,
@@ -66,7 +72,10 @@ const User = mongoose.model(
   UserSchema
 );
 
-// ===== TRANSACTION MODEL =====
+// =========================
+// TRANSACTION MODEL
+// =========================
+
 const TransactionSchema =
   new mongoose.Schema({
     fromEmail: String,
@@ -86,7 +95,10 @@ const Transaction = mongoose.model(
   TransactionSchema
 );
 
-// ===== AUTH =====
+// =========================
+// AUTH MIDDLEWARE
+// =========================
+
 const auth = (
   req,
   res,
@@ -120,12 +132,18 @@ const auth = (
   }
 };
 
-// ===== HOME =====
+// =========================
+// HOME
+// =========================
+
 app.get("/", (req, res) => {
   res.send("FlowPay API running 🚀");
 });
 
-// ===== REGISTER =====
+// =========================
+// REGISTER
+// =========================
+
 app.post(
   "/register",
   async (req, res) => {
@@ -191,7 +209,10 @@ app.post(
   }
 );
 
-// ===== LOGIN =====
+// =========================
+// LOGIN
+// =========================
+
 app.post(
   "/login",
   async (req, res) => {
@@ -228,7 +249,7 @@ app.post(
 
       const token = jwt.sign(
         {
-          userId: user._id,
+          id: user._id,
           email:
             user.email,
         },
@@ -251,6 +272,9 @@ app.post(
 
         email:
           user.email,
+
+        role:
+          user.role,
       });
 
     } catch (err) {
@@ -267,7 +291,57 @@ app.post(
   }
 );
 
-// ===== BALANCE =====
+// =========================
+// CURRENT USER
+// =========================
+
+app.get(
+  "/me",
+  auth,
+  async (req, res) => {
+    try {
+      const user =
+        await User.findById(
+          req.user.id
+        );
+
+      res.json(user);
+
+    } catch (err) {
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+
+// =========================
+// ALL USERS
+// =========================
+
+app.get(
+  "/users",
+  async (req, res) => {
+    try {
+      const users =
+        await User.find();
+
+      res.json(users);
+
+    } catch (err) {
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+
+// =========================
+// BALANCE
+// =========================
+
 app.get(
   "/balance/:id",
   auth,
@@ -304,7 +378,10 @@ app.get(
   }
 );
 
-// ===== ADD BALANCE =====
+// =========================
+// ADD BALANCE
+// =========================
+
 app.post(
   "/add-balance",
   auth,
@@ -352,7 +429,10 @@ app.post(
   }
 );
 
-// ===== TRANSFER =====
+// =========================
+// TRANSFER
+// =========================
+
 app.post(
   "/transfer",
   auth,
@@ -405,6 +485,7 @@ app.post(
         transferAmount;
 
       await sender.save();
+
       await receiver.save();
 
       const transaction =
@@ -443,7 +524,10 @@ app.post(
   }
 );
 
-// ===== TRANSACTIONS =====
+// =========================
+// TRANSACTIONS
+// =========================
+
 app.get(
   "/transactions/:email",
   auth,
@@ -487,7 +571,10 @@ app.get(
   }
 );
 
-// ===== SEARCH USERS =====
+// =========================
+// SEARCH USERS
+// =========================
+
 app.get(
   "/search-users",
   auth,
@@ -521,7 +608,10 @@ app.get(
   }
 );
 
-// ===== START =====
+// =========================
+// START SERVER
+// =========================
+
 app.listen(PORT, () => {
   console.log(
     `🚀 Server running on port ${PORT}`
