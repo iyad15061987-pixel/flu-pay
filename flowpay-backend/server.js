@@ -38,13 +38,26 @@ mongoose
 
 // ===== USER MODEL =====
 const UserSchema = new mongoose.Schema({
-  email: String,
+  email: {
+    type: String,
+    unique: true,
+  },
 
   password: String,
 
   balance: {
     type: Number,
     default: 0,
+  },
+
+  role: {
+    type: String,
+    default: "user",
+  },
+
+  frozen: {
+    type: Boolean,
+    default: false,
   },
 });
 
