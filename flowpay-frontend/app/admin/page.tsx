@@ -20,10 +20,13 @@ export default function AdminPage() {
   }, []);
 
   const checkAdmin = async () => {
-    const token = localStorage.getItem("token");
+    const token =
+      localStorage.getItem("token");
 
     if (!token) {
-      window.location.href = "/login";
+      window.location.href =
+        "/login";
+
       return;
     }
 
@@ -37,13 +40,18 @@ export default function AdminPage() {
         }
       );
 
-      const data = await res.json();
+      const data =
+        await res.json();
 
-      if (data.role !== "admin") {
+      if (
+        data.role !== "admin"
+      ) {
         alert("Access denied");
+
         window.location.href =
           "/dashboard";
       }
+
     } catch (err) {
       alert("Server error");
     }
@@ -55,11 +63,59 @@ export default function AdminPage() {
         `${API_URL}/users`
       );
 
-      const data = await res.json();
+      const data =
+        await res.json();
 
       setUsers(data);
+
     } catch (err) {
       console.log(err);
+    }
+  };
+
+  const addBalance = async (
+    userId: string
+  ) => {
+    const amount = prompt(
+      "Enter amount"
+    );
+
+    if (!amount) return;
+
+    try {
+      const token =
+        localStorage.getItem(
+          "token"
+        );
+
+      await fetch(
+        `${API_URL}/add-balance`,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+
+            Authorization:
+              `Bearer ${token}`,
+          },
+
+          body: JSON.stringify({
+            userId,
+            amount,
+          }),
+        }
+      );
+
+      alert(
+        "Balance added successfully"
+      );
+
+      loadUsers();
+
+    } catch (err) {
+      alert("Server error");
     }
   };
 
@@ -109,6 +165,26 @@ export default function AdminPage() {
               ? "Yes"
               : "No"}
           </p>
+
+          <button
+            onClick={() =>
+              addBalance(
+                user._id
+              )
+            }
+            style={{
+              marginTop: 15,
+              padding: 12,
+              background: "#16a34a",
+              color: "white",
+              border: "none",
+              borderRadius: 10,
+              cursor: "pointer",
+              width: "100%",
+            }}
+          >
+            Add Balance
+          </button>
         </div>
       ))}
     </div>
