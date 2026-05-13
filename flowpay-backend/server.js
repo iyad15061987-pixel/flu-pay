@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -9,18 +11,24 @@ const app = express();
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
-const JWT_SECRET = "flowpay_secret_key";
+const JWT_SECRET =
+  process.env.JWT_SECRET ||
+  "flowpay_secret_key";
 
-// ===== MONGO URI =====
 const MONGO_URI =
-  "mongodb+srv://iyad:IY15061987iy..@cluster0.vyg1m02.mongodb.net/flowpay?retryWrites=true&w=majority&appName=Cluster0";
+  process.env.MONGO_URI;
+
 // ===== CONNECT =====
 console.log("⏳ Connecting to MongoDB...");
 
 mongoose
-  .connect(MONGO_URI)
+  .connect(MONGO_URI, {
+    serverSelectionTimeoutMS: 30000,
+    socketTimeoutMS: 45000,
+    family: 4,
+  })
   .then(() => {
     console.log("✅ MongoDB Connected");
   })
@@ -65,7 +73,7 @@ const Transaction = mongoose.model(
   TransactionSchema
 );
 
-// ===== AUTH MIDDLEWARE =====
+// ===== AUTH =====
 const auth = (
   req,
   res,
@@ -101,7 +109,7 @@ const auth = (
 
 // ===== HOME =====
 app.get("/", (req, res) => {
-  res.send("API_URL_URL_URL is running 🚀");
+  res.send("FlowPay API running 🚀");
 });
 
 // ===== REGISTER =====
@@ -118,12 +126,9 @@ app.post(
         !email ||
         !password
       ) {
-        return res
-          .status(400)
-          .json({
-            message:
-              "Missing data",
-          });
+        return res.status(400).json({
+          message: "Missing data",
+        });
       }
 
       const existingUser =
@@ -132,12 +137,10 @@ app.post(
         });
 
       if (existingUser) {
-        return res
-          .status(400)
-          .json({
-            message:
-              "User already exists",
-          });
+        return res.status(400).json({
+          message:
+            "User already exists",
+        });
       }
 
       const hashedPassword =
@@ -149,10 +152,8 @@ app.post(
       const user =
         new User({
           email,
-
           password:
             hashedPassword,
-
           balance: 0,
         });
 
@@ -193,12 +194,10 @@ app.post(
         });
 
       if (!user) {
-        return res
-          .status(404)
-          .json({
-            message:
-              "User not found",
-          });
+        return res.status(404).json({
+          message:
+            "User not found",
+        });
       }
 
       const isMatch =
@@ -208,18 +207,15 @@ app.post(
         );
 
       if (!isMatch) {
-        return res
-          .status(400)
-          .json({
-            message:
-              "Wrong password",
-          });
+        return res.status(400).json({
+          message:
+            "Wrong password",
+        });
       }
 
       const token = jwt.sign(
         {
           userId: user._id,
-
           email:
             user.email,
         },
@@ -258,7 +254,7 @@ app.post(
   }
 );
 
-// ===== GET BALANCE =====
+// ===== BALANCE =====
 app.get(
   "/balance/:id",
   auth,
@@ -270,12 +266,10 @@ app.get(
         );
 
       if (!user) {
-        return res
-          .status(404)
-          .json({
-            message:
-              "User not found",
-          });
+        return res.status(404).json({
+          message:
+            "User not found",
+        });
       }
 
       res.json({
@@ -314,12 +308,10 @@ app.post(
         );
 
       if (!user) {
-        return res
-          .status(404)
-          .json({
-            message:
-              "User not found",
-          });
+        return res.status(404).json({
+          message:
+            "User not found",
+        });
       }
 
       user.balance += Number(
@@ -364,55 +356,33 @@ app.post(
           fromUserId
         );
 
-      if (!sender) {
-        return res
-          .status(404)
-          .json({
-            message:
-              "Sender not found",
-          });
-      }
-
       const receiver =
         await User.findOne({
           email:
             toEmail,
         });
 
-      if (!receiver) {
-        return res
-          .status(404)
-          .json({
-            message:
-              "Receiver not found",
-          });
+      if (
+        !sender ||
+        !receiver
+      ) {
+        return res.status(404).json({
+          message:
+            "User not found",
+        });
       }
 
       const transferAmount =
         Number(amount);
 
       if (
-        transferAmount <=
-        0
-      ) {
-        return res
-          .status(400)
-          .json({
-            message:
-              "Invalid amount",
-          });
-      }
-
-      if (
         sender.balance <
         transferAmount
       ) {
-        return res
-          .status(400)
-          .json({
-            message:
-              "Insufficient balance",
-          });
+        return res.status(400).json({
+          message:
+            "Insufficient balance",
+        });
       }
 
       sender.balance -=
@@ -422,7 +392,6 @@ app.post(
         transferAmount;
 
       await sender.save();
-
       await receiver.save();
 
       const transaction =
@@ -461,7 +430,7 @@ app.post(
   }
 );
 
-// ===== GET TRANSACTIONS =====
+// ===== TRANSACTIONS =====
 app.get(
   "/transactions/:email",
   auth,
@@ -493,7 +462,7 @@ app.get(
 
     } catch (err) {
       console.log(
-        "TRANSACTIONS ERROR:",
+        "TX ERROR:",
         err
       );
 
@@ -514,14 +483,11 @@ app.get(
       const query =
         req.query.query;
 
-      if (!query) {
-        return res.json([]);
-      }
-
       const users =
         await User.find({
           email: {
-            $regex: query,
+            $regex:
+              query || "",
             $options: "i",
           },
         }).limit(10);
@@ -530,7 +496,7 @@ app.get(
 
     } catch (err) {
       console.log(
-        "SEARCH USERS ERROR:",
+        "SEARCH ERROR:",
         err
       );
 
@@ -542,63 +508,7 @@ app.get(
   }
 );
 
-// ===== ADMIN USERS =====
-app.get(
-  "/admin/users",
-  auth,
-  async (req, res) => {
-    try {
-      const users =
-        await User.find();
-
-      res.json(users);
-
-    } catch (err) {
-      console.log(
-        "ADMIN USERS ERROR:",
-        err
-      );
-
-      res.status(500).json({
-        message:
-          "Server error",
-      });
-    }
-  }
-);
-
-// ===== ADMIN TRANSACTIONS =====
-app.get(
-  "/admin/transactions",
-  auth,
-  async (req, res) => {
-    try {
-      const transactions =
-        await Transaction.find().sort(
-          {
-            createdAt: -1,
-          }
-        );
-
-      res.json(
-        transactions
-      );
-
-    } catch (err) {
-      console.log(
-        "ADMIN TX ERROR:",
-        err
-      );
-
-      res.status(500).json({
-        message:
-          "Server error",
-      });
-    }
-  }
-);
-
-// ===== START SERVER =====
+// ===== START =====
 app.listen(PORT, () => {
   console.log(
     `🚀 Server running on port ${PORT}`
