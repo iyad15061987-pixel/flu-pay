@@ -133,6 +133,60 @@ const auth = (
 };
 
 // =========================
+// ADMIN AUTH
+// =========================
+
+const adminAuth = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const token =
+      req.headers.authorization?.split(
+        " "
+      )[1];
+
+    if (!token) {
+      return res.status(401).json({
+        message:
+          "Unauthorized",
+      });
+    }
+
+    const decoded = jwt.verify(
+      token,
+      JWT_SECRET
+    );
+
+    const user =
+      await User.findById(
+        decoded.id
+      );
+
+    if (
+      !user ||
+      user.role !== "admin"
+    ) {
+      return res.status(403).json({
+        message:
+          "Admin only",
+      });
+    }
+
+    req.user = user;
+
+    next();
+
+  } catch (err) {
+    return res.status(401).json({
+      message:
+        "Invalid token",
+    });
+  }
+};
+
+// =========================
 // HOME
 // =========================
 
@@ -158,7 +212,8 @@ app.post(
         !password
       ) {
         return res.status(400).json({
-          message: "Missing data",
+          message:
+            "Missing data",
         });
       }
 
@@ -329,6 +384,7 @@ app.get(
 
 app.get(
   "/users",
+  adminAuth,
   async (req, res) => {
     try {
       const users =
@@ -391,7 +447,7 @@ app.get(
 
 app.post(
   "/add-balance",
-  auth,
+  adminAuth,
   async (req, res) => {
     try {
       const {
@@ -442,7 +498,7 @@ app.post(
 
 app.post(
   "/freeze-user",
-  auth,
+  adminAuth,
   async (req, res) => {
     try {
       const { userId } =
@@ -478,6 +534,38 @@ app.post(
     } catch (err) {
       console.log(
         "FREEZE ERROR:",
+        err
+      );
+
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+
+// =========================
+// DELETE USER
+// =========================
+
+app.delete(
+  "/delete-user/:id",
+  adminAuth,
+  async (req, res) => {
+    try {
+      await User.findByIdAndDelete(
+        req.params.id
+      );
+
+      res.json({
+        message:
+          "User deleted",
+      });
+
+    } catch (err) {
+      console.log(
+        "DELETE ERROR:",
         err
       );
 
