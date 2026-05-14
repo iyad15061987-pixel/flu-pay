@@ -160,6 +160,32 @@ const Log = mongoose.model(
   LogSchema
 );
 // =========================
+// NOTIFICATION MODEL
+// =========================
+
+const NotificationSchema =
+  new mongoose.Schema({
+    email: String,
+
+    message: String,
+
+    read: {
+      type: Boolean,
+      default: false,
+    },
+
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+  });
+
+const Notification =
+  mongoose.model(
+    "Notification",
+    NotificationSchema
+  );
+// =========================
 // REQUEST MODEL
 // =========================
 
@@ -669,6 +695,19 @@ app.post(
           sender.email,
       });
 
+      await Notification.create({
+  email: sender.email,
+
+  message:
+    `You sent ${transferAmount}$ to ${receiver.email}`,
+});
+
+await Notification.create({
+  email: receiver.email,
+
+  message:
+    `You received ${transferAmount}$ from ${sender.email}`,
+});
       res.json({
         message:
           "Transfer successful",
@@ -1560,6 +1599,12 @@ app.post(
           user.email,
       });
 
+      await Notification.create({
+  email: user.email,
+
+  message:
+    `Your ${request.type} request has been approved`,
+});
       res.json({
         message:
           "Request approved",
@@ -1613,6 +1658,12 @@ app.post(
           request.email,
       });
 
+      await Notification.create({
+  email: request.email,
+
+  message:
+    `Your ${request.type} request has been rejected`,
+});
       res.json({
         message:
           "Request rejected",
@@ -1621,6 +1672,40 @@ app.post(
     } catch (err) {
       console.log(
         "REJECT ERROR:",
+        err
+      );
+
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+// =========================
+// GET NOTIFICATIONS
+// =========================
+
+app.get(
+  "/notifications/:email",
+  auth,
+  async (req, res) => {
+    try {
+      const notifications =
+        await Notification.find({
+          email:
+            req.params.email,
+        }).sort({
+          createdAt: -1,
+        });
+
+      res.json(
+        notifications
+      );
+
+    } catch (err) {
+      console.log(
+        "NOTIFICATIONS ERROR:",
         err
       );
 
