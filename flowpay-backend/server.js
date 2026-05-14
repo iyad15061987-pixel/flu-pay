@@ -108,6 +108,10 @@ const UserSchema =
       type: Number,
       default: 0,
     },
+  currency: {
+  type: String,
+  default: "USD",
+},
   });
 
 const User = mongoose.model(
@@ -1909,6 +1913,55 @@ app.get(
     } catch (err) {
       console.log(
         "ANALYTICS ERROR:",
+        err
+      );
+
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+// =========================
+// UPDATE CURRENCY
+// =========================
+
+app.post(
+  "/update-currency",
+  auth,
+  async (req, res) => {
+    try {
+      const {
+        userId,
+        currency,
+      } = req.body;
+
+      const user =
+        await User.findById(
+          userId
+        );
+
+      if (!user) {
+        return res.status(404).json({
+          message:
+            "User not found",
+        });
+      }
+
+      user.currency =
+        currency;
+
+      await user.save();
+
+      res.json({
+        message:
+          "Currency updated",
+      });
+
+    } catch (err) {
+      console.log(
+        "CURRENCY ERROR:",
         err
       );
 
