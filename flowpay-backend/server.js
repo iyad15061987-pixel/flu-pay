@@ -33,7 +33,18 @@ const EXTERNAL_FEE =
 
 const MINIMUM_FEE =
   0.1;
+// =========================
+// SECURITY LIMITS
+// =========================
 
+const MIN_TRANSFER =
+  1;
+
+const MAX_TRANSFER =
+  10000;
+
+const MAX_REQUEST =
+  50000;
 // =========================
 // CONNECT DATABASE
 // =========================
@@ -628,6 +639,35 @@ app.post(
       const transferAmount =
         Number(amount);
 
+        if (
+  sender.email ===
+  receiver.email
+) {
+  return res.status(400).json({
+    message:
+      "Cannot send to yourself",
+  });
+}
+
+if (
+  transferAmount <
+  MIN_TRANSFER
+) {
+  return res.status(400).json({
+    message:
+      `Minimum transfer is ${MIN_TRANSFER}$`,
+  });
+}
+
+if (
+  transferAmount >
+  MAX_TRANSFER
+) {
+  return res.status(400).json({
+    message:
+      `Maximum transfer is ${MAX_TRANSFER}$`,
+  });
+}
       let fee =
         transferAmount *
         INTERNAL_FEE;
@@ -1286,6 +1326,25 @@ app.post(
         method,
       } = req.body;
 
+      if (
+  Number(amount) <
+  MIN_TRANSFER
+) {
+  return res.status(400).json({
+    message:
+      `Minimum request is ${MIN_TRANSFER}$`,
+  });
+}
+
+if (
+  Number(amount) >
+  MAX_REQUEST
+) {
+  return res.status(400).json({
+    message:
+      `Maximum request is ${MAX_REQUEST}$`,
+  });
+}
       const request =
         new Request({
           userId,
@@ -1340,6 +1399,25 @@ app.post(
         wallet,
       } = req.body;
 
+      if (
+  Number(amount) <
+  MIN_TRANSFER
+) {
+  return res.status(400).json({
+    message:
+      `Minimum request is ${MIN_TRANSFER}$`,
+  });
+}
+
+if (
+  Number(amount) >
+  MAX_REQUEST
+) {
+  return res.status(400).json({
+    message:
+      `Maximum request is ${MAX_REQUEST}$`,
+  });
+}
       const request =
         new Request({
           userId,
