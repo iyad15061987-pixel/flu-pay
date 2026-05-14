@@ -100,6 +100,16 @@ export default function Sidebar() {
   }}
 >
   📋 My Requests
+<Link
+  href="/notifications"
+  style={{
+    color: "white",
+    textDecoration:
+      "none",
+  }}
+>
+  🔔 Notifications
+
 </Link>
           ⚙ Settings
         </Link>
