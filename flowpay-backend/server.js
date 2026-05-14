@@ -1795,6 +1795,131 @@ app.get(
   }
 );
 // =========================
+// ANALYTICS
+// =========================
+
+app.get(
+  "/analytics/:email",
+  auth,
+  async (req, res) => {
+    try {
+      const email =
+        req.params.email;
+
+      const transactions =
+        await Transaction.find({
+          $or: [
+            {
+              fromEmail:
+                email,
+            },
+
+            {
+              toEmail:
+                email,
+            },
+          ],
+        });
+
+      const requests =
+        await Request.find({
+          email,
+        });
+
+      const notifications =
+        await Notification.find({
+          email,
+        });
+
+      let totalSent =
+        0;
+
+      let totalReceived =
+        0;
+
+      let totalFees =
+        0;
+
+      let deposits =
+        0;
+
+      let withdraws =
+        0;
+
+      transactions.forEach(
+        (tx) => {
+          totalFees +=
+            tx.fee || 0;
+
+          if (
+            tx.fromEmail ===
+            email
+          ) {
+            totalSent +=
+              tx.amount;
+          }
+
+          if (
+            tx.toEmail ===
+            email
+          ) {
+            totalReceived +=
+              tx.amount;
+          }
+
+          if (
+            tx.type?.includes(
+              "deposit"
+            )
+          ) {
+            deposits++;
+          }
+
+          if (
+            tx.type?.includes(
+              "withdraw"
+            )
+          ) {
+            withdraws++;
+          }
+        }
+      );
+
+      res.json({
+        totalTransactions:
+          transactions.length,
+
+        totalRequests:
+          requests.length,
+
+        totalNotifications:
+          notifications.length,
+
+        totalSent,
+
+        totalReceived,
+
+        totalFees,
+
+        deposits,
+
+        withdraws,
+      });
+
+    } catch (err) {
+      console.log(
+        "ANALYTICS ERROR:",
+        err
+      );
+
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+// =========================
 // START SERVER
 // =========================
 

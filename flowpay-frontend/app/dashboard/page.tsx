@@ -19,6 +19,9 @@ export default function DashboardPage() {
   const [balance, setBalance] =
     useState(0);
 
+    const [analytics, setAnalytics] =
+  useState<any>(null);
+
   const [transactions, setTransactions] =
     useState<any[]>([]);
 
@@ -70,8 +73,34 @@ export default function DashboardPage() {
     loadTransactions(
       savedEmail,
       savedToken
-    );
-  }, []);
+  );
+ const loadAnalytics =
+  async (
+    email: string,
+    token: string
+  ) => {
+    try {
+      const res =
+        await fetch(
+          `${API_URL}/analytics/${email}`,
+          {
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+            },
+          }
+        );
+
+      const data =
+        await res.json();
+
+      setAnalytics(data);
+
+    } catch (err) {
+      console.log(err);
+    }
+  };
+}, []);
 
   const loadBalance = async (
     id: string,
