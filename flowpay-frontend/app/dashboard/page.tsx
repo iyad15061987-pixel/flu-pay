@@ -81,7 +81,8 @@ export default function DashboardPage() {
       `${API_URL}/balance/${id}`,
       {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization:
+            `Bearer ${token}`,
         },
       }
     );
@@ -104,7 +105,8 @@ export default function DashboardPage() {
           `${API_URL}/transactions/${email}`,
           {
             headers: {
-              Authorization: `Bearer ${token}`,
+              Authorization:
+                `Bearer ${token}`,
             },
           }
         );
@@ -159,6 +161,7 @@ export default function DashboardPage() {
     );
 
     setTransferEmail("");
+
     setTransferAmount("");
   };
 
@@ -251,9 +254,7 @@ export default function DashboardPage() {
               <br />
 
               <SearchUsers
-                onSelect={(
-                  email
-                ) =>
+                onSelect={(email) =>
                   setTransferEmail(
                     email
                   )
@@ -322,6 +323,81 @@ export default function DashboardPage() {
             <QRCard
               email={email}
             />
+          </div>
+
+          <br />
+          <br />
+
+          <div
+            style={{
+              background: "#111827",
+              borderRadius: 20,
+              padding: 25,
+              color: "white",
+            }}
+          >
+            <h2>
+              📜 Transaction History
+            </h2>
+
+            <br />
+
+            {transactions.length === 0 ? (
+              <p>
+                No transactions yet
+              </p>
+            ) : (
+              transactions.map(
+                (
+                  tx,
+                  index
+                ) => (
+                  <div
+                    key={index}
+                    style={{
+                      background:
+                        "#1f2937",
+                      padding: 15,
+                      borderRadius: 12,
+                      marginBottom: 12,
+                    }}
+                  >
+                    <p>
+                      <strong>
+                        From:
+                      </strong>{" "}
+                      {
+                        tx.fromEmail
+                      }
+                    </p>
+
+                    <p>
+                      <strong>
+                        To:
+                      </strong>{" "}
+                      {tx.toEmail}
+                    </p>
+
+                    <p>
+                      <strong>
+                        Amount:
+                      </strong>{" "}
+                      $
+                      {tx.amount}
+                    </p>
+
+                    <p>
+                      <strong>
+                        Date:
+                      </strong>{" "}
+                      {new Date(
+                        tx.createdAt
+                      ).toLocaleString()}
+                    </p>
+                  </div>
+                )
+              )
+            )}
           </div>
 
           <br />
