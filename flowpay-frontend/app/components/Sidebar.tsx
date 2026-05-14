@@ -91,6 +91,16 @@ export default function Sidebar() {
               "none",
           }}
         >
+          <Link
+  href="/requests"
+  style={{
+    color: "white",
+    textDecoration:
+      "none",
+  }}
+>
+  📋 My Requests
+</Link>
           ⚙ Settings
         </Link>
 

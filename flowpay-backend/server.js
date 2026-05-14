@@ -1370,6 +1370,38 @@ app.get(
 );
 
 // =========================
+// USER REQUESTS
+// =========================
+
+app.get(
+  "/my-requests/:email",
+  auth,
+  async (req, res) => {
+    try {
+      const requests =
+        await Request.find({
+          email:
+            req.params.email,
+        }).sort({
+          createdAt: -1,
+        });
+
+      res.json(requests);
+
+    } catch (err) {
+      console.log(
+        "MY REQUESTS ERROR:",
+        err
+      );
+
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+// =========================
 // APPROVE REQUEST
 // =========================
 
