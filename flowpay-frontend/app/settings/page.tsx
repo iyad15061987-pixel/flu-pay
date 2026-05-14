@@ -1,69 +1,51 @@
 "use client";
 
-import Sidebar from "../components/Sidebar";
-import Navbar from "../components/Navbar";
-
 export default function SettingsPage() {
+  const logout = () => {
+    localStorage.clear();
+
+    window.location.href =
+      "/login";
+  };
+
   return (
     <div
       style={{
-        display: "flex",
+        padding: 40,
         background: "#0f172a",
         minHeight: "100vh",
+        color: "white",
       }}
     >
-      <Sidebar />
+      <h1>
+        ⚙ Settings
+      </h1>
+
+      <br />
 
       <div
         style={{
-          marginLeft: 250,
-          width: "100%",
+          background:
+            "#111827",
+          padding: 30,
+          borderRadius: 20,
         }}
       >
-        <Navbar />
-
-        <div
+        <button
+          onClick={logout}
           style={{
-            padding: 30,
+            width: "100%",
+            padding: 15,
+            border: "none",
+            borderRadius: 10,
+            background:
+              "#dc2626",
             color: "white",
+            cursor: "pointer",
           }}
         >
-          <h1>⚙ Settings</h1>
-
-          <br />
-
-          <div
-            style={{
-              background: "#111827",
-              padding: 25,
-              borderRadius: 20,
-              maxWidth: 700,
-            }}
-          >
-            <h2>Account Settings</h2>
-
-            <br />
-
-            <p>
-              FlowPay account settings panel.
-            </p>
-
-            <br />
-
-            <button
-              style={{
-                padding: 15,
-                background: "#2563eb",
-                border: "none",
-                color: "white",
-                borderRadius: 10,
-                cursor: "pointer",
-              }}
-            >
-              Save Changes
-            </button>
-          </div>
-        </div>
+          Logout
+        </button>
       </div>
     </div>
   );

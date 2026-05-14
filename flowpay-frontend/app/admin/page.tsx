@@ -9,6 +9,7 @@ interface User {
   balance: number;
   role: string;
   frozen: boolean;
+  revenue: number;
 }
 
 interface Transaction {
@@ -16,6 +17,16 @@ interface Transaction {
   fromEmail: string;
   toEmail: string;
   amount: number;
+  fee: number;
+  netAmount: number;
+  type: string;
+  createdAt: string;
+}
+
+interface Log {
+  _id: string;
+  action: string;
+  email: string;
   createdAt: string;
 }
 
@@ -26,9 +37,17 @@ export default function AdminPage() {
   const [transactions, setTransactions] =
     useState<Transaction[]>([]);
 
+  const [logs, setLogs] =
+    useState<Log[]>([]);
+
+  const [revenue, setRevenue] =
+    useState(0);
+
   useEffect(() => {
     checkAdmin();
     loadUsers();
+    loadRevenue();
+    loadLogs();
   }, []);
 
   const checkAdmin = async () => {
@@ -154,6 +173,66 @@ export default function AdminPage() {
       }
     };
 
+  const loadRevenue =
+    async () => {
+      try {
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        const res =
+          await fetch(
+            `${API_URL}/admin-revenue`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const data =
+          await res.json();
+
+        setRevenue(
+          data.revenue || 0
+        );
+
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+  const loadLogs =
+    async () => {
+      try {
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        const res =
+          await fetch(
+            `${API_URL}/logs`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const data =
+          await res.json();
+
+        setLogs(data || []);
+
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
   const addBalance = async (
     userId: string
   ) => {
@@ -195,6 +274,7 @@ export default function AdminPage() {
       );
 
       loadUsers();
+      loadRevenue();
 
     } catch (err) {
       alert("Server error");
@@ -286,6 +366,28 @@ export default function AdminPage() {
 
       <br />
 
+      <div
+        style={{
+          background: "#111827",
+          padding: 25,
+          borderRadius: 15,
+          marginBottom: 30,
+        }}
+      >
+        <h2>
+          💰 Total Revenue
+        </h2>
+
+        <br />
+
+        <h1>
+          $
+          {revenue.toFixed(
+            2
+          )}
+        </h1>
+      </div>
+
       <h2>
         👥 Users
       </h2>
@@ -310,6 +412,11 @@ export default function AdminPage() {
           <p>
             <strong>Balance:</strong>{" "}
             ${user.balance}
+          </p>
+
+          <p>
+            <strong>Revenue:</strong>{" "}
+            ${user.revenue || 0}
           </p>
 
           <p>
@@ -416,6 +523,13 @@ export default function AdminPage() {
             >
               <p>
                 <strong>
+                  Type:
+                </strong>{" "}
+                {tx.type}
+              </p>
+
+              <p>
+                <strong>
                   From:
                 </strong>{" "}
                 {
@@ -440,6 +554,22 @@ export default function AdminPage() {
 
               <p>
                 <strong>
+                  Fee:
+                </strong>{" "}
+                $
+                {tx.fee}
+              </p>
+
+              <p>
+                <strong>
+                  Net:
+                </strong>{" "}
+                $
+                {tx.netAmount}
+              </p>
+
+              <p>
+                <strong>
                   Date:
                 </strong>{" "}
                 {new Date(
@@ -449,6 +579,57 @@ export default function AdminPage() {
             </div>
           )
         )
+      )}
+
+      <br />
+      <br />
+
+      <h2>
+        📋 Activity Logs
+      </h2>
+
+      <br />
+
+      {logs.length === 0 ? (
+        <p>
+          No logs yet
+        </p>
+      ) : (
+        logs.map((log) => (
+          <div
+            key={log._id}
+            style={{
+              background:
+                "#111827",
+              padding: 20,
+              borderRadius: 15,
+              marginBottom: 15,
+            }}
+          >
+            <p>
+              <strong>
+                Action:
+              </strong>{" "}
+              {log.action}
+            </p>
+
+            <p>
+              <strong>
+                User:
+              </strong>{" "}
+              {log.email}
+            </p>
+
+            <p>
+              <strong>
+                Date:
+              </strong>{" "}
+              {new Date(
+                log.createdAt
+              ).toLocaleString()}
+            </p>
+          </div>
+        ))
       )}
     </div>
   );
