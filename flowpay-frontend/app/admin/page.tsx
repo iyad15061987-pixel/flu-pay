@@ -30,6 +30,16 @@ interface Log {
   createdAt: string;
 }
 
+interface Request {
+  _id: string;
+  email: string;
+  type: string;
+  method: string;
+  amount: number;
+  wallet: string;
+  status: string;
+}
+
 export default function AdminPage() {
   const [users, setUsers] =
     useState<User[]>([]);
@@ -40,6 +50,9 @@ export default function AdminPage() {
   const [logs, setLogs] =
     useState<Log[]>([]);
 
+  const [requests, setRequests] =
+    useState<Request[]>([]);
+
   const [revenue, setRevenue] =
     useState(0);
 
@@ -48,6 +61,7 @@ export default function AdminPage() {
     loadUsers();
     loadRevenue();
     loadLogs();
+    loadRequests();
   }, []);
 
   const checkAdmin = async () => {
@@ -233,6 +247,35 @@ export default function AdminPage() {
       }
     };
 
+  const loadRequests =
+    async () => {
+      try {
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        const res =
+          await fetch(
+            `${API_URL}/requests`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const data =
+          await res.json();
+
+        setRequests(data);
+
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
   const addBalance = async (
     userId: string
   ) => {
@@ -351,6 +394,62 @@ export default function AdminPage() {
     }
   };
 
+  const approveRequest =
+    async (id: string) => {
+      try {
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        await fetch(
+          `${API_URL}/approve-request/${id}`,
+          {
+            method: "POST",
+
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+            },
+          }
+        );
+
+        loadRequests();
+        loadUsers();
+        loadRevenue();
+
+      } catch (err) {
+        alert("Server error");
+      }
+    };
+
+  const rejectRequest =
+    async (id: string) => {
+      try {
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        await fetch(
+          `${API_URL}/reject-request/${id}`,
+          {
+            method: "POST",
+
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+            },
+          }
+        );
+
+        loadRequests();
+
+      } catch (err) {
+        alert("Server error");
+      }
+    };
+
   return (
     <div
       style={{
@@ -387,6 +486,131 @@ export default function AdminPage() {
           )}
         </h1>
       </div>
+
+      <h2>
+        🏦 Requests
+      </h2>
+
+      <br />
+
+      {requests.length === 0 ? (
+        <p>
+          No requests yet
+        </p>
+      ) : (
+        requests.map(
+          (request) => (
+            <div
+              key={request._id}
+              style={{
+                background:
+                  "#111827",
+                padding: 20,
+                borderRadius: 15,
+                marginBottom: 15,
+              }}
+            >
+              <p>
+                <strong>
+                  User:
+                </strong>{" "}
+                {request.email}
+              </p>
+
+              <p>
+                <strong>
+                  Type:
+                </strong>{" "}
+                {request.type}
+              </p>
+
+              <p>
+                <strong>
+                  Method:
+                </strong>{" "}
+                {request.method}
+              </p>
+
+              <p>
+                <strong>
+                  Amount:
+                </strong>{" "}
+                $
+                {request.amount}
+              </p>
+
+              <p>
+                <strong>
+                  Wallet:
+                </strong>{" "}
+                {request.wallet ||
+                  "-"}
+              </p>
+
+              <p>
+                <strong>
+                  Status:
+                </strong>{" "}
+                {request.status}
+              </p>
+
+              {request.status ===
+                "pending" && (
+                <>
+                  <button
+                    onClick={() =>
+                      approveRequest(
+                        request._id
+                      )
+                    }
+                    style={{
+                      marginTop: 10,
+                      width: "100%",
+                      padding: 12,
+                      background:
+                        "#16a34a",
+                      border: "none",
+                      borderRadius: 10,
+                      color:
+                        "white",
+                      cursor:
+                        "pointer",
+                    }}
+                  >
+                    Approve
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      rejectRequest(
+                        request._id
+                      )
+                    }
+                    style={{
+                      marginTop: 10,
+                      width: "100%",
+                      padding: 12,
+                      background:
+                        "#dc2626",
+                      border: "none",
+                      borderRadius: 10,
+                      color:
+                        "white",
+                      cursor:
+                        "pointer",
+                    }}
+                  >
+                    Reject
+                  </button>
+                </>
+              )}
+            </div>
+          )
+        )
+      )}
+
+      <br />
+      <br />
 
       <h2>
         👥 Users

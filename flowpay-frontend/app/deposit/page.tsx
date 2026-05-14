@@ -3,15 +3,12 @@
 import { useState } from "react";
 import API_URL from "@/lib/api";
 
-export default function WithdrawPage() {
+export default function DepositPage() {
   const [amount, setAmount] =
     useState("");
 
   const [method, setMethod] =
     useState("PayPal");
-
-  const [wallet, setWallet] =
-    useState("");
 
   const createRequest =
     async () => {
@@ -31,7 +28,7 @@ export default function WithdrawPage() {
         );
 
       const res = await fetch(
-        `${API_URL}/create-withdraw-request`,
+        `${API_URL}/create-deposit-request`,
         {
           method: "POST",
 
@@ -48,7 +45,6 @@ export default function WithdrawPage() {
             email,
             amount,
             method,
-            wallet,
           }),
         }
       );
@@ -59,8 +55,6 @@ export default function WithdrawPage() {
       alert(data.message);
 
       setAmount("");
-
-      setWallet("");
     };
 
   return (
@@ -73,7 +67,7 @@ export default function WithdrawPage() {
       }}
     >
       <h1>
-        💸 Withdraw Request
+        🏦 Deposit Request
       </h1>
 
       <br />
@@ -87,6 +81,48 @@ export default function WithdrawPage() {
           maxWidth: 500,
         }}
       >
+        <p>
+          PayPal Email:
+        </p>
+
+        <br />
+
+        <div
+          style={{
+            background:
+              "#1f2937",
+            padding: 15,
+            borderRadius: 10,
+          }}
+        >
+          payments@flowpay.com
+        </div>
+
+        <br />
+
+        <p>
+          Crypto Wallet:
+        </p>
+
+        <br />
+
+        <div
+          style={{
+            background:
+              "#1f2937",
+            padding: 15,
+            borderRadius: 10,
+            wordBreak:
+              "break-all",
+          }}
+        >
+          USDT TRC20:
+          <br />
+          TXxxxxxxxxxxxxxxxx
+        </div>
+
+        <br />
+
         <select
           value={method}
           onChange={(e) =>
@@ -109,24 +145,6 @@ export default function WithdrawPage() {
             Crypto
           </option>
         </select>
-
-        <input
-          type="text"
-          placeholder="PayPal Email or Wallet Address"
-          value={wallet}
-          onChange={(e) =>
-            setWallet(
-              e.target.value
-            )
-          }
-          style={{
-            width: "100%",
-            padding: 15,
-            borderRadius: 10,
-            border: "none",
-            marginBottom: 15,
-          }}
-        />
 
         <input
           type="number"
@@ -154,14 +172,14 @@ export default function WithdrawPage() {
             width: "100%",
             padding: 15,
             background:
-              "#2563eb",
+              "#16a34a",
             color: "white",
             border: "none",
             borderRadius: 10,
             cursor: "pointer",
           }}
         >
-          Create Withdraw Request
+          Create Deposit Request
         </button>
       </div>
     </div>
