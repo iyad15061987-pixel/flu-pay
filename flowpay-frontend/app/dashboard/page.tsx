@@ -77,22 +77,27 @@ export default function DashboardPage() {
     id: string,
     token: string
   ) => {
-    const res = await fetch(
-      `${API_URL}/balance/${id}`,
-      {
-        headers: {
-          Authorization:
-            `Bearer ${token}`,
-        },
-      }
-    );
+    try {
+      const res = await fetch(
+        `${API_URL}/balance/${id}`,
+        {
+          headers: {
+            Authorization:
+              `Bearer ${token}`,
+          },
+        }
+      );
 
-    const data =
-      await res.json();
+      const data =
+        await res.json();
 
-    setBalance(
-      data.balance || 0
-    );
+      setBalance(
+        data.balance || 0
+      );
+
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const loadTransactions =
@@ -100,21 +105,28 @@ export default function DashboardPage() {
       email: string,
       token: string
     ) => {
-      const res =
-        await fetch(
-          `${API_URL}/transactions/${email}`,
-          {
-            headers: {
-              Authorization:
-                `Bearer ${token}`,
-            },
-          }
+      try {
+        const res =
+          await fetch(
+            `${API_URL}/transactions/${email}`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const data =
+          await res.json();
+
+        setTransactions(
+          data || []
         );
 
-      const data =
-        await res.json();
-
-      setTransactions(data || []);
+      } catch (err) {
+        console.log(err);
+      }
     };
 
   const sendMoney = async () => {
@@ -122,47 +134,67 @@ export default function DashboardPage() {
       !transferEmail ||
       !transferAmount
     ) {
-      alert("Fill all fields");
+      alert(
+        "Fill all fields"
+      );
 
       return;
     }
 
-    const res = await fetch(
-      `${API_URL}/transfer`,
-      {
-        method: "POST",
+    try {
+      const res =
+        await fetch(
+          `${API_URL}/transfer`,
+          {
+            method: "POST",
 
-        headers: {
-          "Content-Type":
-            "application/json",
+            headers: {
+              "Content-Type":
+                "application/json",
 
-          Authorization:
-            `Bearer ${token}`,
-        },
+              Authorization:
+                `Bearer ${token}`,
+            },
 
-        body: JSON.stringify({
-          fromUserId: userId,
-          toEmail: transferEmail,
-          amount: transferAmount,
-        }),
-      }
-    );
+            body: JSON.stringify({
+              fromUserId:
+                userId,
 
-    const data =
-      await res.json();
+              toEmail:
+                transferEmail,
 
-    alert(data.message);
+              amount:
+                transferAmount,
+            }),
+          }
+        );
 
-    loadBalance(userId, token);
+      const data =
+        await res.json();
 
-    loadTransactions(
-      email,
-      token
-    );
+      alert(
+        `${data.message}\nFee: $${data.fee || 0}`
+      );
 
-    setTransferEmail("");
+      loadBalance(
+        userId,
+        token
+      );
 
-    setTransferAmount("");
+      loadTransactions(
+        email,
+        token
+      );
+
+      setTransferEmail("");
+
+      setTransferAmount("");
+
+    } catch (err) {
+      alert(
+        "Server error"
+      );
+    }
   };
 
   return (
@@ -318,6 +350,163 @@ export default function DashboardPage() {
               >
                 Send Money
               </button>
+
+              <br />
+              <br />
+
+              <div
+                style={{
+                  background:
+                    "#1f2937",
+                  padding: 20,
+                  borderRadius: 15,
+                }}
+              >
+                <h2>
+                  🏦 External Operations
+                </h2>
+
+                <br />
+
+                <button
+                  onClick={async () => {
+                    const amount =
+                      prompt(
+                        "Deposit amount"
+                      );
+
+                    if (!amount)
+                      return;
+
+                    const res =
+                      await fetch(
+                        `${API_URL}/external-deposit`,
+                        {
+                          method:
+                            "POST",
+
+                          headers:
+                            {
+                              "Content-Type":
+                                "application/json",
+
+                              Authorization:
+                                `Bearer ${token}`,
+                            },
+
+                          body: JSON.stringify(
+                            {
+                              userId,
+                              amount,
+                            }
+                          ),
+                        }
+                      );
+
+                    const data =
+                      await res.json();
+
+                    alert(
+                      `${data.message}\nFee: $${data.fee}`
+                    );
+
+                    loadBalance(
+                      userId,
+                      token
+                    );
+
+                    loadTransactions(
+                      email,
+                      token
+                    );
+                  }}
+                  style={{
+                    width: "100%",
+                    padding: 15,
+                    marginBottom: 15,
+                    border: "none",
+                    borderRadius: 10,
+                    background:
+                      "#16a34a",
+                    color:
+                      "white",
+                    cursor:
+                      "pointer",
+                  }}
+                >
+                  External Deposit
+                  (3.5%)
+                </button>
+
+                <button
+                  onClick={async () => {
+                    const amount =
+                      prompt(
+                        "Withdraw amount"
+                      );
+
+                    if (!amount)
+                      return;
+
+                    const res =
+                      await fetch(
+                        `${API_URL}/external-withdraw`,
+                        {
+                          method:
+                            "POST",
+
+                          headers:
+                            {
+                              "Content-Type":
+                                "application/json",
+
+                              Authorization:
+                                `Bearer ${token}`,
+                            },
+
+                          body: JSON.stringify(
+                            {
+                              userId,
+                              amount,
+                            }
+                          ),
+                        }
+                      );
+
+                    const data =
+                      await res.json();
+
+                    alert(
+                      `${data.message}\nFee: $${data.fee}`
+                    );
+
+                    loadBalance(
+                      userId,
+                      token
+                    );
+
+                    loadTransactions(
+                      email,
+                      token
+                    );
+                  }}
+                  style={{
+                    width: "100%",
+                    padding: 15,
+                    border: "none",
+                    borderRadius: 10,
+                    background:
+                      "#dc2626",
+                    color:
+                      "white",
+                    cursor:
+                      "pointer",
+                  }}
+                >
+                  External Withdraw
+                  (3.5%)
+                </button>
+              </div>
             </div>
 
             <QRCard
@@ -342,9 +531,11 @@ export default function DashboardPage() {
 
             <br />
 
-            {transactions.length === 0 ? (
+            {transactions.length ===
+            0 ? (
               <p>
-                No transactions yet
+                No transactions
+                yet
               </p>
             ) : (
               transactions.map(
@@ -362,6 +553,13 @@ export default function DashboardPage() {
                       marginBottom: 12,
                     }}
                   >
+                    <p>
+                      <strong>
+                        Type:
+                      </strong>{" "}
+                      {tx.type}
+                    </p>
+
                     <p>
                       <strong>
                         From:
@@ -384,6 +582,22 @@ export default function DashboardPage() {
                       </strong>{" "}
                       $
                       {tx.amount}
+                    </p>
+
+                    <p>
+                      <strong>
+                        Fee:
+                      </strong>{" "}
+                      $
+                      {tx.fee}
+                    </p>
+
+                    <p>
+                      <strong>
+                        Net:
+                      </strong>{" "}
+                      $
+                      {tx.netAmount}
                     </p>
 
                     <p>

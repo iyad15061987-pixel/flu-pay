@@ -1,81 +1,102 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-import Sidebar from "../components/Sidebar";
-import Navbar from "../components/Navbar";
+import API_URL from "@/lib/api";
 
 export default function ProfilePage() {
-  const [email, setEmail] = useState("");
+  const [user, setUser] =
+    useState<any>(null);
 
   useEffect(() => {
-    const savedEmail =
-      localStorage.getItem("email") || "";
-
-    setEmail(savedEmail);
+    loadProfile();
   }, []);
+
+  const loadProfile = async () => {
+    const token =
+      localStorage.getItem("token");
+
+    const res = await fetch(
+      `${API_URL}/me`,
+      {
+        headers: {
+          Authorization:
+            `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data =
+      await res.json();
+
+    setUser(data);
+  };
+
+  if (!user) {
+    return (
+      <div
+        style={{
+          padding: 40,
+          color: "white",
+          background:
+            "#0f172a",
+          minHeight:
+            "100vh",
+        }}
+      >
+        Loading...
+      </div>
+    );
+  }
 
   return (
     <div
       style={{
-        display: "flex",
+        padding: 40,
         background: "#0f172a",
         minHeight: "100vh",
+        color: "white",
       }}
     >
-      <Sidebar />
+      <h1>
+        👤 Profile
+      </h1>
+
+      <br />
 
       <div
         style={{
-          marginLeft: 250,
-          width: "100%",
+          background:
+            "#111827",
+          padding: 30,
+          borderRadius: 20,
         }}
       >
-        <Navbar />
+        <p>
+          <strong>Email:</strong>{" "}
+          {user.email}
+        </p>
 
-        <div
-          style={{
-            padding: 30,
-            color: "white",
-          }}
-        >
-          <h1>👤 Profile</h1>
+        <p>
+          <strong>Balance:</strong>{" "}
+          ${user.balance}
+        </p>
 
-          <br />
+        <p>
+          <strong>Role:</strong>{" "}
+          {user.role}
+        </p>
 
-          <div
-            style={{
-              background: "#111827",
-              padding: 30,
-              borderRadius: 20,
-              maxWidth: 700,
-            }}
-          >
-            <div
-              style={{
-                width: 100,
-                height: 100,
-                borderRadius: "50%",
-                background: "#2563eb",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 40,
-                marginBottom: 20,
-              }}
-            >
-              {email.charAt(0).toUpperCase()}
-            </div>
+        <p>
+          <strong>Frozen:</strong>{" "}
+          {user.frozen
+            ? "Yes"
+            : "No"}
+        </p>
 
-            <h2>{email}</h2>
-
-            <br />
-
-            <p>
-              FlowPay verified account.
-            </p>
-          </div>
-        </div>
+        <p>
+          <strong>Total Revenue:</strong>{" "}
+          ${user.revenue || 0}
+        </p>
       </div>
     </div>
   );
