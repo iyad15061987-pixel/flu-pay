@@ -1,6 +1,59 @@
 "use client";
 
+import { useState } from "react";
+
+import Sidebar from "../components/Sidebar";
+
+import API_URL from "@/lib/api";
+
 export default function SettingsPage() {
+  const [currency, setCurrency] =
+    useState("USD");
+
+  const updateCurrency =
+    async () => {
+      try {
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        const userId =
+          localStorage.getItem(
+            "userId"
+          );
+
+        const res =
+          await fetch(
+            `${API_URL}/update-currency`,
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                Authorization:
+                  `Bearer ${token}`,
+              },
+
+              body: JSON.stringify({
+                userId,
+                currency,
+              }),
+            }
+          );
+
+        const data =
+          await res.json();
+
+        alert(data.message);
+
+      } catch (err) {
+        alert("Server error");
+      }
+    };
+
   const logout = () => {
     localStorage.clear();
 
@@ -11,41 +64,104 @@ export default function SettingsPage() {
   return (
     <div
       style={{
-        padding: 40,
+        display: "flex",
         background: "#0f172a",
         minHeight: "100vh",
-        color: "white",
       }}
     >
-      <h1>
-        ⚙ Settings
-      </h1>
-
-      <br />
+      <Sidebar />
 
       <div
         style={{
-          background:
-            "#111827",
-          padding: 30,
-          borderRadius: 20,
+          marginLeft: 250,
+          padding: 40,
+          width: "100%",
+          color: "white",
         }}
       >
-        <button
-          onClick={logout}
+        <h1>
+          ⚙ Settings
+        </h1>
+
+        <br />
+
+        <div
           style={{
-            width: "100%",
-            padding: 15,
-            border: "none",
-            borderRadius: 10,
             background:
-              "#dc2626",
-            color: "white",
-            cursor: "pointer",
+              "#111827",
+            padding: 30,
+            borderRadius: 20,
+            maxWidth: 500,
           }}
         >
-          Logout
-        </button>
+          <h2>
+            💱 Currency
+          </h2>
+
+          <br />
+
+          <select
+            value={currency}
+            onChange={(e) =>
+              setCurrency(
+                e.target.value
+              )
+            }
+            style={{
+              width: "100%",
+              padding: 15,
+              borderRadius: 10,
+              marginBottom: 15,
+            }}
+          >
+            <option>
+              USD
+            </option>
+
+            <option>
+              EUR
+            </option>
+
+            <option>
+              GBP
+            </option>
+          </select>
+
+          <button
+            onClick={
+              updateCurrency
+            }
+            style={{
+              width: "100%",
+              padding: 15,
+              background:
+                "#2563eb",
+              border: "none",
+              borderRadius: 10,
+              color: "white",
+              cursor: "pointer",
+              marginBottom: 20,
+            }}
+          >
+            Save Currency
+          </button>
+
+          <button
+            onClick={logout}
+            style={{
+              width: "100%",
+              padding: 15,
+              border: "none",
+              borderRadius: 10,
+              background:
+                "#dc2626",
+              color: "white",
+              cursor: "pointer",
+            }}
+          >
+            Logout
+          </button>
+        </div>
       </div>
     </div>
   );
