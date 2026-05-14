@@ -11,7 +11,8 @@ const app = express();
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
-const PORT = process.env.PORT || 5000;
+const PORT =
+  process.env.PORT || 5000;
 
 const JWT_SECRET =
   process.env.JWT_SECRET ||
@@ -21,51 +22,82 @@ const MONGO_URI =
   process.env.MONGO_URI;
 
 // =========================
-// CONNECT MONGODB
+// FEES SYSTEM
 // =========================
 
-console.log("⏳ Connecting to MongoDB...");
+const INTERNAL_FEE =
+  0.0001;
+
+const EXTERNAL_FEE =
+  0.035;
+
+const MINIMUM_FEE =
+  0.1;
+
+// =========================
+// CONNECT DATABASE
+// =========================
+
+console.log(
+  "⏳ Connecting to MongoDB..."
+);
 
 mongoose
   .connect(MONGO_URI, {
-    serverSelectionTimeoutMS: 30000,
+    serverSelectionTimeoutMS:
+      30000,
+
     socketTimeoutMS: 45000,
+
     family: 4,
   })
+
   .then(() => {
-    console.log("✅ MongoDB Connected");
+    console.log(
+      "✅ MongoDB Connected"
+    );
   })
+
   .catch((err) => {
-    console.log("❌ Mongo Error:", err);
+    console.log(
+      "❌ Mongo Error:",
+      err
+    );
   });
 
 // =========================
 // USER MODEL
 // =========================
 
-const UserSchema = new mongoose.Schema({
-  email: {
-    type: String,
-    unique: true,
-  },
+const UserSchema =
+  new mongoose.Schema({
+    email: {
+      type: String,
+      unique: true,
+    },
 
-  password: String,
+    password: String,
 
-  balance: {
-    type: Number,
-    default: 0,
-  },
+    balance: {
+      type: Number,
+      default: 0,
+    },
 
-  role: {
-    type: String,
-    default: "user",
-  },
+    role: {
+      type: String,
+      default: "user",
+    },
 
-  frozen: {
-    type: Boolean,
-    default: false,
-  },
-});
+    frozen: {
+      type: Boolean,
+      default: false,
+    },
+
+    revenue: {
+      type: Number,
+      default: 0,
+    },
+  });
 
 const User = mongoose.model(
   "User",
@@ -84,59 +116,55 @@ const TransactionSchema =
 
     amount: Number,
 
+    fee: Number,
+
+    netAmount: Number,
+
+    type: String,
+
+    status: {
+      type: String,
+      default: "completed",
+    },
+
     createdAt: {
       type: Date,
       default: Date.now,
     },
   });
 
-const Transaction = mongoose.model(
-  "Transaction",
-  TransactionSchema
+const Transaction =
+  mongoose.model(
+    "Transaction",
+    TransactionSchema
+  );
+
+// =========================
+// LOG MODEL
+// =========================
+
+const LogSchema =
+  new mongoose.Schema({
+    action: String,
+
+    email: String,
+
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+  });
+
+const Log = mongoose.model(
+  "Log",
+  LogSchema
 );
 
 // =========================
-// AUTH MIDDLEWARE
+// AUTH
 // =========================
 
 const auth = (
-  req,
-  res,
-  next
-) => {
-  try {
-    const token =
-      req.headers.authorization?.split(
-        " "
-      )[1];
-
-    if (!token) {
-      return res.status(401).json({
-        message: "Unauthorized",
-      });
-    }
-
-    const decoded = jwt.verify(
-      token,
-      JWT_SECRET
-    );
-
-    req.user = decoded;
-
-    next();
-
-  } catch (err) {
-    return res.status(401).json({
-      message: "Invalid token",
-    });
-  }
-};
-
-// =========================
-// ADMIN AUTH
-// =========================
-
-const adminAuth = async (
   req,
   res,
   next
@@ -154,27 +182,13 @@ const adminAuth = async (
       });
     }
 
-    const decoded = jwt.verify(
-      token,
-      JWT_SECRET
-    );
-
-    const user =
-      await User.findById(
-        decoded.id
+    const decoded =
+      jwt.verify(
+        token,
+        JWT_SECRET
       );
 
-    if (
-      !user ||
-      user.role !== "admin"
-    ) {
-      return res.status(403).json({
-        message:
-          "Admin only",
-      });
-    }
-
-    req.user = user;
+    req.user = decoded;
 
     next();
 
@@ -187,13 +201,77 @@ const adminAuth = async (
 };
 
 // =========================
+// ADMIN AUTH
+// =========================
+
+const adminAuth =
+  async (
+    req,
+    res,
+    next
+  ) => {
+    try {
+      const token =
+        req.headers.authorization?.split(
+          " "
+        )[1];
+
+      if (!token) {
+        return res
+          .status(401)
+          .json({
+            message:
+              "Unauthorized",
+          });
+      }
+
+      const decoded =
+        jwt.verify(
+          token,
+          JWT_SECRET
+        );
+
+      const user =
+        await User.findById(
+          decoded.id
+        );
+
+      if (
+        !user ||
+        user.role !==
+          "admin"
+      ) {
+        return res
+          .status(403)
+          .json({
+            message:
+              "Admin only",
+          });
+      }
+
+      req.user = user;
+
+      next();
+
+    } catch (err) {
+      return res
+        .status(401)
+        .json({
+          message:
+            "Invalid token",
+        });
+    }
+  };
+
+// =========================
 // HOME
 // =========================
 
 app.get("/", (req, res) => {
-  res.send("FlowPay API running 🚀");
+  res.send(
+    "FlowPay API running 🚀"
+  );
 });
-
 // =========================
 // REGISTER
 // =========================
@@ -240,10 +318,16 @@ app.post(
           email,
           password:
             hashedPassword,
-          balance: 0,
         });
 
       await user.save();
+
+      await Log.create({
+        action:
+          "New account created",
+
+        email,
+      });
 
       res.json({
         message:
@@ -323,6 +407,13 @@ app.post(
         }
       );
 
+      await Log.create({
+        action:
+          "User login",
+
+        email,
+      });
+
       res.json({
         message:
           "Login success",
@@ -337,6 +428,9 @@ app.post(
 
         role:
           user.role,
+
+        balance:
+          user.balance,
       });
 
     } catch (err) {
@@ -379,7 +473,7 @@ app.get(
 );
 
 // =========================
-// ALL USERS
+// USERS
 // =========================
 
 app.get(
@@ -415,21 +509,147 @@ app.get(
           req.params.id
         );
 
-      if (!user) {
-        return res.status(404).json({
-          message:
-            "User not found",
-        });
-      }
-
       res.json({
         balance:
           user.balance,
       });
 
     } catch (err) {
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+// =========================
+// INTERNAL TRANSFER
+// =========================
+
+app.post(
+  "/transfer",
+  auth,
+  async (req, res) => {
+    try {
+      const {
+        fromUserId,
+        toEmail,
+        amount,
+      } = req.body;
+
+      const sender =
+        await User.findById(
+          fromUserId
+        );
+
+      const receiver =
+        await User.findOne({
+          email:
+            toEmail,
+        });
+
+      if (
+        !sender ||
+        !receiver
+      ) {
+        return res.status(404).json({
+          message:
+            "User not found",
+        });
+      }
+
+      if (sender.frozen) {
+        return res.status(403).json({
+          message:
+            "Account frozen",
+        });
+      }
+
+      const transferAmount =
+        Number(amount);
+
+      let fee =
+        transferAmount *
+        INTERNAL_FEE;
+
+      if (
+        fee < MINIMUM_FEE
+      ) {
+        fee =
+          MINIMUM_FEE;
+      }
+
+      const total =
+        transferAmount +
+        fee;
+
+      if (
+        sender.balance <
+        total
+      ) {
+        return res.status(400).json({
+          message:
+            "Insufficient balance",
+        });
+      }
+
+      const netAmount =
+        transferAmount;
+
+      sender.balance -=
+        total;
+
+      receiver.balance +=
+        netAmount;
+
+      sender.revenue +=
+        fee;
+
+      await sender.save();
+
+      await receiver.save();
+
+      await Transaction.create({
+        fromEmail:
+          sender.email,
+
+        toEmail:
+          receiver.email,
+
+        amount:
+          transferAmount,
+
+        fee,
+
+        netAmount,
+
+        type:
+          "internal_transfer",
+      });
+
+      await Log.create({
+        action:
+          `Internal transfer ${transferAmount}$ to ${receiver.email}`,
+
+        email:
+          sender.email,
+      });
+
+      res.json({
+        message:
+          "Transfer successful",
+
+        fee,
+
+        total,
+
+        balance:
+          sender.balance,
+      });
+
+    } catch (err) {
       console.log(
-        "BALANCE ERROR:",
+        "TRANSFER ERROR:",
         err
       );
 
@@ -441,6 +661,291 @@ app.get(
   }
 );
 
+// =========================
+// EXTERNAL DEPOSIT
+// =========================
+
+app.post(
+  "/external-deposit",
+  auth,
+  async (req, res) => {
+    try {
+      const {
+        userId,
+        amount,
+      } = req.body;
+
+      const user =
+        await User.findById(
+          userId
+        );
+
+      if (!user) {
+        return res.status(404).json({
+          message:
+            "User not found",
+        });
+      }
+
+      const depositAmount =
+        Number(amount);
+
+      let fee =
+        depositAmount *
+        EXTERNAL_FEE;
+
+      if (
+        fee < MINIMUM_FEE
+      ) {
+        fee =
+          MINIMUM_FEE;
+      }
+
+      const netAmount =
+        depositAmount -
+        fee;
+
+      user.balance +=
+        netAmount;
+
+      user.revenue +=
+        fee;
+
+      await user.save();
+
+      await Transaction.create({
+        fromEmail:
+          "External",
+
+        toEmail:
+          user.email,
+
+        amount:
+          depositAmount,
+
+        fee,
+
+        netAmount,
+
+        type:
+          "external_deposit",
+      });
+
+      await Log.create({
+        action:
+          `External deposit ${depositAmount}$`,
+
+        email:
+          user.email,
+      });
+
+      res.json({
+        message:
+          "Deposit completed",
+
+        fee,
+
+        netAmount,
+
+        balance:
+          user.balance,
+      });
+
+    } catch (err) {
+      console.log(
+        "DEPOSIT ERROR:",
+        err
+      );
+
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+
+// =========================
+// EXTERNAL WITHDRAW
+// =========================
+
+app.post(
+  "/external-withdraw",
+  auth,
+  async (req, res) => {
+    try {
+      const {
+        userId,
+        amount,
+      } = req.body;
+
+      const user =
+        await User.findById(
+          userId
+        );
+
+      if (!user) {
+        return res.status(404).json({
+          message:
+            "User not found",
+        });
+      }
+
+      const withdrawAmount =
+        Number(amount);
+
+      let fee =
+        withdrawAmount *
+        EXTERNAL_FEE;
+
+      if (
+        fee < MINIMUM_FEE
+      ) {
+        fee =
+          MINIMUM_FEE;
+      }
+
+      const total =
+        withdrawAmount +
+        fee;
+
+      if (
+        user.balance <
+        total
+      ) {
+        return res.status(400).json({
+          message:
+            "Insufficient balance",
+        });
+      }
+
+      user.balance -=
+        total;
+
+      user.revenue +=
+        fee;
+
+      await user.save();
+
+      await Transaction.create({
+        fromEmail:
+          user.email,
+
+        toEmail:
+          "External",
+
+        amount:
+          withdrawAmount,
+
+        fee,
+
+        netAmount:
+          withdrawAmount,
+
+        type:
+          "external_withdraw",
+      });
+
+      await Log.create({
+        action:
+          `External withdraw ${withdrawAmount}$`,
+
+        email:
+          user.email,
+      });
+
+      res.json({
+        message:
+          "Withdraw completed",
+
+        fee,
+
+        total,
+
+        balance:
+          user.balance,
+      });
+
+    } catch (err) {
+      console.log(
+        "WITHDRAW ERROR:",
+        err
+      );
+
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+
+// =========================
+// TRANSACTIONS
+// =========================
+
+app.get(
+  "/transactions/:email",
+  auth,
+  async (req, res) => {
+    try {
+      const email =
+        req.params.email;
+
+      const transactions =
+        await Transaction.find({
+          $or: [
+            {
+              fromEmail:
+                email,
+            },
+
+            {
+              toEmail:
+                email,
+            },
+          ],
+        }).sort({
+          createdAt: -1,
+        });
+
+      res.json(
+        transactions
+      );
+
+    } catch (err) {
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+
+// =========================
+// LOGS
+// =========================
+
+app.get(
+  "/logs",
+  adminAuth,
+  async (req, res) => {
+    try {
+      const logs =
+        await Log.find().sort({
+          createdAt: -1,
+        });
+
+      res.json(logs);
+
+    } catch (err) {
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
 // =========================
 // ADD BALANCE
 // =========================
@@ -473,7 +978,18 @@ app.post(
 
       await user.save();
 
+      await Log.create({
+        action:
+          `Admin added ${amount}$ balance`,
+
+        email:
+          user.email,
+      });
+
       res.json({
+        message:
+          "Balance added",
+
         balance:
           user.balance,
       });
@@ -521,14 +1037,21 @@ app.post(
 
       await user.save();
 
+      await Log.create({
+        action:
+          user.frozen
+            ? "User frozen"
+            : "User unfrozen",
+
+        email:
+          user.email,
+      });
+
       res.json({
         message:
           user.frozen
             ? "User frozen"
             : "User unfrozen",
-
-        frozen:
-          user.frozen,
       });
 
     } catch (err) {
@@ -554,6 +1077,21 @@ app.delete(
   adminAuth,
   async (req, res) => {
     try {
+      const user =
+        await User.findById(
+          req.params.id
+        );
+
+      if (user) {
+        await Log.create({
+          action:
+            "User deleted",
+
+          email:
+            user.email,
+        });
+      }
+
       await User.findByIdAndDelete(
         req.params.id
       );
@@ -566,155 +1104,6 @@ app.delete(
     } catch (err) {
       console.log(
         "DELETE ERROR:",
-        err
-      );
-
-      res.status(500).json({
-        message:
-          "Server error",
-      });
-    }
-  }
-);
-
-// =========================
-// TRANSFER
-// =========================
-
-app.post(
-  "/transfer",
-  auth,
-  async (req, res) => {
-    try {
-      const {
-        fromUserId,
-        toEmail,
-        amount,
-      } = req.body;
-
-      const sender =
-        await User.findById(
-          fromUserId
-        );
-
-      const receiver =
-        await User.findOne({
-          email:
-            toEmail,
-        });
-
-      if (
-        !sender ||
-        !receiver
-      ) {
-        return res.status(404).json({
-          message:
-            "User not found",
-        });
-      }
-
-      if (sender.frozen) {
-        return res.status(403).json({
-          message:
-            "Account frozen",
-        });
-      }
-
-      const transferAmount =
-        Number(amount);
-
-      if (
-        sender.balance <
-        transferAmount
-      ) {
-        return res.status(400).json({
-          message:
-            "Insufficient balance",
-        });
-      }
-
-      sender.balance -=
-        transferAmount;
-
-      receiver.balance +=
-        transferAmount;
-
-      await sender.save();
-
-      await receiver.save();
-
-      const transaction =
-        new Transaction({
-          fromEmail:
-            sender.email,
-
-          toEmail:
-            receiver.email,
-
-          amount:
-            transferAmount,
-        });
-
-      await transaction.save();
-
-      res.json({
-        message:
-          "Transfer successful",
-
-        balance:
-          sender.balance,
-      });
-
-    } catch (err) {
-      console.log(
-        "TRANSFER ERROR:",
-        err
-      );
-
-      res.status(500).json({
-        message:
-          "Server error",
-      });
-    }
-  }
-);
-
-// =========================
-// TRANSACTIONS
-// =========================
-
-app.get(
-  "/transactions/:email",
-  auth,
-  async (req, res) => {
-    try {
-      const email =
-        req.params.email;
-
-      const transactions =
-        await Transaction.find({
-          $or: [
-            {
-              fromEmail:
-                email,
-            },
-
-            {
-              toEmail:
-                email,
-            },
-          ],
-        }).sort({
-          createdAt: -1,
-        });
-
-      res.json(
-        transactions
-      );
-
-    } catch (err) {
-      console.log(
-        "TX ERROR:",
         err
       );
 
@@ -743,7 +1132,9 @@ app.get(
           email: {
             $regex:
               query || "",
-            $options: "i",
+
+            $options:
+              "i",
           },
         }).limit(10);
 
@@ -752,6 +1143,50 @@ app.get(
     } catch (err) {
       console.log(
         "SEARCH ERROR:",
+        err
+      );
+
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+
+// =========================
+// ADMIN REVENUE
+// =========================
+
+app.get(
+  "/admin-revenue",
+  adminAuth,
+  async (req, res) => {
+    try {
+      const transactions =
+        await Transaction.find();
+
+      let totalRevenue =
+        0;
+
+      transactions.forEach(
+        (tx) => {
+          totalRevenue +=
+            tx.fee || 0;
+        }
+      );
+
+      res.json({
+        revenue:
+          totalRevenue,
+
+        transactions:
+          transactions.length,
+      });
+
+    } catch (err) {
+      console.log(
+        "REVENUE ERROR:",
         err
       );
 
