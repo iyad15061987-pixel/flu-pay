@@ -159,6 +159,40 @@ const Log = mongoose.model(
   "Log",
   LogSchema
 );
+// =========================
+// REQUEST MODEL
+// =========================
+
+const RequestSchema =
+  new mongoose.Schema({
+    userId: String,
+
+    email: String,
+
+    type: String,
+
+    method: String,
+
+    amount: Number,
+
+    wallet: String,
+
+    status: {
+      type: String,
+      default: "pending",
+    },
+
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+  });
+
+const Request =
+  mongoose.model(
+    "Request",
+    RequestSchema
+  );
 
 // =========================
 // AUTH
@@ -1197,7 +1231,374 @@ app.get(
     }
   }
 );
+// =========================
+// CREATE DEPOSIT REQUEST
+// =========================
 
+app.post(
+  "/create-deposit-request",
+  auth,
+  async (req, res) => {
+    try {
+      const {
+        userId,
+        email,
+        amount,
+        method,
+      } = req.body;
+
+      const request =
+        new Request({
+          userId,
+          email,
+          amount,
+          method,
+          type: "deposit",
+        });
+
+      await request.save();
+
+      await Log.create({
+        action:
+          `Deposit request ${amount}$ via ${method}`,
+
+        email,
+      });
+
+      res.json({
+        message:
+          "Deposit request created",
+      });
+
+    } catch (err) {
+      console.log(
+        "DEPOSIT REQUEST ERROR:",
+        err
+      );
+
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+
+// =========================
+// CREATE WITHDRAW REQUEST
+// =========================
+
+app.post(
+  "/create-withdraw-request",
+  auth,
+  async (req, res) => {
+    try {
+      const {
+        userId,
+        email,
+        amount,
+        method,
+        wallet,
+      } = req.body;
+
+      const request =
+        new Request({
+          userId,
+          email,
+          amount,
+          method,
+          wallet,
+          type: "withdraw",
+        });
+
+      await request.save();
+
+      await Log.create({
+        action:
+          `Withdraw request ${amount}$ via ${method}`,
+
+        email,
+      });
+
+      res.json({
+        message:
+          "Withdraw request created",
+      });
+
+    } catch (err) {
+      console.log(
+        "WITHDRAW REQUEST ERROR:",
+        err
+      );
+
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+
+// =========================
+// GET ALL REQUESTS
+// =========================
+
+app.get(
+  "/requests",
+  adminAuth,
+  async (req, res) => {
+    try {
+      const requests =
+        await Request.find().sort({
+          createdAt: -1,
+        });
+
+      res.json(requests);
+
+    } catch (err) {
+      console.log(
+        "REQUESTS ERROR:",
+        err
+      );
+
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+
+// =========================
+// APPROVE REQUEST
+// =========================
+
+app.post(
+  "/approve-request/:id",
+  adminAuth,
+  async (req, res) => {
+    try {
+      const request =
+        await Request.findById(
+          req.params.id
+        );
+
+      if (!request) {
+        return res.status(404).json({
+          message:
+            "Request not found",
+        });
+      }
+
+      if (
+        request.status !==
+        "pending"
+      ) {
+        return res.status(400).json({
+          message:
+            "Already processed",
+        });
+      }
+
+      const user =
+        await User.findById(
+          request.userId
+        );
+
+      if (!user) {
+        return res.status(404).json({
+          message:
+            "User not found",
+        });
+      }
+
+      if (
+        request.type ===
+        "deposit"
+      ) {
+        let fee =
+          request.amount *
+          EXTERNAL_FEE;
+
+        if (
+          fee <
+          MINIMUM_FEE
+        ) {
+          fee =
+            MINIMUM_FEE;
+        }
+
+        const netAmount =
+          request.amount -
+          fee;
+
+        user.balance +=
+          netAmount;
+
+        user.revenue +=
+          fee;
+
+        await Transaction.create({
+          fromEmail:
+            "External",
+
+          toEmail:
+            user.email,
+
+          amount:
+            request.amount,
+
+          fee,
+
+          netAmount,
+
+          type:
+            "deposit_request",
+        });
+      }
+
+      if (
+        request.type ===
+        "withdraw"
+      ) {
+        let fee =
+          request.amount *
+          EXTERNAL_FEE;
+
+        if (
+          fee <
+          MINIMUM_FEE
+        ) {
+          fee =
+            MINIMUM_FEE;
+        }
+
+        const total =
+          request.amount +
+          fee;
+
+        if (
+          user.balance <
+          total
+        ) {
+          return res.status(400).json({
+            message:
+              "Insufficient balance",
+          });
+        }
+
+        user.balance -=
+          total;
+
+        user.revenue +=
+          fee;
+
+        await Transaction.create({
+          fromEmail:
+            user.email,
+
+          toEmail:
+            "External",
+
+          amount:
+            request.amount,
+
+          fee,
+
+          netAmount:
+            request.amount,
+
+          type:
+            "withdraw_request",
+        });
+      }
+
+      request.status =
+        "approved";
+
+      await request.save();
+
+      await user.save();
+
+      await Log.create({
+        action:
+          `Request approved ${request.amount}$`,
+
+        email:
+          user.email,
+      });
+
+      res.json({
+        message:
+          "Request approved",
+      });
+
+    } catch (err) {
+      console.log(
+        "APPROVE ERROR:",
+        err
+      );
+
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+
+// =========================
+// REJECT REQUEST
+// =========================
+
+app.post(
+  "/reject-request/:id",
+  adminAuth,
+  async (req, res) => {
+    try {
+      const request =
+        await Request.findById(
+          req.params.id
+        );
+
+      if (!request) {
+        return res.status(404).json({
+          message:
+            "Request not found",
+        });
+      }
+
+      request.status =
+        "rejected";
+
+      await request.save();
+
+      await Log.create({
+        action:
+          `Request rejected ${request.amount}$`,
+
+        email:
+          request.email,
+      });
+
+      res.json({
+        message:
+          "Request rejected",
+      });
+
+    } catch (err) {
+      console.log(
+        "REJECT ERROR:",
+        err
+      );
+
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
 // =========================
 // START SERVER
 // =========================
