@@ -3,55 +3,57 @@
 import { useEffect, useState } from "react";
 
 import Sidebar from "../components/Sidebar";
-import Navbar from "../components/Navbar";
-import WalletCard from "../components/WalletCard";
-import StatsCard from "../components/StatsCard";
-import BalanceChart from "../components/BalanceChart";
-import QRCard from "../components/QRCard";
-import UserCard from "../components/UserCard";
-import NotificationCard from "../components/NotificationCard";
-import CurrencyCard from "../components/CurrencyCard";
-import SearchUsers from "../components/SearchUsers";
 
 import API_URL from "@/lib/api";
 
+interface Transaction {
+  _id: string;
+  fromEmail: string;
+  toEmail: string;
+  amount: number;
+  fee: number;
+  netAmount: number;
+  type: string;
+  createdAt: string;
+}
+
 export default function DashboardPage() {
-  const [balance, setBalance] =
-    useState(0);
-
-    const [analytics, setAnalytics] =
-  useState<any>(null);
-
-  const [transactions, setTransactions] =
-    useState<any[]>([]);
-
-  const [transferEmail, setTransferEmail] =
-    useState("");
-
-  const [transferAmount, setTransferAmount] =
-    useState("");
-
-  const [userId, setUserId] =
-    useState("");
-
   const [email, setEmail] =
     useState("");
 
-  const [token, setToken] =
+  const [balance, setBalance] =
+    useState(0);
+
+  const [
+    receiverEmail,
+    setReceiverEmail,
+  ] = useState("");
+
+  const [amount, setAmount] =
     useState("");
 
-  useEffect(() => {
-    const savedUserId =
-      localStorage.getItem("userId");
+  const [
+    transactions,
+    setTransactions,
+  ] = useState<Transaction[]>(
+    []
+  );
 
+  const [analytics, setAnalytics] =
+    useState<any>(null);
+
+  useEffect(() => {
     const savedEmail =
-      localStorage.getItem("email");
+      localStorage.getItem(
+        "email"
+      );
 
     const savedToken =
-      localStorage.getItem("token");
+      localStorage.getItem(
+        "token"
+      );
 
     if (
-      !savedUserId ||
       !savedEmail ||
       !savedToken
     ) {
@@ -61,54 +63,31 @@ export default function DashboardPage() {
       return;
     }
 
-    setUserId(savedUserId);
     setEmail(savedEmail);
-    setToken(savedToken);
 
-    loadBalance(
-      savedUserId,
+    loadUser(
+      savedEmail,
       savedToken
     );
 
     loadTransactions(
       savedEmail,
       savedToken
-  );
- const loadAnalytics =
-  async (
-    email: string,
-    token: string
-  ) => {
-    try {
-      const res =
-        await fetch(
-          `${API_URL}/analytics/${email}`,
-          {
-            headers: {
-              Authorization:
-                `Bearer ${token}`,
-            },
-          }
-        );
+    );
 
-      const data =
-        await res.json();
+    loadAnalytics(
+      savedEmail,
+      savedToken
+    );
+  }, []);
 
-      setAnalytics(data);
-
-    } catch (err) {
-      console.log(err);
-    }
-  };
-}, []);
-
-  const loadBalance = async (
-    id: string,
+  const loadUser = async (
+    userEmail: string,
     token: string
   ) => {
     try {
       const res = await fetch(
-        `${API_URL}/balance/${id}`,
+        `${API_URL}/user/${userEmail}`,
         {
           headers: {
             Authorization:
@@ -131,13 +110,13 @@ export default function DashboardPage() {
 
   const loadTransactions =
     async (
-      email: string,
+      userEmail: string,
       token: string
     ) => {
       try {
         const res =
           await fetch(
-            `${API_URL}/transactions/${email}`,
+            `${API_URL}/transactions/${userEmail}`,
             {
               headers: {
                 Authorization:
@@ -149,82 +128,152 @@ export default function DashboardPage() {
         const data =
           await res.json();
 
-        setTransactions(
-          data || []
-        );
+        setTransactions(data);
 
       } catch (err) {
         console.log(err);
       }
     };
 
-  const sendMoney = async () => {
-    if (
-      !transferEmail ||
-      !transferAmount
-    ) {
-      alert(
-        "Fill all fields"
-      );
+  const loadAnalytics =
+    async (
+      email: string,
+      token: string
+    ) => {
+      try {
+        const res =
+          await fetch(
+            `${API_URL}/analytics/${email}`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
 
-      return;
-    }
+        const data =
+          await res.json();
 
-    try {
-      const res =
-        await fetch(
-          `${API_URL}/transfer`,
-          {
-            method: "POST",
+        setAnalytics(data);
 
-            headers: {
-              "Content-Type":
-                "application/json",
+      } catch (err) {
+        console.log(err);
+      }
+    };
 
-              Authorization:
-                `Bearer ${token}`,
-            },
+  const transfer =
+    async () => {
+      try {
+        const token =
+          localStorage.getItem(
+            "token"
+          );
 
-            body: JSON.stringify({
-              fromUserId:
-                userId,
+        const res =
+          await fetch(
+            `${API_URL}/transfer`,
+            {
+              method: "POST",
 
-              toEmail:
-                transferEmail,
+              headers: {
+                "Content-Type":
+                  "application/json",
 
-              amount:
-                transferAmount,
-            }),
-          }
+                Authorization:
+                  `Bearer ${token}`,
+              },
+
+              body: JSON.stringify({
+                fromEmail:
+                  email,
+
+                toEmail:
+                  receiverEmail,
+
+                amount,
+              }),
+            }
+          );
+
+        const data =
+          await res.json();
+
+        alert(data.message);
+
+        setAmount("");
+
+        setReceiverEmail("");
+
+        loadUser(
+          email,
+          token || ""
         );
 
-      const data =
-        await res.json();
+        loadTransactions(
+          email,
+          token || ""
+        );
 
-      alert(
-        `${data.message}\nFee: $${data.fee || 0}`
+        loadAnalytics(
+          email,
+          token || ""
+        );
+
+      } catch (err) {
+        alert("Server error");
+      }
+    };
+
+  const downloadReceipt =
+    (tx: any) => {
+      const content = `
+FLOWPAY RECEIPT
+
+Type: ${tx.type}
+
+From: ${tx.fromEmail}
+
+To: ${tx.toEmail}
+
+Amount: $${tx.amount}
+
+Fee: $${tx.fee}
+
+Net Amount: $${tx.netAmount}
+
+Date:
+${new Date(
+  tx.createdAt
+).toLocaleString()}
+`;
+
+      const blob =
+        new Blob([content], {
+          type: "text/plain",
+        });
+
+      const url =
+        URL.createObjectURL(
+          blob
+        );
+
+      const a =
+        document.createElement(
+          "a"
+        );
+
+      a.href = url;
+
+      a.download =
+        "receipt.txt";
+
+      a.click();
+
+      URL.revokeObjectURL(
+        url
       );
-
-      loadBalance(
-        userId,
-        token
-      );
-
-      loadTransactions(
-        email,
-        token
-      );
-
-      setTransferEmail("");
-
-      setTransferAmount("");
-
-    } catch (err) {
-      alert(
-        "Server error"
-      );
-    }
-  };
+    };
 
   return (
     <div
@@ -239,426 +288,408 @@ export default function DashboardPage() {
       <div
         style={{
           marginLeft: 250,
+          padding: 40,
           width: "100%",
+          color: "white",
         }}
       >
-        <Navbar />
+        <h1>
+          🚀 Dashboard
+        </h1>
+
+        <br />
 
         <div
           style={{
+            background:
+              "#111827",
             padding: 30,
+            borderRadius: 20,
+            marginBottom: 30,
+            maxWidth: 500,
           }}
         >
-          <h1
-            style={{
-              color: "white",
-              marginBottom: 30,
-            }}
-          >
-            Dashboard
+          <h2>
+            💰 Wallet Balance
+          </h2>
+
+          <br />
+
+          <h1>
+            ${balance}
           </h1>
 
-          <UserCard />
-
-          <br />
           <br />
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns:
-                "repeat(auto-fit,minmax(300px,1fr))",
-              gap: 20,
-            }}
-          >
-            <WalletCard balance={balance} />
+          <p>
+            Logged in as:
+          </p>
 
-            <StatsCard
-              title="Transactions"
-              value={transactions.length.toString()}
-            />
+          <strong>
+            {email}
+          </strong>
+        </div>
 
-            <StatsCard
-              title="Account"
-              value="Verified"
-            />
-          </div>
-
-          <br />
-          <br />
-
-          <BalanceChart />
-
-          <br />
-          <br />
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns:
-                "repeat(auto-fit,minmax(350px,1fr))",
-              gap: 20,
-            }}
-          >
-            <div
-              style={{
-                background: "#111827",
-                borderRadius: 20,
-                padding: 25,
-                color: "white",
-              }}
-            >
-              <h2>
-                💸 Send Money
-              </h2>
-
-              <br />
-
-              <SearchUsers
-                onSelect={(email) =>
-                  setTransferEmail(
-                    email
-                  )
-                }
-              />
-
-              <br />
-
-              <input
-                type="email"
-                placeholder="Receiver Email"
-                value={
-                  transferEmail
-                }
-                onChange={(e) =>
-                  setTransferEmail(
-                    e.target.value
-                  )
-                }
-                style={{
-                  width: "100%",
-                  padding: 15,
-                  marginBottom: 15,
-                  borderRadius: 10,
-                  border: "none",
-                }}
-              />
-
-              <input
-                type="number"
-                placeholder="Amount"
-                value={
-                  transferAmount
-                }
-                onChange={(e) =>
-                  setTransferAmount(
-                    e.target.value
-                  )
-                }
-                style={{
-                  width: "100%",
-                  padding: 15,
-                  marginBottom: 15,
-                  borderRadius: 10,
-                  border: "none",
-                }}
-              />
-
-              <button
-                onClick={sendMoney}
-                style={{
-                  width: "100%",
-                  padding: 15,
-                  background:
-                    "#2563eb",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 10,
-                  cursor: "pointer",
-                }}
-              >
-                Send Money
-              </button>
-
-              <br />
-              <br />
-
-              <div
-                style={{
-                  background:
-                    "#1f2937",
-                  padding: 20,
-                  borderRadius: 15,
-                }}
-              >
-                <h2>
-                  🏦 External Operations
-                </h2>
-
-                <br />
-
-                <button
-                  onClick={async () => {
-                    const amount =
-                      prompt(
-                        "Deposit amount"
-                      );
-
-                    if (!amount)
-                      return;
-
-                    const res =
-                      await fetch(
-                        `${API_URL}/external-deposit`,
-                        {
-                          method:
-                            "POST",
-
-                          headers:
-                            {
-                              "Content-Type":
-                                "application/json",
-
-                              Authorization:
-                                `Bearer ${token}`,
-                            },
-
-                          body: JSON.stringify(
-                            {
-                              userId,
-                              amount,
-                            }
-                          ),
-                        }
-                      );
-
-                    const data =
-                      await res.json();
-
-                    alert(
-                      `${data.message}\nFee: $${data.fee}`
-                    );
-
-                    loadBalance(
-                      userId,
-                      token
-                    );
-
-                    loadTransactions(
-                      email,
-                      token
-                    );
-                  }}
-                  style={{
-                    width: "100%",
-                    padding: 15,
-                    marginBottom: 15,
-                    border: "none",
-                    borderRadius: 10,
-                    background:
-                      "#16a34a",
-                    color:
-                      "white",
-                    cursor:
-                      "pointer",
-                  }}
-                >
-                  External Deposit
-                  (3.5%)
-                </button>
-
-                <button
-                  onClick={async () => {
-                    const amount =
-                      prompt(
-                        "Withdraw amount"
-                      );
-
-                    if (!amount)
-                      return;
-
-                    const res =
-                      await fetch(
-                        `${API_URL}/external-withdraw`,
-                        {
-                          method:
-                            "POST",
-
-                          headers:
-                            {
-                              "Content-Type":
-                                "application/json",
-
-                              Authorization:
-                                `Bearer ${token}`,
-                            },
-
-                          body: JSON.stringify(
-                            {
-                              userId,
-                              amount,
-                            }
-                          ),
-                        }
-                      );
-
-                    const data =
-                      await res.json();
-
-                    alert(
-                      `${data.message}\nFee: $${data.fee}`
-                    );
-
-                    loadBalance(
-                      userId,
-                      token
-                    );
-
-                    loadTransactions(
-                      email,
-                      token
-                    );
-                  }}
-                  style={{
-                    width: "100%",
-                    padding: 15,
-                    border: "none",
-                    borderRadius: 10,
-                    background:
-                      "#dc2626",
-                    color:
-                      "white",
-                    cursor:
-                      "pointer",
-                  }}
-                >
-                  External Withdraw
-                  (3.5%)
-                </button>
-              </div>
-            </div>
-
-            <QRCard
-              email={email}
-            />
-          </div>
-
-          <br />
-          <br />
-
-          <div
-            style={{
-              background: "#111827",
-              borderRadius: 20,
-              padding: 25,
-              color: "white",
-            }}
-          >
+        {analytics && (
+          <>
             <h2>
-              📜 Transaction History
+              📊 Analytics
             </h2>
 
             <br />
 
-            {transactions.length ===
-            0 ? (
-              <p>
-                No transactions
-                yet
-              </p>
-            ) : (
-              transactions.map(
-                (
-                  tx,
-                  index
-                ) => (
-                  <div
-                    key={index}
-                    style={{
-                      background:
-                        "#1f2937",
-                      padding: 15,
-                      borderRadius: 12,
-                      marginBottom: 12,
-                    }}
-                  >
-                    <p>
-                      <strong>
-                        Type:
-                      </strong>{" "}
-                      {tx.type}
-                    </p>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "repeat(auto-fit,minmax(220px,1fr))",
+                gap: 20,
+                marginBottom: 40,
+              }}
+            >
+              <div
+                style={{
+                  background:
+                    "#111827",
+                  padding: 20,
+                  borderRadius: 15,
+                }}
+              >
+                <h3>
+                  💸 Total Sent
+                </h3>
 
-                    <p>
-                      <strong>
-                        From:
-                      </strong>{" "}
-                      {
-                        tx.fromEmail
-                      }
-                    </p>
+                <br />
 
-                    <p>
-                      <strong>
-                        To:
-                      </strong>{" "}
-                      {tx.toEmail}
-                    </p>
+                <h2>
+                  $
+                  {
+                    analytics.totalSent
+                  }
+                </h2>
+              </div>
 
-                    <p>
-                      <strong>
-                        Amount:
-                      </strong>{" "}
-                      $
-                      {tx.amount}
-                    </p>
+              <div
+                style={{
+                  background:
+                    "#111827",
+                  padding: 20,
+                  borderRadius: 15,
+                }}
+              >
+                <h3>
+                  💰 Total Received
+                </h3>
 
-                    <p>
-                      <strong>
-                        Fee:
-                      </strong>{" "}
-                      $
-                      {tx.fee}
-                    </p>
+                <br />
 
-                    <p>
-                      <strong>
-                        Net:
-                      </strong>{" "}
-                      $
-                      {tx.netAmount}
-                    </p>
+                <h2>
+                  $
+                  {
+                    analytics.totalReceived
+                  }
+                </h2>
+              </div>
 
-                    <p>
-                      <strong>
-                        Date:
-                      </strong>{" "}
-                      {new Date(
-                        tx.createdAt
-                      ).toLocaleString()}
-                    </p>
-                  </div>
-                )
+              <div
+                style={{
+                  background:
+                    "#111827",
+                  padding: 20,
+                  borderRadius: 15,
+                }}
+              >
+                <h3>
+                  🏦 Deposits
+                </h3>
+
+                <br />
+
+                <h2>
+                  {
+                    analytics.deposits
+                  }
+                </h2>
+              </div>
+
+              <div
+                style={{
+                  background:
+                    "#111827",
+                  padding: 20,
+                  borderRadius: 15,
+                }}
+              >
+                <h3>
+                  💸 Withdraws
+                </h3>
+
+                <br />
+
+                <h2>
+                  {
+                    analytics.withdraws
+                  }
+                </h2>
+              </div>
+
+              <div
+                style={{
+                  background:
+                    "#111827",
+                  padding: 20,
+                  borderRadius: 15,
+                }}
+              >
+                <h3>
+                  📋 Requests
+                </h3>
+
+                <br />
+
+                <h2>
+                  {
+                    analytics.totalRequests
+                  }
+                </h2>
+              </div>
+
+              <div
+                style={{
+                  background:
+                    "#111827",
+                  padding: 20,
+                  borderRadius: 15,
+                }}
+              >
+                <h3>
+                  🔔 Notifications
+                </h3>
+
+                <br />
+
+                <h2>
+                  {
+                    analytics.totalNotifications
+                  }
+                </h2>
+              </div>
+
+              <div
+                style={{
+                  background:
+                    "#111827",
+                  padding: 20,
+                  borderRadius: 15,
+                }}
+              >
+                <h3>
+                  💵 Total Fees
+                </h3>
+
+                <br />
+
+                <h2>
+                  $
+                  {
+                    analytics.totalFees
+                  }
+                </h2>
+              </div>
+            </div>
+          </>
+        )}
+
+        <div
+          style={{
+            background:
+              "#111827",
+            padding: 30,
+            borderRadius: 20,
+            marginBottom: 40,
+            maxWidth: 500,
+          }}
+        >
+          <h2>
+            💸 Internal Transfer
+          </h2>
+
+          <br />
+
+          <input
+            type="email"
+            placeholder="Receiver Email"
+            value={
+              receiverEmail
+            }
+            onChange={(e) =>
+              setReceiverEmail(
+                e.target.value
               )
-            )}
-          </div>
-
-          <br />
-          <br />
-
-          <div
+            }
             style={{
-              display: "grid",
-              gridTemplateColumns:
-                "repeat(auto-fit,minmax(300px,1fr))",
-              gap: 20,
+              width: "100%",
+              padding: 15,
+              borderRadius: 10,
+              border: "none",
+              marginBottom: 15,
+            }}
+          />
+
+          <input
+            type="number"
+            placeholder="Amount"
+            value={amount}
+            onChange={(e) =>
+              setAmount(
+                e.target.value
+              )
+            }
+            style={{
+              width: "100%",
+              padding: 15,
+              borderRadius: 10,
+              border: "none",
+              marginBottom: 15,
+            }}
+          />
+
+          <button
+            onClick={transfer}
+            style={{
+              width: "100%",
+              padding: 15,
+              background:
+                "#16a34a",
+              border: "none",
+              borderRadius: 10,
+              color: "white",
+              cursor: "pointer",
             }}
           >
-            <NotificationCard />
+            Send Money
+          </button>
 
-            <CurrencyCard />
-          </div>
+          <br />
+          <br />
+
+          <p>
+            Internal transfer
+            fee:
+            <strong>
+              {" "}
+              0.01%
+            </strong>
+          </p>
         </div>
+
+        <h2>
+          📜 Transaction History
+        </h2>
+
+        <br />
+
+        {transactions.length ===
+        0 ? (
+          <p>
+            No transactions yet
+          </p>
+        ) : (
+          transactions.map(
+            (tx) => (
+              <div
+                key={tx._id}
+                style={{
+                  background:
+                    "#111827",
+                  padding: 20,
+                  borderRadius: 15,
+                  marginBottom: 15,
+                }}
+              >
+                <p>
+                  <strong>
+                    Type:
+                  </strong>{" "}
+                  {tx.type}
+                </p>
+
+                <p>
+                  <strong>
+                    From:
+                  </strong>{" "}
+                  {
+                    tx.fromEmail
+                  }
+                </p>
+
+                <p>
+                  <strong>
+                    To:
+                  </strong>{" "}
+                  {tx.toEmail}
+                </p>
+
+                <p>
+                  <strong>
+                    Amount:
+                  </strong>{" "}
+                  $
+                  {tx.amount}
+                </p>
+
+                <p>
+                  <strong>
+                    Fee:
+                  </strong>{" "}
+                  $
+                  {tx.fee}
+                </p>
+
+                <p>
+                  <strong>
+                    Net:
+                  </strong>{" "}
+                  $
+                  {tx.netAmount}
+                </p>
+
+                <p>
+                  <strong>
+                    Date:
+                  </strong>{" "}
+                  {new Date(
+                    tx.createdAt
+                  ).toLocaleString()}
+                </p>
+
+                <br />
+
+                <button
+                  onClick={() =>
+                    downloadReceipt(
+                      tx
+                    )
+                  }
+                  style={{
+                    marginTop: 10,
+                    padding: 10,
+                    background:
+                      "#2563eb",
+                    border: "none",
+                    borderRadius: 10,
+                    color: "white",
+                    cursor:
+                      "pointer",
+                  }}
+                >
+                  📄 Download
+                  Receipt
+                </button>
+              </div>
+            )
+          )
+        )}
       </div>
     </div>
   );
