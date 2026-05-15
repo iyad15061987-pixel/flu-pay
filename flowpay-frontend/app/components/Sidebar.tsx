@@ -2,6 +2,13 @@
 
 import Link from "next/link";
 
+import {
+  useEffect,
+  useState,
+} from "react";
+
+import API_URL from "@/lib/api";
+
 export default function Sidebar() {
   const role =
     typeof window !==
@@ -10,18 +17,88 @@ export default function Sidebar() {
       "role"
     );
 
+  const [
+    notifications,
+    setNotifications,
+  ] = useState<any[]>([]);
+
+  useEffect(() => {
+    loadNotifications();
+  }, []);
+
+  const loadNotifications =
+    async () => {
+      try {
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        const email =
+          localStorage.getItem(
+            "email"
+          );
+
+        if (
+          !token ||
+          !email
+        )
+          return;
+
+        const res =
+          await fetch(
+            `${API_URL}/notifications/${email}`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const data =
+          await res.json();
+
+        setNotifications(
+          data || []
+        );
+
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
   return (
     <div
       style={{
         width: 250,
         height: "100vh",
-        background: "#111827",
-        color: "white",
+        background:
+          localStorage.getItem(
+            "theme"
+          ) === "light"
+            ? "white"
+            : "#111827",
+
+        color:
+          localStorage.getItem(
+            "theme"
+          ) === "light"
+            ? "#111827"
+            : "white",
+
         padding: 25,
+
         position: "fixed",
+
         left: 0,
+
         top: 0,
+
         overflowY: "auto",
+
+        boxShadow:
+          "0 0 10px rgba(0,0,0,0.1)",
       }}
     >
       <h1
@@ -35,15 +112,24 @@ export default function Sidebar() {
       <nav
         style={{
           display: "flex",
+
           flexDirection:
             "column",
+
           gap: 15,
         }}
       >
         <Link
           href="/dashboard"
           style={{
-            color: "white",
+            color:
+              localStorage.getItem(
+                "theme"
+              ) ===
+              "light"
+                ? "#111827"
+                : "white",
+
             textDecoration:
               "none",
           }}
@@ -54,7 +140,14 @@ export default function Sidebar() {
         <Link
           href="/deposit"
           style={{
-            color: "white",
+            color:
+              localStorage.getItem(
+                "theme"
+              ) ===
+              "light"
+                ? "#111827"
+                : "white",
+
             textDecoration:
               "none",
           }}
@@ -65,7 +158,14 @@ export default function Sidebar() {
         <Link
           href="/withdraw"
           style={{
-            color: "white",
+            color:
+              localStorage.getItem(
+                "theme"
+              ) ===
+              "light"
+                ? "#111827"
+                : "white",
+
             textDecoration:
               "none",
           }}
@@ -76,7 +176,14 @@ export default function Sidebar() {
         <Link
           href="/requests"
           style={{
-            color: "white",
+            color:
+              localStorage.getItem(
+                "theme"
+              ) ===
+              "light"
+                ? "#111827"
+                : "white",
+
             textDecoration:
               "none",
           }}
@@ -87,18 +194,36 @@ export default function Sidebar() {
         <Link
           href="/notifications"
           style={{
-            color: "white",
+            color:
+              localStorage.getItem(
+                "theme"
+              ) ===
+              "light"
+                ? "#111827"
+                : "white",
+
             textDecoration:
               "none",
           }}
         >
-          🔔 Notifications
+          🔔 Notifications (
+          {
+            notifications.length
+          }
+          )
         </Link>
 
         <Link
           href="/support"
           style={{
-            color: "white",
+            color:
+              localStorage.getItem(
+                "theme"
+              ) ===
+              "light"
+                ? "#111827"
+                : "white",
+
             textDecoration:
               "none",
           }}
@@ -109,7 +234,14 @@ export default function Sidebar() {
         <Link
           href="/profile"
           style={{
-            color: "white",
+            color:
+              localStorage.getItem(
+                "theme"
+              ) ===
+              "light"
+                ? "#111827"
+                : "white",
+
             textDecoration:
               "none",
           }}
@@ -120,7 +252,14 @@ export default function Sidebar() {
         <Link
           href="/settings"
           style={{
-            color: "white",
+            color:
+              localStorage.getItem(
+                "theme"
+              ) ===
+              "light"
+                ? "#111827"
+                : "white",
+
             textDecoration:
               "none",
           }}
@@ -133,9 +272,12 @@ export default function Sidebar() {
           <Link
             href="/admin"
             style={{
-              color: "#22c55e",
+              color:
+                "#22c55e",
+
               textDecoration:
                 "none",
+
               fontWeight:
                 "bold",
             }}
