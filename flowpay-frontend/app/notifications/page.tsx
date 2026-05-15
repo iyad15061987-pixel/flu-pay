@@ -1,24 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import Sidebar from "../components/Sidebar";
 
 import API_URL from "@/lib/api";
 
-interface Notification {
-  _id: string;
-  message: string;
-  createdAt: string;
-}
-
 export default function NotificationsPage() {
   const [
     notifications,
     setNotifications,
-  ] = useState<
-    Notification[]
-  >([]);
+  ] = useState<any[]>([]);
 
   useEffect(() => {
     loadNotifications();
@@ -64,7 +59,14 @@ export default function NotificationsPage() {
     <div
       style={{
         display: "flex",
-        background: "#0f172a",
+
+        background:
+          localStorage.getItem(
+            "theme"
+          ) === "light"
+            ? "#f3f4f6"
+            : "#0f172a",
+
         minHeight: "100vh",
       }}
     >
@@ -73,9 +75,17 @@ export default function NotificationsPage() {
       <div
         style={{
           marginLeft: 250,
+
           padding: 40,
+
           width: "100%",
-          color: "white",
+
+          color:
+            localStorage.getItem(
+              "theme"
+            ) === "light"
+              ? "#111827"
+              : "white",
         }}
       >
         <h1>
@@ -86,9 +96,29 @@ export default function NotificationsPage() {
 
         {notifications.length ===
         0 ? (
-          <p>
-            No notifications
-          </p>
+          <div
+            style={{
+              background:
+                "#111827",
+
+              padding: 30,
+
+              borderRadius: 20,
+
+              textAlign:
+                "center",
+            }}
+          >
+            <h2>
+              📭 Empty
+            </h2>
+
+            <br />
+
+            <p>
+              No notifications
+            </p>
+          </div>
         ) : (
           notifications.map(
             (
@@ -100,12 +130,31 @@ export default function NotificationsPage() {
                 }
                 style={{
                   background:
-                    "#111827",
-                  padding: 20,
-                  borderRadius: 15,
-                  marginBottom: 15,
+                    localStorage.getItem(
+                      "theme"
+                    ) ===
+                    "light"
+                      ? "white"
+                      : "#111827",
+
+                  padding: 25,
+
+                  borderRadius: 20,
+
+                  marginBottom: 20,
+
+                  boxShadow:
+                    "0 0 10px rgba(0,0,0,0.1)",
                 }}
               >
+                <h3>
+                  {
+                    notification.title
+                  }
+                </h3>
+
+                <br />
+
                 <p>
                   {
                     notification.message
