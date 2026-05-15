@@ -42,6 +42,14 @@ export default function DashboardPage() {
   const [analytics, setAnalytics] =
     useState<any>(null);
 
+  const fee =
+    Number(amount || 0) *
+    0.0001;
+
+  const netAmount =
+    Number(amount || 0) -
+    fee;
+
   useEffect(() => {
     const savedEmail =
       localStorage.getItem(
@@ -79,6 +87,34 @@ export default function DashboardPage() {
       savedEmail,
       savedToken
     );
+
+    const payEmail =
+      localStorage.getItem(
+        "payEmail"
+      );
+
+    const payAmount =
+      localStorage.getItem(
+        "payAmount"
+      );
+
+    if (payEmail) {
+      setReceiverEmail(
+        payEmail
+      );
+
+      localStorage.removeItem(
+        "payEmail"
+      );
+    }
+
+    if (payAmount) {
+      setAmount(payAmount);
+
+      localStorage.removeItem(
+        "payAmount"
+      );
+    }
   }, []);
 
   const loadUser = async (
@@ -553,6 +589,51 @@ ${new Date(
               marginBottom: 15,
             }}
           />
+
+          <div
+            style={{
+              background:
+                "#1f2937",
+              padding: 20,
+              borderRadius: 15,
+              marginBottom: 20,
+            }}
+          >
+            <p>
+              💵 Amount:
+              <strong>
+                {" "}
+                $
+                {Number(
+                  amount || 0
+                ).toFixed(2)}
+              </strong>
+            </p>
+
+            <br />
+
+            <p>
+              🧾 Fee:
+              <strong>
+                {" "}
+                $
+                {fee.toFixed(4)}
+              </strong>
+            </p>
+
+            <br />
+
+            <p>
+              ✅ Receiver Gets:
+              <strong>
+                {" "}
+                $
+                {netAmount.toFixed(
+                  4
+                )}
+              </strong>
+            </p>
+          </div>
 
           <button
             onClick={transfer}
