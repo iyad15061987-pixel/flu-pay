@@ -44,6 +44,9 @@ export default function DashboardPage() {
   const [analytics, setAnalytics] =
     useState<any>(null);
 
+  const [activities, setActivities] =
+    useState<any[]>([]);
+
   const fee =
     Number(amount || 0) *
     0.0001;
@@ -86,6 +89,11 @@ export default function DashboardPage() {
     );
 
     loadAnalytics(
+      savedEmail,
+      savedToken
+    );
+
+    loadActivities(
       savedEmail,
       savedToken
     );
@@ -200,6 +208,52 @@ export default function DashboardPage() {
       }
     };
 
+  const loadActivities =
+    async (
+      userEmail: string,
+      token: string
+    ) => {
+      try {
+        const txRes =
+          await fetch(
+            `${API_URL}/transactions/${userEmail}`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const txData =
+          await txRes.json();
+
+        const formatted =
+          txData.map(
+            (tx: any) => ({
+              type:
+                tx.type,
+
+              amount:
+                tx.amount,
+
+              createdAt:
+                tx.createdAt,
+            })
+          );
+
+        setActivities(
+          formatted.slice(
+            0,
+            10
+          )
+        );
+
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
   const transfer =
     async () => {
       try {
@@ -254,6 +308,11 @@ export default function DashboardPage() {
         );
 
         loadAnalytics(
+          email,
+          token || ""
+        );
+
+        loadActivities(
           email,
           token || ""
         );
@@ -317,7 +376,14 @@ ${new Date(
     <div
       style={{
         display: "flex",
-        background: "#0f172a",
+
+        background:
+          localStorage.getItem(
+            "theme"
+          ) === "light"
+            ? "#f3f4f6"
+            : "#0f172a",
+
         minHeight: "100vh",
       }}
     >
@@ -326,9 +392,17 @@ ${new Date(
       <div
         style={{
           marginLeft: 250,
+
           padding: 40,
+
           width: "100%",
-          color: "white",
+
+          color:
+            localStorage.getItem(
+              "theme"
+            ) === "light"
+              ? "#111827"
+              : "white",
         }}
       >
         <h1>
@@ -340,11 +414,22 @@ ${new Date(
         <div
           style={{
             background:
-              "#111827",
+              localStorage.getItem(
+                "theme"
+              ) === "light"
+                ? "white"
+                : "#111827",
+
             padding: 30,
+
             borderRadius: 20,
+
             marginBottom: 30,
+
             maxWidth: 500,
+
+            boxShadow:
+              "0 0 10px rgba(0,0,0,0.1)",
           }}
         >
           <h2>
@@ -367,9 +452,10 @@ ${new Date(
             {email}
           </strong>
         </div>
-<BalanceChart
-  balance={balance}
-/>
+
+        <BalanceChart
+          balance={balance}
+        />
 
         {analytics && (
           <>
@@ -382,17 +468,27 @@ ${new Date(
             <div
               style={{
                 display: "grid",
+
                 gridTemplateColumns:
                   "repeat(auto-fit,minmax(220px,1fr))",
+
                 gap: 20,
+
                 marginBottom: 40,
               }}
             >
               <div
                 style={{
                   background:
-                    "#111827",
+                    localStorage.getItem(
+                      "theme"
+                    ) ===
+                    "light"
+                      ? "white"
+                      : "#111827",
+
                   padding: 20,
+
                   borderRadius: 15,
                 }}
               >
@@ -413,8 +509,15 @@ ${new Date(
               <div
                 style={{
                   background:
-                    "#111827",
+                    localStorage.getItem(
+                      "theme"
+                    ) ===
+                    "light"
+                      ? "white"
+                      : "#111827",
+
                   padding: 20,
+
                   borderRadius: 15,
                 }}
               >
@@ -435,8 +538,15 @@ ${new Date(
               <div
                 style={{
                   background:
-                    "#111827",
+                    localStorage.getItem(
+                      "theme"
+                    ) ===
+                    "light"
+                      ? "white"
+                      : "#111827",
+
                   padding: 20,
+
                   borderRadius: 15,
                 }}
               >
@@ -456,8 +566,15 @@ ${new Date(
               <div
                 style={{
                   background:
-                    "#111827",
+                    localStorage.getItem(
+                      "theme"
+                    ) ===
+                    "light"
+                      ? "white"
+                      : "#111827",
+
                   padding: 20,
+
                   borderRadius: 15,
                 }}
               >
@@ -477,8 +594,15 @@ ${new Date(
               <div
                 style={{
                   background:
-                    "#111827",
+                    localStorage.getItem(
+                      "theme"
+                    ) ===
+                    "light"
+                      ? "white"
+                      : "#111827",
+
                   padding: 20,
+
                   borderRadius: 15,
                 }}
               >
@@ -498,8 +622,15 @@ ${new Date(
               <div
                 style={{
                   background:
-                    "#111827",
+                    localStorage.getItem(
+                      "theme"
+                    ) ===
+                    "light"
+                      ? "white"
+                      : "#111827",
+
                   padding: 20,
+
                   borderRadius: 15,
                 }}
               >
@@ -519,8 +650,15 @@ ${new Date(
               <div
                 style={{
                   background:
-                    "#111827",
+                    localStorage.getItem(
+                      "theme"
+                    ) ===
+                    "light"
+                      ? "white"
+                      : "#111827",
+
                   padding: 20,
+
                   borderRadius: 15,
                 }}
               >
@@ -544,11 +682,22 @@ ${new Date(
         <div
           style={{
             background:
-              "#111827",
+              localStorage.getItem(
+                "theme"
+              ) === "light"
+                ? "white"
+                : "#111827",
+
             padding: 30,
+
             borderRadius: 20,
+
             marginBottom: 40,
+
             maxWidth: 500,
+
+            boxShadow:
+              "0 0 10px rgba(0,0,0,0.1)",
           }}
         >
           <h2>
@@ -570,9 +719,13 @@ ${new Date(
             }
             style={{
               width: "100%",
+
               padding: 15,
+
               borderRadius: 10,
+
               border: "none",
+
               marginBottom: 15,
             }}
           />
@@ -588,9 +741,13 @@ ${new Date(
             }
             style={{
               width: "100%",
+
               padding: 15,
+
               borderRadius: 10,
+
               border: "none",
+
               marginBottom: 15,
             }}
           />
@@ -598,9 +755,17 @@ ${new Date(
           <div
             style={{
               background:
-                "#1f2937",
+                localStorage.getItem(
+                  "theme"
+                ) ===
+                "light"
+                  ? "#e5e7eb"
+                  : "#1f2937",
+
               padding: 20,
+
               borderRadius: 15,
+
               marginBottom: 20,
             }}
           >
@@ -644,21 +809,18 @@ ${new Date(
             onClick={transfer}
             style={{
               width: "100%",
+
               padding: 15,
+
               background:
-  localStorage.getItem(
-    "theme"
-  ) === "light"
-    ? "#f3f4f6"
-    : "#0f172a",
+                "#16a34a",
+
               border: "none",
+
               borderRadius: 10,
-              color:
-  localStorage.getItem(
-    "theme"
-  ) === "light"
-    ? "#111827"
-    : "white",
+
+              color: "white",
+
               cursor: "pointer",
             }}
           >
@@ -679,6 +841,84 @@ ${new Date(
         </div>
 
         <h2>
+          🧠 Recent Activity
+        </h2>
+
+        <br />
+
+        <div
+          style={{
+            marginBottom: 40,
+          }}
+        >
+          {activities.length ===
+          0 ? (
+            <p>
+              No activity yet
+            </p>
+          ) : (
+            activities.map(
+              (
+                activity,
+                index
+              ) => (
+                <div
+                  key={index}
+                  style={{
+                    background:
+                      localStorage.getItem(
+                        "theme"
+                      ) ===
+                      "light"
+                        ? "white"
+                        : "#111827",
+
+                    padding: 20,
+
+                    borderRadius: 15,
+
+                    marginBottom: 15,
+
+                    borderLeft:
+                      "5px solid #22c55e",
+
+                    boxShadow:
+                      "0 0 10px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <h3>
+                    {
+                      activity.type
+                    }
+                  </h3>
+
+                  <br />
+
+                  <p>
+                    Amount:
+                    <strong>
+                      {" "}
+                      $
+                      {
+                        activity.amount
+                      }
+                    </strong>
+                  </p>
+
+                  <br />
+
+                  <p>
+                    {new Date(
+                      activity.createdAt
+                    ).toLocaleString()}
+                  </p>
+                </div>
+              )
+            )
+          )}
+        </div>
+
+        <h2>
           📜 Transaction History
         </h2>
 
@@ -696,10 +936,21 @@ ${new Date(
                 key={tx._id}
                 style={{
                   background:
-                    "#111827",
+                    localStorage.getItem(
+                      "theme"
+                    ) ===
+                    "light"
+                      ? "white"
+                      : "#111827",
+
                   padding: 20,
+
                   borderRadius: 15,
+
                   marginBottom: 15,
+
+                  boxShadow:
+                    "0 0 10px rgba(0,0,0,0.1)",
                 }}
               >
                 <p>
@@ -768,12 +1019,18 @@ ${new Date(
                   }
                   style={{
                     marginTop: 10,
+
                     padding: 10,
+
                     background:
                       "#2563eb",
+
                     border: "none",
+
                     borderRadius: 10,
+
                     color: "white",
+
                     cursor:
                       "pointer",
                   }}
