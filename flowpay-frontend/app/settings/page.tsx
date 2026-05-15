@@ -10,6 +10,16 @@ export default function SettingsPage() {
   const [currency, setCurrency] =
     useState("USD");
 
+  const [
+    oldPassword,
+    setOldPassword,
+  ] = useState("");
+
+  const [
+    newPassword,
+    setNewPassword,
+  ] = useState("");
+
   const updateCurrency =
     async () => {
       try {
@@ -48,6 +58,55 @@ export default function SettingsPage() {
           await res.json();
 
         alert(data.message);
+
+      } catch (err) {
+        alert("Server error");
+      }
+    };
+
+  const changePassword =
+    async () => {
+      try {
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        const userId =
+          localStorage.getItem(
+            "userId"
+          );
+
+        const res =
+          await fetch(
+            `${API_URL}/change-password`,
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                Authorization:
+                  `Bearer ${token}`,
+              },
+
+              body: JSON.stringify({
+                userId,
+                oldPassword,
+                newPassword,
+              }),
+            }
+          );
+
+        const data =
+          await res.json();
+
+        alert(data.message);
+
+        setOldPassword("");
+
+        setNewPassword("");
 
       } catch (err) {
         alert("Server error");
@@ -144,6 +203,70 @@ export default function SettingsPage() {
             }}
           >
             Save Currency
+          </button>
+
+          <br />
+          <br />
+
+          <h2>
+            🔐 Change Password
+          </h2>
+
+          <br />
+
+          <input
+            type="password"
+            placeholder="Old Password"
+            value={oldPassword}
+            onChange={(e) =>
+              setOldPassword(
+                e.target.value
+              )
+            }
+            style={{
+              width: "100%",
+              padding: 15,
+              borderRadius: 10,
+              border: "none",
+              marginBottom: 15,
+            }}
+          />
+
+          <input
+            type="password"
+            placeholder="New Password"
+            value={newPassword}
+            onChange={(e) =>
+              setNewPassword(
+                e.target.value
+              )
+            }
+            style={{
+              width: "100%",
+              padding: 15,
+              borderRadius: 10,
+              border: "none",
+              marginBottom: 15,
+            }}
+          />
+
+          <button
+            onClick={
+              changePassword
+            }
+            style={{
+              width: "100%",
+              padding: 15,
+              background:
+                "#16a34a",
+              border: "none",
+              borderRadius: 10,
+              color: "white",
+              cursor: "pointer",
+              marginBottom: 20,
+            }}
+          >
+            Change Password
           </button>
 
           <button

@@ -1972,6 +1972,102 @@ app.post(
     }
   }
 );
+
+// =========================
+// CHANGE PASSWORD
+// =========================
+
+app.post(
+  "/change-password",
+  auth,
+  async (req, res) => {
+    try {
+      const {
+        userId,
+        oldPassword,
+        newPassword,
+      } = req.body;
+
+      const user =
+        await User.findById(
+          userId
+        );
+
+      if (!user) {
+        return res.status(404).json({
+          message:
+            "User not found",
+        });
+      }
+
+      const isMatch =
+        await bcrypt.compare(
+          oldPassword,
+          user.password
+        );
+
+      if (!isMatch) {
+        return res.status(400).json({
+          message:
+            "Wrong old password",
+        });
+      }
+
+      if (
+        newPassword.length <
+        6
+      ) {
+        return res.status(400).json({
+          message:
+            "Password too short",
+        });
+      }
+
+      const hashedPassword =
+        await bcrypt.hash(
+          newPassword,
+          10
+        );
+
+      user.password =
+        hashedPassword;
+
+      await user.save();
+
+      await Log.create({
+        action:
+          "Password changed",
+
+        email:
+          user.email,
+      });
+
+      await Notification.create({
+        email:
+          user.email,
+
+        message:
+          "Your password has been changed successfully",
+      });
+
+      res.json({
+        message:
+          "Password updated",
+      });
+
+    } catch (err) {
+      console.log(
+        "PASSWORD ERROR:",
+        err
+      );
+
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
 // =========================
 // START SERVER
 // =========================
