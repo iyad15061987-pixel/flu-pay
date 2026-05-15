@@ -53,10 +53,22 @@ export default function ProfilePage() {
       <div
         style={{
           background:
-            "#0f172a",
+            localStorage.getItem(
+              "theme"
+            ) === "light"
+              ? "#f3f4f6"
+              : "#0f172a",
+
           minHeight:
             "100vh",
-          color: "white",
+
+          color:
+            localStorage.getItem(
+              "theme"
+            ) === "light"
+              ? "#111827"
+              : "white",
+
           padding: 40,
         }}
       >
@@ -69,7 +81,14 @@ export default function ProfilePage() {
     <div
       style={{
         display: "flex",
-        background: "#0f172a",
+
+        background:
+          localStorage.getItem(
+            "theme"
+          ) === "light"
+            ? "#f3f4f6"
+            : "#0f172a",
+
         minHeight: "100vh",
       }}
     >
@@ -78,9 +97,17 @@ export default function ProfilePage() {
       <div
         style={{
           marginLeft: 250,
+
           padding: 40,
+
           width: "100%",
-          color: "white",
+
+          color:
+            localStorage.getItem(
+              "theme"
+            ) === "light"
+              ? "#111827"
+              : "white",
         }}
       >
         <h1>
@@ -92,16 +119,27 @@ export default function ProfilePage() {
         <div
           style={{
             background:
-              "#111827",
+              localStorage.getItem(
+                "theme"
+              ) === "light"
+                ? "white"
+                : "#111827",
+
             padding: 30,
+
             borderRadius: 20,
+
             maxWidth: 700,
+
+            boxShadow:
+              "0 0 10px rgba(0,0,0,0.1)",
           }}
         >
           <div
             style={{
               textAlign:
                 "center",
+
               marginBottom: 30,
             }}
           >
@@ -115,23 +153,36 @@ export default function ProfilePage() {
 
             <p>
               Personal Receive QR
+            </p>
+
             <br />
 
-<div
-  style={{
-    background:
-      "#1f2937",
-    padding: 15,
-    borderRadius: 10,
-    wordBreak:
-      "break-all",
-  }}
->
-  {window.location.origin}
-  /pay/
-  {profile.email}
-</div>
-            </p>
+            <div
+              style={{
+                background:
+                  localStorage.getItem(
+                    "theme"
+                  ) ===
+                  "light"
+                    ? "#e5e7eb"
+                    : "#1f2937",
+
+                padding: 15,
+
+                borderRadius: 10,
+
+                wordBreak:
+                  "break-all",
+              }}
+            >
+              {
+                window
+                  .location
+                  .origin
+              }
+              /pay/
+              {profile.email}
+            </div>
           </div>
 
           <p>
@@ -194,7 +245,8 @@ export default function ProfilePage() {
 
           <p>
             <strong>
-              Total Transactions:
+              Total
+              Transactions:
             </strong>{" "}
             {
               profile.totalTransactions
@@ -205,7 +257,8 @@ export default function ProfilePage() {
 
           <p>
             <strong>
-              Account Created:
+              Account
+              Created:
             </strong>{" "}
             {new Date(
               profile.createdAt
