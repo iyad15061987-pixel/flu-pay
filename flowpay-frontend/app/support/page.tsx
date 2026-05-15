@@ -4,69 +4,31 @@ import { useState } from "react";
 
 import Sidebar from "../components/Sidebar";
 
-import API_URL from "@/lib/api";
-
 export default function SupportPage() {
-  const [subject, setSubject] =
-    useState("");
-
   const [message, setMessage] =
     useState("");
 
   const sendSupport =
-    async () => {
-      try {
-        const token =
-          localStorage.getItem(
-            "token"
-          );
+    () => {
+      alert(
+        "Support request sent"
+      );
 
-        const email =
-          localStorage.getItem(
-            "email"
-          );
-
-        const res =
-          await fetch(
-            `${API_URL}/create-support`,
-            {
-              method: "POST",
-
-              headers: {
-                "Content-Type":
-                  "application/json",
-
-                Authorization:
-                  `Bearer ${token}`,
-              },
-
-              body: JSON.stringify({
-                email,
-                subject,
-                message,
-              }),
-            }
-          );
-
-        const data =
-          await res.json();
-
-        alert(data.message);
-
-        setSubject("");
-
-        setMessage("");
-
-      } catch (err) {
-        alert("Server error");
-      }
+      setMessage("");
     };
 
   return (
     <div
       style={{
         display: "flex",
-        background: "#0f172a",
+
+        background:
+          localStorage.getItem(
+            "theme"
+          ) === "light"
+            ? "#f3f4f6"
+            : "#0f172a",
+
         minHeight: "100vh",
       }}
     >
@@ -75,9 +37,17 @@ export default function SupportPage() {
       <div
         style={{
           marginLeft: 250,
+
           padding: 40,
+
           width: "100%",
-          color: "white",
+
+          color:
+            localStorage.getItem(
+              "theme"
+            ) === "light"
+              ? "#111827"
+              : "white",
         }}
       >
         <h1>
@@ -89,32 +59,21 @@ export default function SupportPage() {
         <div
           style={{
             background:
-              "#111827",
+              localStorage.getItem(
+                "theme"
+              ) === "light"
+                ? "white"
+                : "#111827",
+
             padding: 30,
+
             borderRadius: 20,
+
             maxWidth: 700,
           }}
         >
-          <input
-            type="text"
-            placeholder="Subject"
-            value={subject}
-            onChange={(e) =>
-              setSubject(
-                e.target.value
-              )
-            }
-            style={{
-              width: "100%",
-              padding: 15,
-              borderRadius: 10,
-              border: "none",
-              marginBottom: 15,
-            }}
-          />
-
           <textarea
-            placeholder="Message"
+            placeholder="Describe your issue..."
             value={message}
             onChange={(e) =>
               setMessage(
@@ -123,11 +82,14 @@ export default function SupportPage() {
             }
             style={{
               width: "100%",
+
               height: 200,
-              padding: 15,
+
+              padding: 20,
+
               borderRadius: 10,
-              border: "none",
-              marginBottom: 15,
+
+              marginBottom: 20,
             }}
           />
 
@@ -137,16 +99,22 @@ export default function SupportPage() {
             }
             style={{
               width: "100%",
+
               padding: 15,
+
               background:
                 "#2563eb",
+
               border: "none",
+
               borderRadius: 10,
+
               color: "white",
+
               cursor: "pointer",
             }}
           >
-            Send Ticket
+            Send Support Request
           </button>
         </div>
       </div>

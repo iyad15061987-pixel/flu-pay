@@ -1,24 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import Sidebar from "../components/Sidebar";
 
 import API_URL from "@/lib/api";
 
-interface Request {
-  _id: string;
-  type: string;
-  method: string;
-  amount: number;
-  wallet: string;
-  status: string;
-  createdAt: string;
-}
-
 export default function RequestsPage() {
   const [requests, setRequests] =
-    useState<Request[]>([]);
+    useState<any[]>([]);
 
   useEffect(() => {
     loadRequests();
@@ -37,9 +30,9 @@ export default function RequestsPage() {
             "email"
           );
 
-        const res =
+        const depositRes =
           await fetch(
-            `${API_URL}/my-requests/${email}`,
+            `${API_URL}/user-deposit-requests/${email}`,
             {
               headers: {
                 Authorization:
@@ -48,10 +41,27 @@ export default function RequestsPage() {
             }
           );
 
-        const data =
-          await res.json();
+        const withdrawRes =
+          await fetch(
+            `${API_URL}/user-withdraw-requests/${email}`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
 
-        setRequests(data);
+        const deposits =
+          await depositRes.json();
+
+        const withdraws =
+          await withdrawRes.json();
+
+        setRequests([
+          ...deposits,
+          ...withdraws,
+        ]);
 
       } catch (err) {
         console.log(err);
@@ -62,7 +72,14 @@ export default function RequestsPage() {
     <div
       style={{
         display: "flex",
-        background: "#0f172a",
+
+        background:
+          localStorage.getItem(
+            "theme"
+          ) === "light"
+            ? "#f3f4f6"
+            : "#0f172a",
+
         minHeight: "100vh",
       }}
     >
@@ -71,9 +88,17 @@ export default function RequestsPage() {
       <div
         style={{
           marginLeft: 250,
+
           padding: 40,
+
           width: "100%",
-          color: "white",
+
+          color:
+            localStorage.getItem(
+              "theme"
+            ) === "light"
+              ? "#111827"
+              : "white",
         }}
       >
         <h1>
@@ -84,22 +109,51 @@ export default function RequestsPage() {
 
         {requests.length ===
         0 ? (
-          <p>
-            No requests yet
-          </p>
+          <div
+            style={{
+              background:
+                "#111827",
+
+              padding: 30,
+
+              borderRadius: 20,
+
+              textAlign:
+                "center",
+            }}
+          >
+            <h2>
+              📭 Empty
+            </h2>
+
+            <br />
+
+            <p>
+              No requests yet
+            </p>
+          </div>
         ) : (
           requests.map(
             (request) => (
               <div
-                key={
-                  request._id
-                }
+                key={request._id}
                 style={{
                   background:
-                    "#111827",
-                  padding: 20,
-                  borderRadius: 15,
-                  marginBottom: 15,
+                    localStorage.getItem(
+                      "theme"
+                    ) ===
+                    "light"
+                      ? "white"
+                      : "#111827",
+
+                  padding: 25,
+
+                  borderRadius: 20,
+
+                  marginBottom: 20,
+
+                  boxShadow:
+                    "0 0 10px rgba(0,0,0,0.1)",
                 }}
               >
                 <p>
@@ -111,14 +165,7 @@ export default function RequestsPage() {
                   }
                 </p>
 
-                <p>
-                  <strong>
-                    Method:
-                  </strong>{" "}
-                  {
-                    request.method
-                  }
-                </p>
+                <br />
 
                 <p>
                   <strong>
@@ -130,13 +177,7 @@ export default function RequestsPage() {
                   }
                 </p>
 
-                <p>
-                  <strong>
-                    Wallet:
-                  </strong>{" "}
-                  {request.wallet ||
-                    "-"}
-                </p>
+                <br />
 
                 <p>
                   <strong>
@@ -147,13 +188,15 @@ export default function RequestsPage() {
                   }
                 </p>
 
+                <br />
+
                 <p>
                   <strong>
-                    Date:
+                    Method:
                   </strong>{" "}
-                  {new Date(
-                    request.createdAt
-                  ).toLocaleString()}
+                  {
+                    request.method
+                  }
                 </p>
               </div>
             )
