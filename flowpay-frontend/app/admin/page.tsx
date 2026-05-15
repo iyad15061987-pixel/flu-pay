@@ -1,205 +1,35 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
+import Sidebar from "../components/Sidebar";
+
 import API_URL from "@/lib/api";
-
-interface User {
-  _id: string;
-  email: string;
-  balance: number;
-  role: string;
-  frozen: boolean;
-  revenue: number;
-}
-
-interface Transaction {
-  _id: string;
-  fromEmail: string;
-  toEmail: string;
-  amount: number;
-  fee: number;
-  netAmount: number;
-  type: string;
-  createdAt: string;
-}
-
-interface Log {
-  _id: string;
-  action: string;
-  email: string;
-  createdAt: string;
-}
-
-interface Request {
-  _id: string;
-  email: string;
-  type: string;
-  method: string;
-  amount: number;
-  wallet: string;
-  status: string;
-}
-
-interface Support {
-  _id: string;
-  email: string;
-  subject: string;
-  message: string;
-  status: string;
-}
 
 export default function AdminPage() {
   const [users, setUsers] =
-    useState<User[]>([]);
+    useState<any[]>([]);
 
-  const [transactions, setTransactions] =
-    useState<Transaction[]>([]);
+  const [depositRequests, setDepositRequests] =
+    useState<any[]>([]);
 
-  const [logs, setLogs] =
-    useState<Log[]>([]);
+  const [
+    withdrawRequests,
+    setWithdrawRequests,
+  ] = useState<any[]>([]);
 
-  const [requests, setRequests] =
-    useState<Request[]>([]);
-
-  const [supports, setSupports] =
-    useState<Support[]>([]);
-
-  const [revenue, setRevenue] =
-    useState(0);
+  const [search, setSearch] =
+    useState("");
 
   useEffect(() => {
-    checkAdmin();
     loadUsers();
-    loadRevenue();
-    loadLogs();
-    loadRequests();
-    loadSupports();
+
+    loadDepositRequests();
+
+    loadWithdrawRequests();
   }, []);
 
-  const checkAdmin = async () => {
-    const token =
-      localStorage.getItem("token");
-
-    if (!token) {
-      window.location.href =
-        "/login";
-
-      return;
-    }
-
-    try {
-      const res = await fetch(
-        `${API_URL}/me`,
-        {
-          headers: {
-            Authorization:
-              `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data =
-        await res.json();
-
-      if (
-        data.role !== "admin"
-      ) {
-        alert("Access denied");
-
-        window.location.href =
-          "/dashboard";
-      }
-
-    } catch (err) {
-      alert("Server error");
-    }
-  };
-
-  const loadUsers = async () => {
-    try {
-      const token =
-        localStorage.getItem(
-          "token"
-        );
-
-      const res = await fetch(
-        `${API_URL}/users`,
-        {
-          headers: {
-            Authorization:
-              `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data =
-        await res.json();
-
-      setUsers(data);
-
-      loadTransactions(data);
-
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  const loadTransactions =
-    async (usersData: User[]) => {
-      try {
-        const token =
-          localStorage.getItem(
-            "token"
-          );
-
-        const allTx =
-          await Promise.all(
-            usersData.map(
-              async (user) => {
-                const res =
-                  await fetch(
-                    `${API_URL}/transactions/${user.email}`,
-                    {
-                      headers: {
-                        Authorization:
-                          `Bearer ${token}`,
-                      },
-                    }
-                  );
-
-                return await res.json();
-              }
-            )
-          );
-
-        const merged =
-          allTx.flat();
-
-        const unique =
-          merged.filter(
-            (
-              tx,
-              index,
-              self
-            ) =>
-              index ===
-              self.findIndex(
-                (t) =>
-                  t._id ===
-                  tx._id
-              )
-          );
-
-        setTransactions(
-          unique
-        );
-
-      } catch (err) {
-        console.log(err);
-      }
-    };
-
-  const loadRevenue =
+  const loadUsers =
     async () => {
       try {
         const token =
@@ -209,7 +39,7 @@ export default function AdminPage() {
 
         const res =
           await fetch(
-            `${API_URL}/admin-revenue`,
+            `${API_URL}/admin/users`,
             {
               headers: {
                 Authorization:
@@ -221,16 +51,14 @@ export default function AdminPage() {
         const data =
           await res.json();
 
-        setRevenue(
-          data.revenue || 0
-        );
+        setUsers(data);
 
       } catch (err) {
         console.log(err);
       }
     };
 
-  const loadLogs =
+  const loadDepositRequests =
     async () => {
       try {
         const token =
@@ -240,7 +68,7 @@ export default function AdminPage() {
 
         const res =
           await fetch(
-            `${API_URL}/logs`,
+            `${API_URL}/admin/deposit-requests`,
             {
               headers: {
                 Authorization:
@@ -252,14 +80,16 @@ export default function AdminPage() {
         const data =
           await res.json();
 
-        setLogs(data || []);
+        setDepositRequests(
+          data
+        );
 
       } catch (err) {
         console.log(err);
       }
     };
 
-  const loadRequests =
+  const loadWithdrawRequests =
     async () => {
       try {
         const token =
@@ -269,7 +99,7 @@ export default function AdminPage() {
 
         const res =
           await fetch(
-            `${API_URL}/requests`,
+            `${API_URL}/admin/withdraw-requests`,
             {
               headers: {
                 Authorization:
@@ -281,15 +111,17 @@ export default function AdminPage() {
         const data =
           await res.json();
 
-        setRequests(data);
+        setWithdrawRequests(
+          data
+        );
 
       } catch (err) {
         console.log(err);
       }
     };
 
-  const loadSupports =
-    async () => {
+  const approveDeposit =
+    async (requestId: string) => {
       try {
         const token =
           localStorage.getItem(
@@ -298,174 +130,84 @@ export default function AdminPage() {
 
         const res =
           await fetch(
-            `${API_URL}/support-tickets`,
+            `${API_URL}/approve-deposit`,
             {
+              method: "POST",
+
               headers: {
+                "Content-Type":
+                  "application/json",
+
                 Authorization:
                   `Bearer ${token}`,
               },
+
+              body: JSON.stringify({
+                requestId,
+              }),
             }
           );
 
         const data =
           await res.json();
 
-        setSupports(data);
+        alert(data.message);
 
-      } catch (err) {
-        console.log(err);
-      }
-    };
+        loadDepositRequests();
 
-  const addBalance = async (
-    userId: string
-  ) => {
-    const amount =
-      prompt(
-        "Enter amount"
-      );
-
-    if (!amount) return;
-
-    try {
-      const token =
-        localStorage.getItem(
-          "token"
-        );
-
-      await fetch(
-        `${API_URL}/add-balance`,
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type":
-              "application/json",
-
-            Authorization:
-              `Bearer ${token}`,
-          },
-
-          body: JSON.stringify({
-            userId,
-            amount,
-          }),
-        }
-      );
-
-      alert(
-        "Balance added"
-      );
-
-      loadUsers();
-      loadRevenue();
-
-    } catch (err) {
-      alert("Server error");
-    }
-  };
-
-  const freezeUser = async (
-    userId: string
-  ) => {
-    try {
-      const token =
-        localStorage.getItem(
-          "token"
-        );
-
-      await fetch(
-        `${API_URL}/freeze-user`,
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type":
-              "application/json",
-
-            Authorization:
-              `Bearer ${token}`,
-          },
-
-          body: JSON.stringify({
-            userId,
-          }),
-        }
-      );
-
-      loadUsers();
-
-    } catch (err) {
-      alert("Server error");
-    }
-  };
-
-  const deleteUser = async (
-    userId: string
-  ) => {
-    const yes =
-      confirm(
-        "Delete user?"
-      );
-
-    if (!yes) return;
-
-    try {
-      const token =
-        localStorage.getItem(
-          "token"
-        );
-
-      await fetch(
-        `${API_URL}/delete-user/${userId}`,
-        {
-          method: "DELETE",
-
-          headers: {
-            Authorization:
-              `Bearer ${token}`,
-          },
-        }
-      );
-
-      loadUsers();
-
-    } catch (err) {
-      alert("Server error");
-    }
-  };
-
-  const approveRequest =
-    async (id: string) => {
-      try {
-        const token =
-          localStorage.getItem(
-            "token"
-          );
-
-        await fetch(
-          `${API_URL}/approve-request/${id}`,
-          {
-            method: "POST",
-
-            headers: {
-              Authorization:
-                `Bearer ${token}`,
-            },
-          }
-        );
-
-        loadRequests();
         loadUsers();
-        loadRevenue();
 
       } catch (err) {
         alert("Server error");
       }
     };
 
-  const rejectRequest =
-    async (id: string) => {
+  const approveWithdraw =
+    async (requestId: string) => {
+      try {
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        const res =
+          await fetch(
+            `${API_URL}/approve-withdraw`,
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                Authorization:
+                  `Bearer ${token}`,
+              },
+
+              body: JSON.stringify({
+                requestId,
+              }),
+            }
+          );
+
+        const data =
+          await res.json();
+
+        alert(data.message);
+
+        loadWithdrawRequests();
+
+        loadUsers();
+
+      } catch (err) {
+        alert("Server error");
+      }
+    };
+
+  const freezeUser =
+    async (
+      userId: string
+    ) => {
       try {
         const token =
           localStorage.getItem(
@@ -473,487 +215,641 @@ export default function AdminPage() {
           );
 
         await fetch(
-          `${API_URL}/reject-request/${id}`,
+          `${API_URL}/freeze-user`,
           {
             method: "POST",
 
             headers: {
+              "Content-Type":
+                "application/json",
+
               Authorization:
                 `Bearer ${token}`,
             },
+
+            body: JSON.stringify({
+              userId,
+            }),
           }
         );
 
-        loadRequests();
+        loadUsers();
 
       } catch (err) {
-        alert("Server error");
+        console.log(err);
       }
     };
+
+  const unfreezeUser =
+    async (
+      userId: string
+    ) => {
+      try {
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        await fetch(
+          `${API_URL}/unfreeze-user`,
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              Authorization:
+                `Bearer ${token}`,
+            },
+
+            body: JSON.stringify({
+              userId,
+            }),
+          }
+        );
+
+        loadUsers();
+
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+  const deleteUser =
+    async (
+      userId: string
+    ) => {
+      try {
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        const confirmDelete =
+          confirm(
+            "Delete this user?"
+          );
+
+        if (
+          !confirmDelete
+        )
+          return;
+
+        await fetch(
+          `${API_URL}/delete-user`,
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              Authorization:
+                `Bearer ${token}`,
+            },
+
+            body: JSON.stringify({
+              userId,
+            }),
+          }
+        );
+
+        loadUsers();
+
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+  const filteredUsers =
+    users.filter(
+      (u: any) =>
+        u.email
+          .toLowerCase()
+          .includes(
+            search.toLowerCase()
+          )
+    );
 
   return (
     <div
       style={{
-        padding: 30,
-        background: "#0f172a",
+        display: "flex",
+
+        background:
+          localStorage.getItem(
+            "theme"
+          ) === "light"
+            ? "#f3f4f6"
+            : "#0f172a",
+
         minHeight: "100vh",
-        color: "white",
       }}
     >
-      <h1>
-        🛡 Admin Dashboard
-      </h1>
-
-      <br />
+      <Sidebar />
 
       <div
         style={{
-          background: "#111827",
-          padding: 25,
-          borderRadius: 15,
-          marginBottom: 30,
+          marginLeft: 250,
+
+          padding: 40,
+
+          width: "100%",
+
+          color:
+            localStorage.getItem(
+              "theme"
+            ) === "light"
+              ? "#111827"
+              : "white",
         }}
       >
+        <h1>
+          🛡 Admin Panel
+        </h1>
+
+        <br />
+
         <h2>
-          💰 Total Revenue
+          👥 Users
         </h2>
 
         <br />
 
-        <h1>
-          $
-          {revenue.toFixed(
-            2
-          )}
-        </h1>
-      </div>
-
-      <h2>
-        🏦 Requests
-      </h2>
-
-      <br />
-
-      {requests.length === 0 ? (
-        <p>
-          No requests yet
-        </p>
-      ) : (
-        requests.map(
-          (request) => (
-            <div
-              key={request._id}
-              style={{
-                background:
-                  "#111827",
-                padding: 20,
-                borderRadius: 15,
-                marginBottom: 15,
-              }}
-            >
-              <p>
-                <strong>
-                  User:
-                </strong>{" "}
-                {request.email}
-              </p>
-
-              <p>
-                <strong>
-                  Type:
-                </strong>{" "}
-                {request.type}
-              </p>
-
-              <p>
-                <strong>
-                  Method:
-                </strong>{" "}
-                {request.method}
-              </p>
-
-              <p>
-                <strong>
-                  Amount:
-                </strong>{" "}
-                $
-                {request.amount}
-              </p>
-
-              <p>
-                <strong>
-                  Wallet:
-                </strong>{" "}
-                {request.wallet ||
-                  "-"}
-              </p>
-
-              <p>
-                <strong>
-                  Status:
-                </strong>{" "}
-                {request.status}
-              </p>
-
-              {request.status ===
-                "pending" && (
-                <>
-                  <button
-                    onClick={() =>
-                      approveRequest(
-                        request._id
-                      )
-                    }
-                    style={{
-                      marginTop: 10,
-                      width: "100%",
-                      padding: 12,
-                      background:
-                        "#16a34a",
-                      border: "none",
-                      borderRadius: 10,
-                      color:
-                        "white",
-                      cursor:
-                        "pointer",
-                    }}
-                  >
-                    Approve
-                  </button>
-
-                  <button
-                    onClick={() =>
-                      rejectRequest(
-                        request._id
-                      )
-                    }
-                    style={{
-                      marginTop: 10,
-                      width: "100%",
-                      padding: 12,
-                      background:
-                        "#dc2626",
-                      border: "none",
-                      borderRadius: 10,
-                      color:
-                        "white",
-                      cursor:
-                        "pointer",
-                    }}
-                  >
-                    Reject
-                  </button>
-                </>
-              )}
-            </div>
-          )
-        )
-      )}
-
-      <br />
-      <br />
-
-      <h2>
-        👥 Users
-      </h2>
-
-      <br />
-
-      {users.map((user) => (
-        <div
-          key={user._id}
+        <input
+          type="text"
+          placeholder="Search user..."
+          value={search}
+          onChange={(e) =>
+            setSearch(
+              e.target.value
+            )
+          }
           style={{
-            background: "#111827",
-            padding: 20,
-            borderRadius: 15,
-            marginBottom: 15,
+            width: "100%",
+
+            padding: 15,
+
+            borderRadius: 10,
+
+            marginBottom: 20,
+
+            border: "none",
           }}
-        >
-          <p>
-            <strong>Email:</strong>{" "}
-            {user.email}
-          </p>
+        />
 
-          <p>
-            <strong>Balance:</strong>{" "}
-            ${user.balance}
-          </p>
-
-          <p>
-            <strong>Revenue:</strong>{" "}
-            ${user.revenue || 0}
-          </p>
-
-          <p>
-            <strong>Role:</strong>{" "}
-            {user.role}
-          </p>
-
-          <p>
-            <strong>Frozen:</strong>{" "}
-            {user.frozen
-              ? "Yes"
-              : "No"}
-          </p>
-
-          <button
-            onClick={() =>
-              addBalance(
-                user._id
-              )
-            }
-            style={{
-              marginTop: 10,
-              width: "100%",
-              padding: 12,
-              background: "#16a34a",
-              border: "none",
-              borderRadius: 10,
-              color: "white",
-              cursor: "pointer",
-            }}
-          >
-            Add Balance
-          </button>
-
-          <button
-            onClick={() =>
-              freezeUser(
-                user._id
-              )
-            }
-            style={{
-              marginTop: 10,
-              width: "100%",
-              padding: 12,
-              background: "#dc2626",
-              border: "none",
-              borderRadius: 10,
-              color: "white",
-              cursor: "pointer",
-            }}
-          >
-            {user.frozen
-              ? "Unfreeze User"
-              : "Freeze User"}
-          </button>
-
-          <button
-            onClick={() =>
-              deleteUser(
-                user._id
-              )
-            }
-            style={{
-              marginTop: 10,
-              width: "100%",
-              padding: 12,
-              background: "#7f1d1d",
-              border: "none",
-              borderRadius: 10,
-              color: "white",
-              cursor: "pointer",
-            }}
-          >
-            Delete User
-          </button>
-        </div>
-      ))}
-
-      <br />
-      <br />
-
-      <h2>
-        📜 All Transactions
-      </h2>
-
-      <br />
-
-      {transactions.length === 0 ? (
-        <p>
-          No transactions yet
-        </p>
-      ) : (
-        transactions.map(
-          (tx, index) => (
-            <div
-              key={index}
-              style={{
-                background:
-                  "#111827",
-                padding: 20,
-                borderRadius: 15,
-                marginBottom: 15,
-              }}
-            >
-              <p>
-                <strong>
-                  Type:
-                </strong>{" "}
-                {tx.type}
-              </p>
-
-              <p>
-                <strong>
-                  From:
-                </strong>{" "}
-                {
-                  tx.fromEmail
-                }
-              </p>
-
-              <p>
-                <strong>
-                  To:
-                </strong>{" "}
-                {tx.toEmail}
-              </p>
-
-              <p>
-                <strong>
-                  Amount:
-                </strong>{" "}
-                $
-                {tx.amount}
-              </p>
-
-              <p>
-                <strong>
-                  Fee:
-                </strong>{" "}
-                $
-                {tx.fee}
-              </p>
-
-              <p>
-                <strong>
-                  Net:
-                </strong>{" "}
-                $
-                {tx.netAmount}
-              </p>
-
-              <p>
-                <strong>
-                  Date:
-                </strong>{" "}
-                {new Date(
-                  tx.createdAt
-                ).toLocaleString()}
-              </p>
-            </div>
-          )
-        )
-      )}
-
-      <br />
-      <br />
-
-      <h2>
-        🆘 Support Tickets
-      </h2>
-
-      <br />
-
-      {supports.length === 0 ? (
-        <p>
-          No tickets yet
-        </p>
-      ) : (
-        supports.map(
-          (ticket) => (
-            <div
-              key={ticket._id}
-              style={{
-                background:
-                  "#111827",
-                padding: 20,
-                borderRadius: 15,
-                marginBottom: 15,
-              }}
-            >
-              <p>
-                <strong>
-                  User:
-                </strong>{" "}
-                {ticket.email}
-              </p>
-
-              <p>
-                <strong>
-                  Subject:
-                </strong>{" "}
-                {ticket.subject}
-              </p>
-
-              <p>
-                <strong>
-                  Message:
-                </strong>{" "}
-                {ticket.message}
-              </p>
-
-              <p>
-                <strong>
-                  Status:
-                </strong>{" "}
-                {ticket.status}
-              </p>
-            </div>
-          )
-        )
-      )}
-
-      <br />
-      <br />
-
-      <h2>
-        📋 Activity Logs
-      </h2>
-
-      <br />
-
-      {logs.length === 0 ? (
-        <p>
-          No logs yet
-        </p>
-      ) : (
-        logs.map((log) => (
+        {filteredUsers.length ===
+        0 ? (
           <div
-            key={log._id}
             style={{
               background:
                 "#111827",
-              padding: 20,
-              borderRadius: 15,
-              marginBottom: 15,
+
+              padding: 30,
+
+              borderRadius: 20,
+
+              textAlign:
+                "center",
             }}
           >
-            <p>
-              <strong>
-                Action:
-              </strong>{" "}
-              {log.action}
-            </p>
+            <h2>
+              📭 Empty
+            </h2>
+
+            <br />
 
             <p>
-              <strong>
-                User:
-              </strong>{" "}
-              {log.email}
-            </p>
-
-            <p>
-              <strong>
-                Date:
-              </strong>{" "}
-              {new Date(
-                log.createdAt
-              ).toLocaleString()}
+              No users found
             </p>
           </div>
-        ))
-      )}
+        ) : (
+          filteredUsers.map(
+            (user) => (
+              <div
+                key={user._id}
+                style={{
+                  background:
+                    localStorage.getItem(
+                      "theme"
+                    ) ===
+                    "light"
+                      ? "white"
+                      : "#111827",
+
+                  padding: 25,
+
+                  borderRadius: 20,
+
+                  marginBottom: 20,
+
+                  boxShadow:
+                    "0 0 10px rgba(0,0,0,0.1)",
+                }}
+              >
+                <p>
+                  <strong>
+                    Email:
+                  </strong>{" "}
+                  {user.email}
+                </p>
+
+                <br />
+
+                <p>
+                  <strong>
+                    Balance:
+                  </strong>{" "}
+                  $
+                  {
+                    user.balance
+                  }
+                </p>
+
+                <br />
+
+                <p>
+                  <strong>
+                    Revenue:
+                  </strong>{" "}
+                  $
+                  {
+                    user.revenue
+                  }
+                </p>
+
+                <br />
+
+                <p>
+                  <strong>
+                    Frozen:
+                  </strong>{" "}
+                  {user.frozen
+                    ? "Yes"
+                    : "No"}
+                </p>
+
+                <br />
+
+                <div
+                  style={{
+                    display: "flex",
+
+                    gap: 10,
+
+                    flexWrap:
+                      "wrap",
+                  }}
+                >
+                  <button
+                    onClick={() =>
+                      freezeUser(
+                        user._id
+                      )
+                    }
+                    style={{
+                      padding:
+                        "10px 20px",
+
+                      background:
+                        "#dc2626",
+
+                      border:
+                        "none",
+
+                      borderRadius: 10,
+
+                      color:
+                        "white",
+
+                      cursor:
+                        "pointer",
+                    }}
+                  >
+                    Freeze
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      unfreezeUser(
+                        user._id
+                      )
+                    }
+                    style={{
+                      padding:
+                        "10px 20px",
+
+                      background:
+                        "#16a34a",
+
+                      border:
+                        "none",
+
+                      borderRadius: 10,
+
+                      color:
+                        "white",
+
+                      cursor:
+                        "pointer",
+                    }}
+                  >
+                    Unfreeze
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      deleteUser(
+                        user._id
+                      )
+                    }
+                    style={{
+                      padding:
+                        "10px 20px",
+
+                      background:
+                        "#111827",
+
+                      border:
+                        "none",
+
+                      borderRadius: 10,
+
+                      color:
+                        "white",
+
+                      cursor:
+                        "pointer",
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            )
+          )
+        )}
+
+        <br />
+        <br />
+
+        <h2>
+          🏦 Deposit Requests
+        </h2>
+
+        <br />
+
+        {depositRequests.length ===
+        0 ? (
+          <div
+            style={{
+              background:
+                "#111827",
+
+              padding: 30,
+
+              borderRadius: 20,
+
+              textAlign:
+                "center",
+            }}
+          >
+            <h2>
+              📭 Empty
+            </h2>
+
+            <br />
+
+            <p>
+              No deposit requests
+            </p>
+          </div>
+        ) : (
+          depositRequests.map(
+            (request) => (
+              <div
+                key={request._id}
+                style={{
+                  background:
+                    localStorage.getItem(
+                      "theme"
+                    ) ===
+                    "light"
+                      ? "white"
+                      : "#111827",
+
+                  padding: 25,
+
+                  borderRadius: 20,
+
+                  marginBottom: 20,
+
+                  boxShadow:
+                    "0 0 10px rgba(0,0,0,0.1)",
+                }}
+              >
+                <p>
+                  <strong>
+                    Email:
+                  </strong>{" "}
+                  {
+                    request.email
+                  }
+                </p>
+
+                <br />
+
+                <p>
+                  <strong>
+                    Amount:
+                  </strong>{" "}
+                  $
+                  {
+                    request.amount
+                  }
+                </p>
+
+                <br />
+
+                <p>
+                  <strong>
+                    Method:
+                  </strong>{" "}
+                  {
+                    request.method
+                  }
+                </p>
+
+                <br />
+
+                <button
+                  onClick={() =>
+                    approveDeposit(
+                      request._id
+                    )
+                  }
+                  style={{
+                    padding:
+                      "10px 20px",
+
+                    background:
+                      "#16a34a",
+
+                    border:
+                      "none",
+
+                    borderRadius: 10,
+
+                    color:
+                      "white",
+
+                    cursor:
+                      "pointer",
+                  }}
+                >
+                  Approve Deposit
+                </button>
+              </div>
+            )
+          )
+        )}
+
+        <br />
+        <br />
+
+        <h2>
+          💸 Withdraw Requests
+        </h2>
+
+        <br />
+
+        {withdrawRequests.length ===
+        0 ? (
+          <div
+            style={{
+              background:
+                "#111827",
+
+              padding: 30,
+
+              borderRadius: 20,
+
+              textAlign:
+                "center",
+            }}
+          >
+            <h2>
+              📭 Empty
+            </h2>
+
+            <br />
+
+            <p>
+              No withdraw requests
+            </p>
+          </div>
+        ) : (
+          withdrawRequests.map(
+            (request) => (
+              <div
+                key={request._id}
+                style={{
+                  background:
+                    localStorage.getItem(
+                      "theme"
+                    ) ===
+                    "light"
+                      ? "white"
+                      : "#111827",
+
+                  padding: 25,
+
+                  borderRadius: 20,
+
+                  marginBottom: 20,
+
+                  boxShadow:
+                    "0 0 10px rgba(0,0,0,0.1)",
+                }}
+              >
+                <p>
+                  <strong>
+                    Email:
+                  </strong>{" "}
+                  {
+                    request.email
+                  }
+                </p>
+
+                <br />
+
+                <p>
+                  <strong>
+                    Amount:
+                  </strong>{" "}
+                  $
+                  {
+                    request.amount
+                  }
+                </p>
+
+                <br />
+
+                <p>
+                  <strong>
+                    Method:
+                  </strong>{" "}
+                  {
+                    request.method
+                  }
+                </p>
+
+                <br />
+
+                <p>
+                  <strong>
+                    Wallet:
+                  </strong>{" "}
+                  {
+                    request.wallet
+                  }
+                </p>
+
+                <br />
+
+                <button
+                  onClick={() =>
+                    approveWithdraw(
+                      request._id
+                    )
+                  }
+                  style={{
+                    padding:
+                      "10px 20px",
+
+                    background:
+                      "#2563eb",
+
+                    border:
+                      "none",
+
+                    borderRadius: 10,
+
+                    color:
+                      "white",
+
+                    cursor:
+                      "pointer",
+                  }}
+                >
+                  Approve Withdraw
+                </button>
+              </div>
+            )
+          )
+        )}
+      </div>
     </div>
   );
 }
