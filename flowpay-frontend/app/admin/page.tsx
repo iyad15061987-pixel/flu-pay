@@ -40,6 +40,14 @@ interface Request {
   status: string;
 }
 
+interface Support {
+  _id: string;
+  email: string;
+  subject: string;
+  message: string;
+  status: string;
+}
+
 export default function AdminPage() {
   const [users, setUsers] =
     useState<User[]>([]);
@@ -53,6 +61,9 @@ export default function AdminPage() {
   const [requests, setRequests] =
     useState<Request[]>([]);
 
+  const [supports, setSupports] =
+    useState<Support[]>([]);
+
   const [revenue, setRevenue] =
     useState(0);
 
@@ -62,6 +73,7 @@ export default function AdminPage() {
     loadRevenue();
     loadLogs();
     loadRequests();
+    loadSupports();
   }, []);
 
   const checkAdmin = async () => {
@@ -270,6 +282,35 @@ export default function AdminPage() {
           await res.json();
 
         setRequests(data);
+
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+  const loadSupports =
+    async () => {
+      try {
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        const res =
+          await fetch(
+            `${API_URL}/support-tickets`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const data =
+          await res.json();
+
+        setSupports(data);
 
       } catch (err) {
         console.log(err);
@@ -799,6 +840,64 @@ export default function AdminPage() {
                 {new Date(
                   tx.createdAt
                 ).toLocaleString()}
+              </p>
+            </div>
+          )
+        )
+      )}
+
+      <br />
+      <br />
+
+      <h2>
+        🆘 Support Tickets
+      </h2>
+
+      <br />
+
+      {supports.length === 0 ? (
+        <p>
+          No tickets yet
+        </p>
+      ) : (
+        supports.map(
+          (ticket) => (
+            <div
+              key={ticket._id}
+              style={{
+                background:
+                  "#111827",
+                padding: 20,
+                borderRadius: 15,
+                marginBottom: 15,
+              }}
+            >
+              <p>
+                <strong>
+                  User:
+                </strong>{" "}
+                {ticket.email}
+              </p>
+
+              <p>
+                <strong>
+                  Subject:
+                </strong>{" "}
+                {ticket.subject}
+              </p>
+
+              <p>
+                <strong>
+                  Message:
+                </strong>{" "}
+                {ticket.message}
+              </p>
+
+              <p>
+                <strong>
+                  Status:
+                </strong>{" "}
+                {ticket.status}
               </p>
             </div>
           )

@@ -110,6 +110,15 @@ export default function Sidebar() {
 >
   🔔 Notifications
 
+<Link
+  href="/support"
+  style={{
+    color: "white",
+    textDecoration:
+      "none",
+  }}
+>
+  🆘 Support
 </Link>
           ⚙ Settings
         </Link>
