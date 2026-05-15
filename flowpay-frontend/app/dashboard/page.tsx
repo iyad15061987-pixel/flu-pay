@@ -641,10 +641,19 @@ ${new Date(
               width: "100%",
               padding: 15,
               background:
-                "#16a34a",
+  localStorage.getItem(
+    "theme"
+  ) === "light"
+    ? "#f3f4f6"
+    : "#0f172a",
               border: "none",
               borderRadius: 10,
-              color: "white",
+              color:
+  localStorage.getItem(
+    "theme"
+  ) === "light"
+    ? "#111827"
+    : "white",
               cursor: "pointer",
             }}
           >

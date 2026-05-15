@@ -8,7 +8,13 @@ import API_URL from "@/lib/api";
 
 export default function SettingsPage() {
   const [currency, setCurrency] =
-    useState("USD");
+  const [theme, setTheme] =
+  useState(
+    localStorage.getItem(
+      "theme"
+    ) || "dark"
+  );
+  useState("USD");
 
   const [
     oldPassword,
@@ -113,7 +119,19 @@ export default function SettingsPage() {
       }
     };
 
-  const logout = () => {
+  const saveTheme = () => {
+  localStorage.setItem(
+    "theme",
+    theme
+  );
+
+  alert(
+    "Theme updated"
+  );
+
+  window.location.reload();
+};
+    const logout = () => {
     localStorage.clear();
 
     window.location.href =
@@ -209,6 +227,54 @@ export default function SettingsPage() {
           <br />
 
           <h2>
+          <br />
+<br />
+
+<h2>
+  🌙 Theme
+</h2>
+
+<br />
+
+<select
+  value={theme}
+  onChange={(e) =>
+    setTheme(
+      e.target.value
+    )
+  }
+  style={{
+    width: "100%",
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 15,
+  }}
+>
+  <option value="dark">
+    Dark
+  </option>
+
+  <option value="light">
+    Light
+  </option>
+</select>
+
+<button
+  onClick={saveTheme}
+  style={{
+    width: "100%",
+    padding: 15,
+    background:
+      "#7c3aed",
+    border: "none",
+    borderRadius: 10,
+    color: "white",
+    cursor: "pointer",
+    marginBottom: 20,
+  }}
+>
+  Save Theme
+</button>
             🔐 Change Password
           </h2>
 
