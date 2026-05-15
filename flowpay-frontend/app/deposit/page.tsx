@@ -150,10 +150,39 @@ export default function DepositPage() {
               padding: 15,
 
               borderRadius: 10,
+
+              wordBreak:
+                "break-all",
             }}
           >
             payments@flowpay.com
           </div>
+
+          <button
+            onClick={() =>
+              navigator.clipboard.writeText(
+                "payments@flowpay.com"
+              )
+            }
+            style={{
+              marginTop: 10,
+
+              padding: 10,
+
+              border: "none",
+
+              borderRadius: 10,
+
+              background:
+                "#2563eb",
+
+              color: "white",
+
+              cursor: "pointer",
+            }}
+          >
+            Copy PayPal
+          </button>
 
           <br />
           <br />
@@ -214,6 +243,33 @@ export default function DepositPage() {
               >
                 bc1qztfc7yp5p8mjr9002sdweh7ks9gydhm0lrcpty
               </p>
+
+              <button
+                onClick={() =>
+                  navigator.clipboard.writeText(
+                    "bc1qztfc7yp5p8mjr9002sdweh7ks9gydhm0lrcpty"
+                  )
+                }
+                style={{
+                  marginTop: 10,
+
+                  padding: 10,
+
+                  border: "none",
+
+                  borderRadius: 10,
+
+                  background:
+                    "#2563eb",
+
+                  color: "white",
+
+                  cursor:
+                    "pointer",
+                }}
+              >
+                Copy Address
+              </button>
             </div>
 
             <div
@@ -256,6 +312,33 @@ export default function DepositPage() {
               >
                 TCriCVuuWBWV8DW9aFNfjFvtrd5anyZSwp
               </p>
+
+              <button
+                onClick={() =>
+                  navigator.clipboard.writeText(
+                    "TCriCVuuWBWV8DW9aFNfjFvtrd5anyZSwp"
+                  )
+                }
+                style={{
+                  marginTop: 10,
+
+                  padding: 10,
+
+                  border: "none",
+
+                  borderRadius: 10,
+
+                  background:
+                    "#2563eb",
+
+                  color: "white",
+
+                  cursor:
+                    "pointer",
+                }}
+              >
+                Copy Address
+              </button>
             </div>
 
             <div
@@ -298,6 +381,33 @@ export default function DepositPage() {
               >
                 0x3fa91e9Cb73306C4566D2fEf640E212B9bf034CE
               </p>
+
+              <button
+                onClick={() =>
+                  navigator.clipboard.writeText(
+                    "0x3fa91e9Cb73306C4566D2fEf640E212B9bf034CE"
+                  )
+                }
+                style={{
+                  marginTop: 10,
+
+                  padding: 10,
+
+                  border: "none",
+
+                  borderRadius: 10,
+
+                  background:
+                    "#2563eb",
+
+                  color: "white",
+
+                  cursor:
+                    "pointer",
+                }}
+              >
+                Copy Address
+              </button>
             </div>
           </div>
 
@@ -313,8 +423,11 @@ export default function DepositPage() {
             }
             style={{
               width: "100%",
+
               padding: 15,
+
               borderRadius: 10,
+
               marginBottom: 15,
             }}
           >
@@ -338,9 +451,13 @@ export default function DepositPage() {
             }
             style={{
               width: "100%",
+
               padding: 15,
+
               borderRadius: 10,
+
               border: "none",
+
               marginBottom: 15,
             }}
           />
@@ -404,7 +521,9 @@ export default function DepositPage() {
             }
             style={{
               width: "100%",
+
               padding: 15,
+
               background:
                 "#16a34a",
 

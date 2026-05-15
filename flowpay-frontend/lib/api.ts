@@ -1,5 +1,4 @@
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "http://localhost:5000";
+  "https://flu-pay.onrender.com";
 
 export default API_URL;
