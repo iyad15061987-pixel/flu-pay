@@ -2254,6 +2254,48 @@ app.get(
   }
 );
 // =========================
+// PUBLIC PAYMENT PROFILE
+// =========================
+
+app.get(
+  "/pay/:email",
+  async (req, res) => {
+    try {
+      const user =
+        await User.findOne({
+          email:
+            req.params.email,
+        });
+
+      if (!user) {
+        return res.status(404).json({
+          message:
+            "User not found",
+        });
+      }
+
+      res.json({
+        email:
+          user.email,
+
+        role:
+          user.role,
+      });
+
+    } catch (err) {
+      console.log(
+        "PAY PROFILE ERROR:",
+        err
+      );
+
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+// =========================
 // START SERVER
 // =========================
 

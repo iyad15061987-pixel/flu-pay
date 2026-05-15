@@ -115,6 +115,22 @@ export default function ProfilePage() {
 
             <p>
               Personal Receive QR
+            <br />
+
+<div
+  style={{
+    background:
+      "#1f2937",
+    padding: 15,
+    borderRadius: 10,
+    wordBreak:
+      "break-all",
+  }}
+>
+  {window.location.origin}
+  /pay/
+  {profile.email}
+</div>
             </p>
           </div>
 
