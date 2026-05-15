@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 
 import Sidebar from "../components/Sidebar";
 
+import BalanceChart from "../components/BalanceChart";
+
 import API_URL from "@/lib/api";
 
 interface Transaction {
@@ -365,6 +367,9 @@ ${new Date(
             {email}
           </strong>
         </div>
+<BalanceChart
+  balance={balance}
+/>
 
         {analytics && (
           <>
