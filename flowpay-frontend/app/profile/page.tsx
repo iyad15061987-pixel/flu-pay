@@ -1,46 +1,63 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
+import Sidebar from "../components/Sidebar";
+
 import API_URL from "@/lib/api";
 
 export default function ProfilePage() {
-  const [user, setUser] =
+  const [profile, setProfile] =
     useState<any>(null);
 
   useEffect(() => {
     loadProfile();
   }, []);
 
-  const loadProfile = async () => {
-    const token =
-      localStorage.getItem("token");
+  const loadProfile =
+    async () => {
+      try {
+        const token =
+          localStorage.getItem(
+            "token"
+          );
 
-    const res = await fetch(
-      `${API_URL}/me`,
-      {
-        headers: {
-          Authorization:
-            `Bearer ${token}`,
-        },
+        const email =
+          localStorage.getItem(
+            "email"
+          );
+
+        const res =
+          await fetch(
+            `${API_URL}/profile/${email}`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const data =
+          await res.json();
+
+        setProfile(data);
+
+      } catch (err) {
+        console.log(err);
       }
-    );
+    };
 
-    const data =
-      await res.json();
-
-    setUser(data);
-  };
-
-  if (!user) {
+  if (!profile) {
     return (
       <div
         style={{
-          padding: 40,
-          color: "white",
           background:
             "#0f172a",
           minHeight:
             "100vh",
+          color: "white",
+          padding: 40,
         }}
       >
         Loading...
@@ -51,52 +68,134 @@ export default function ProfilePage() {
   return (
     <div
       style={{
-        padding: 40,
+        display: "flex",
         background: "#0f172a",
         minHeight: "100vh",
-        color: "white",
       }}
     >
-      <h1>
-        👤 Profile
-      </h1>
-
-      <br />
+      <Sidebar />
 
       <div
         style={{
-          background:
-            "#111827",
-          padding: 30,
-          borderRadius: 20,
+          marginLeft: 250,
+          padding: 40,
+          width: "100%",
+          color: "white",
         }}
       >
-        <p>
-          <strong>Email:</strong>{" "}
-          {user.email}
-        </p>
+        <h1>
+          👤 Profile
+        </h1>
 
-        <p>
-          <strong>Balance:</strong>{" "}
-          ${user.balance}
-        </p>
+        <br />
 
-        <p>
-          <strong>Role:</strong>{" "}
-          {user.role}
-        </p>
+        <div
+          style={{
+            background:
+              "#111827",
+            padding: 30,
+            borderRadius: 20,
+            maxWidth: 700,
+          }}
+        >
+          <div
+            style={{
+              textAlign:
+                "center",
+              marginBottom: 30,
+            }}
+          >
+            <img
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${profile.email}`}
+              width="200"
+            />
 
-        <p>
-          <strong>Frozen:</strong>{" "}
-          {user.frozen
-            ? "Yes"
-            : "No"}
-        </p>
+            <br />
+            <br />
 
-        <p>
-          <strong>Total Revenue:</strong>{" "}
-          ${user.revenue || 0}
-        </p>
+            <p>
+              Personal Receive QR
+            </p>
+          </div>
+
+          <p>
+            <strong>
+              Email:
+            </strong>{" "}
+            {profile.email}
+          </p>
+
+          <br />
+
+          <p>
+            <strong>
+              Balance:
+            </strong>{" "}
+            $
+            {profile.balance}
+          </p>
+
+          <br />
+
+          <p>
+            <strong>
+              Revenue:
+            </strong>{" "}
+            $
+            {profile.revenue}
+          </p>
+
+          <br />
+
+          <p>
+            <strong>
+              Currency:
+            </strong>{" "}
+            {profile.currency}
+          </p>
+
+          <br />
+
+          <p>
+            <strong>
+              Role:
+            </strong>{" "}
+            {profile.role}
+          </p>
+
+          <br />
+
+          <p>
+            <strong>
+              Frozen:
+            </strong>{" "}
+            {profile.frozen
+              ? "Yes"
+              : "No"}
+          </p>
+
+          <br />
+
+          <p>
+            <strong>
+              Total Transactions:
+            </strong>{" "}
+            {
+              profile.totalTransactions
+            }
+          </p>
+
+          <br />
+
+          <p>
+            <strong>
+              Account Created:
+            </strong>{" "}
+            {new Date(
+              profile.createdAt
+            ).toLocaleString()}
+          </p>
+        </div>
       </div>
     </div>
   );

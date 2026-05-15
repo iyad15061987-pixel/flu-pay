@@ -2176,6 +2176,84 @@ app.get(
   }
 );
 // =========================
+// USER PROFILE
+// =========================
+
+app.get(
+  "/profile/:email",
+  auth,
+  async (req, res) => {
+    try {
+      const email =
+        req.params.email;
+
+      const user =
+        await User.findOne({
+          email,
+        });
+
+      if (!user) {
+        return res.status(404).json({
+          message:
+            "User not found",
+        });
+      }
+
+      const transactions =
+        await Transaction.find({
+          $or: [
+            {
+              fromEmail:
+                email,
+            },
+
+            {
+              toEmail:
+                email,
+            },
+          ],
+        });
+
+      res.json({
+        email:
+          user.email,
+
+        balance:
+          user.balance,
+
+        revenue:
+          user.revenue,
+
+        role:
+          user.role,
+
+        frozen:
+          user.frozen,
+
+        currency:
+          user.currency,
+
+        totalTransactions:
+          transactions.length,
+
+        createdAt:
+          user._id.getTimestamp(),
+      });
+
+    } catch (err) {
+      console.log(
+        "PROFILE ERROR:",
+        err
+      );
+
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+// =========================
 // START SERVER
 // =========================
 
