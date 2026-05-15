@@ -201,6 +201,34 @@ const Notification =
     NotificationSchema
   );
 // =========================
+// SUPPORT MODEL
+// =========================
+
+const SupportSchema =
+  new mongoose.Schema({
+    email: String,
+
+    subject: String,
+
+    message: String,
+
+    status: {
+      type: String,
+      default: "open",
+    },
+
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+  });
+
+const Support =
+  mongoose.model(
+    "Support",
+    SupportSchema
+  );
+  // =========================
 // REQUEST MODEL
 // =========================
 
@@ -2058,6 +2086,85 @@ app.post(
     } catch (err) {
       console.log(
         "PASSWORD ERROR:",
+        err
+      );
+
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+// =========================
+// CREATE SUPPORT TICKET
+// =========================
+
+app.post(
+  "/create-support",
+  auth,
+  async (req, res) => {
+    try {
+      const {
+        email,
+        subject,
+        message,
+      } = req.body;
+
+      const support =
+        new Support({
+          email,
+          subject,
+          message,
+        });
+
+      await support.save();
+
+      await Notification.create({
+        email,
+
+        message:
+          "Your support ticket has been submitted",
+      });
+
+      res.json({
+        message:
+          "Support ticket created",
+      });
+
+    } catch (err) {
+      console.log(
+        "SUPPORT ERROR:",
+        err
+      );
+
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+
+// =========================
+// GET SUPPORT TICKETS
+// =========================
+
+app.get(
+  "/support-tickets",
+  adminAuth,
+  async (req, res) => {
+    try {
+      const tickets =
+        await Support.find().sort({
+          createdAt: -1,
+        });
+
+      res.json(tickets);
+
+    } catch (err) {
+      console.log(
+        "SUPPORT TICKETS ERROR:",
         err
       );
 
