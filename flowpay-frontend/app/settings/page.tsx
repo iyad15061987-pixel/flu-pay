@@ -8,13 +8,14 @@ import API_URL from "@/lib/api";
 
 export default function SettingsPage() {
   const [currency, setCurrency] =
+    useState("USD");
+
   const [theme, setTheme] =
-  useState(
-    localStorage.getItem(
-      "theme"
-    ) || "dark"
-  );
-  useState("USD");
+    useState(
+      localStorage.getItem(
+        "theme"
+      ) || "dark"
+    );
 
   const [
     oldPassword,
@@ -70,6 +71,19 @@ export default function SettingsPage() {
       }
     };
 
+  const saveTheme = () => {
+    localStorage.setItem(
+      "theme",
+      theme
+    );
+
+    alert(
+      "Theme updated"
+    );
+
+    window.location.reload();
+  };
+
   const changePassword =
     async () => {
       try {
@@ -119,19 +133,7 @@ export default function SettingsPage() {
       }
     };
 
-  const saveTheme = () => {
-  localStorage.setItem(
-    "theme",
-    theme
-  );
-
-  alert(
-    "Theme updated"
-  );
-
-  window.location.reload();
-};
-    const logout = () => {
+  const logout = () => {
     localStorage.clear();
 
     window.location.href =
@@ -142,7 +144,14 @@ export default function SettingsPage() {
     <div
       style={{
         display: "flex",
-        background: "#0f172a",
+
+        background:
+          localStorage.getItem(
+            "theme"
+          ) === "light"
+            ? "#f3f4f6"
+            : "#0f172a",
+
         minHeight: "100vh",
       }}
     >
@@ -151,9 +160,17 @@ export default function SettingsPage() {
       <div
         style={{
           marginLeft: 250,
+
           padding: 40,
+
           width: "100%",
-          color: "white",
+
+          color:
+            localStorage.getItem(
+              "theme"
+            ) === "light"
+              ? "#111827"
+              : "white",
         }}
       >
         <h1>
@@ -165,10 +182,20 @@ export default function SettingsPage() {
         <div
           style={{
             background:
-              "#111827",
+              localStorage.getItem(
+                "theme"
+              ) === "light"
+                ? "white"
+                : "#111827",
+
             padding: 30,
+
             borderRadius: 20,
+
             maxWidth: 500,
+
+            boxShadow:
+              "0 0 10px rgba(0,0,0,0.1)",
           }}
         >
           <h2>
@@ -227,54 +254,55 @@ export default function SettingsPage() {
           <br />
 
           <h2>
+            🌙 Theme
+          </h2>
+
           <br />
-<br />
 
-<h2>
-  🌙 Theme
-</h2>
+          <select
+            value={theme}
+            onChange={(e) =>
+              setTheme(
+                e.target.value
+              )
+            }
+            style={{
+              width: "100%",
+              padding: 15,
+              borderRadius: 10,
+              marginBottom: 15,
+            }}
+          >
+            <option value="dark">
+              Dark
+            </option>
 
-<br />
+            <option value="light">
+              Light
+            </option>
+          </select>
 
-<select
-  value={theme}
-  onChange={(e) =>
-    setTheme(
-      e.target.value
-    )
-  }
-  style={{
-    width: "100%",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-  }}
->
-  <option value="dark">
-    Dark
-  </option>
+          <button
+            onClick={saveTheme}
+            style={{
+              width: "100%",
+              padding: 15,
+              background:
+                "#7c3aed",
+              border: "none",
+              borderRadius: 10,
+              color: "white",
+              cursor: "pointer",
+              marginBottom: 20,
+            }}
+          >
+            Save Theme
+          </button>
 
-  <option value="light">
-    Light
-  </option>
-</select>
+          <br />
+          <br />
 
-<button
-  onClick={saveTheme}
-  style={{
-    width: "100%",
-    padding: 15,
-    background:
-      "#7c3aed",
-    border: "none",
-    borderRadius: 10,
-    color: "white",
-    cursor: "pointer",
-    marginBottom: 20,
-  }}
->
-  Save Theme
-</button>
+          <h2>
             🔐 Change Password
           </h2>
 
