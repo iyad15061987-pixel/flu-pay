@@ -645,6 +645,13 @@ app.post(
           fromUserId
         );
 
+        if (sender.frozen) {
+  return res.status(403).json({
+    message:
+      "Account frozen",
+  });
+}
+
       const receiver =
         await User.findOne({
           email:
@@ -2287,6 +2294,107 @@ app.get(
         "PAY PROFILE ERROR:",
         err
       );
+
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+// =========================
+// FREEZE USER
+// =========================
+
+app.post(
+  "/freeze-user",
+  adminAuth,
+  async (req, res) => {
+    try {
+      const { userId } =
+        req.body;
+
+      await User.findByIdAndUpdate(
+        userId,
+        {
+          frozen: true,
+        }
+      );
+
+      res.json({
+        message:
+          "User frozen",
+      });
+
+    } catch (err) {
+      console.log(err);
+
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+
+// =========================
+// UNFREEZE USER
+// =========================
+
+app.post(
+  "/unfreeze-user",
+  adminAuth,
+  async (req, res) => {
+    try {
+      const { userId } =
+        req.body;
+
+      await User.findByIdAndUpdate(
+        userId,
+        {
+          frozen: false,
+        }
+      );
+
+      res.json({
+        message:
+          "User unfrozen",
+      });
+
+    } catch (err) {
+      console.log(err);
+
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+
+// =========================
+// DELETE USER
+// =========================
+
+app.post(
+  "/delete-user",
+  adminAuth,
+  async (req, res) => {
+    try {
+      const { userId } =
+        req.body;
+
+      await User.findByIdAndDelete(
+        userId
+      );
+
+      res.json({
+        message:
+          "User deleted",
+      });
+
+    } catch (err) {
+      console.log(err);
 
       res.status(500).json({
         message:
