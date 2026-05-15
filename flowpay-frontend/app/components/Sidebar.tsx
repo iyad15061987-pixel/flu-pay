@@ -21,6 +21,7 @@ export default function Sidebar() {
         position: "fixed",
         left: 0,
         top: 0,
+        overflowY: "auto",
       }}
     >
       <h1
@@ -73,6 +74,39 @@ export default function Sidebar() {
         </Link>
 
         <Link
+          href="/requests"
+          style={{
+            color: "white",
+            textDecoration:
+              "none",
+          }}
+        >
+          📋 My Requests
+        </Link>
+
+        <Link
+          href="/notifications"
+          style={{
+            color: "white",
+            textDecoration:
+              "none",
+          }}
+        >
+          🔔 Notifications
+        </Link>
+
+        <Link
+          href="/support"
+          style={{
+            color: "white",
+            textDecoration:
+              "none",
+          }}
+        >
+          🆘 Support
+        </Link>
+
+        <Link
           href="/profile"
           style={{
             color: "white",
@@ -91,35 +125,6 @@ export default function Sidebar() {
               "none",
           }}
         >
-          <Link
-  href="/requests"
-  style={{
-    color: "white",
-    textDecoration:
-      "none",
-  }}
->
-  📋 My Requests
-<Link
-  href="/notifications"
-  style={{
-    color: "white",
-    textDecoration:
-      "none",
-  }}
->
-  🔔 Notifications
-
-<Link
-  href="/support"
-  style={{
-    color: "white",
-    textDecoration:
-      "none",
-  }}
->
-  🆘 Support
-</Link>
           ⚙ Settings
         </Link>
 
