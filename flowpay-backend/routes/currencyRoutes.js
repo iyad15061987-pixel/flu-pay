@@ -6,17 +6,53 @@ const router =
 
 const {
   auth,
+  adminOnly,
 } = require(
   "../middleware/auth"
 );
 
-const ExchangeRate =
-  require(
-    "../models/ExchangeRate"
-  );
+// =========================
+// GET CURRENCIES
+// =========================
 
 router.get(
-  "/exchange-rates",
+  "/currencies",
+
+  auth,
+
+  async (req, res) => {
+    try {
+
+      const currencies = [
+        "USD",
+        "EUR",
+        "GBP",
+        "ILS",
+        "AED",
+      ];
+
+      return res.json(
+        currencies
+      );
+
+    } catch (err) {
+
+      console.log(err);
+
+      return res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+
+// =========================
+// ADMIN UPDATE RATES
+// =========================
+
+router.post(
+  "/currencies/update",
 
   auth,
 
@@ -24,17 +60,17 @@ router.get(
 
   async (req, res) => {
     try {
-      const rates =
-        await ExchangeRate.find();
 
-      res.json(
-        rates
-      );
+      return res.json({
+        message:
+          "Currency rates updated",
+      });
 
     } catch (err) {
+
       console.log(err);
 
-      res.status(500).json({
+      return res.status(500).json({
         message:
           "Server error",
       });
