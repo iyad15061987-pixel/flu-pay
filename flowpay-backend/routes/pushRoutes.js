@@ -6,17 +6,17 @@ const router =
 
 const {
   auth,
+  adminOnly,
 } = require(
   "../middleware/auth"
 );
 
-const User =
-  require(
-    "../models/User"
-  );
+// =========================
+// SEND PUSH NOTIFICATION
+// =========================
 
 router.post(
-  "/save-fcm-token",
+  "/push/send",
 
   auth,
 
@@ -24,27 +24,59 @@ router.post(
 
   async (req, res) => {
     try {
+
       const {
-        token,
+        title,
+        body,
       } = req.body;
 
-      await User.findByIdAndUpdate(
-        req.user.id,
-        {
-          fcmToken:
-            token,
-        }
-      );
-
-      res.json({
+      return res.json({
         message:
-          "FCM token saved",
+          "Push notification queued",
+
+        data: {
+          title,
+          body,
+        },
       });
 
     } catch (err) {
+
       console.log(err);
 
-      res.status(500).json({
+      return res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+
+// =========================
+// PUSH STATUS
+// =========================
+
+router.get(
+  "/push/status",
+
+  auth,
+
+  async (req, res) => {
+    try {
+
+      return res.json({
+        firebase:
+          false,
+
+        message:
+          "Firebase optional mode active",
+      });
+
+    } catch (err) {
+
+      console.log(err);
+
+      return res.status(500).json({
         message:
           "Server error",
       });
