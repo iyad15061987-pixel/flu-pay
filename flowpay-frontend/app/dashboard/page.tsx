@@ -1,30 +1,94 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import socket from "@/lib/socket";
+
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import Sidebar from "../components/Sidebar";
 
 import BalanceChart from "../components/BalanceChart";
 
+import MerchantAnalytics
+  from "../components/MerchantAnalytics";
+
 import API_URL from "@/lib/api";
 
 interface Transaction {
   _id: string;
+
   fromEmail: string;
+
   toEmail: string;
+
   amount: number;
+
   fee: number;
+
   netAmount: number;
+
   type: string;
+
+  createdAt: string;
+}
+
+interface Invoice {
+  _id: string;
+
+  customerEmail: string;
+
+  amount: number;
+
+  currency: string;
+
+  description: string;
+
+  paymentLink: string;
+
+  status: string;
+
+  createdAt: string;
+}
+
+interface Withdrawal {
+  _id: string;
+
+  amount: number;
+
+  fee: number;
+
+  netAmount: number;
+
+  method: string;
+
+  destination: string;
+
+  status: string;
+
+  riskLevel: string;
+
   createdAt: string;
 }
 
 export default function DashboardPage() {
+
+  const [mounted, setMounted] =
+    useState(false);
+
+  const [theme, setTheme] =
+    useState("dark");
+
   const [email, setEmail] =
     useState("");
 
   const [balance, setBalance] =
     useState(0);
+
+  // =========================
+  // TRANSFER
+  // =========================
 
   const [
     receiverEmail,
@@ -33,6 +97,74 @@ export default function DashboardPage() {
 
   const [amount, setAmount] =
     useState("");
+
+  // =========================
+  // DEPOSIT
+  // =========================
+
+  const [
+    depositAmount,
+    setDepositAmount,
+  ] = useState("");
+
+  const [
+    depositMethod,
+    setDepositMethod,
+  ] = useState("paypal");
+
+  const [
+    deposits,
+    setDeposits,
+  ] = useState<any[]>([]);
+
+  // =========================
+  // WITHDRAWAL
+  // =========================
+
+  const [
+    withdrawalAmount,
+    setWithdrawalAmount,
+  ] = useState("");
+
+  const [
+    withdrawalMethod,
+    setWithdrawalMethod,
+  ] = useState("paypal");
+
+  const [
+    withdrawalDestination,
+    setWithdrawalDestination,
+  ] = useState("");
+
+  const [
+    withdrawals,
+    setWithdrawals,
+  ] = useState<
+    Withdrawal[]
+  >([]);
+
+  // =========================
+  // INVOICES
+  // =========================
+
+  const [
+    invoiceAmount,
+    setInvoiceAmount,
+  ] = useState("");
+
+  const [
+    customerEmail,
+    setCustomerEmail,
+  ] = useState("");
+
+  const [
+    invoiceDescription,
+    setInvoiceDescription,
+  ] = useState("");
+
+  // =========================
+  // DATA
+  // =========================
 
   const [
     transactions,
@@ -44,125 +176,109 @@ export default function DashboardPage() {
   const [analytics, setAnalytics] =
     useState<any>(null);
 
-  const [activities, setActivities] =
-    useState<any[]>([]);
+  const [
+    merchantAnalytics,
+    setMerchantAnalytics,
+  ] = useState<any>(
+    null
+  );
 
-  const fee =
-    Number(amount || 0) *
-    0.0001;
+  const [invoices, setInvoices] =
+    useState<Invoice[]>([]);
 
-  const netAmount =
-    Number(amount || 0) -
-    fee;
+  // =========================
+  // 2FA
+  // =========================
 
-  useEffect(() => {
-    const savedEmail =
-      localStorage.getItem(
-        "email"
-      );
+  const [
+    twoFactorEnabled,
+    setTwoFactorEnabled,
+  ] = useState(false);
 
-    const savedToken =
-      localStorage.getItem(
-        "token"
-      );
+  // =========================
+  // LOAD USER
+  // =========================
 
-    if (
-      !savedEmail ||
-      !savedToken
-    ) {
-      window.location.href =
-        "/login";
+  const loadUser =
+    async () => {
 
-      return;
-    }
-
-    setEmail(savedEmail);
-
-    loadUser(
-      savedEmail,
-      savedToken
-    );
-
-    loadTransactions(
-      savedEmail,
-      savedToken
-    );
-
-    loadAnalytics(
-      savedEmail,
-      savedToken
-    );
-
-    loadActivities(
-      savedEmail,
-      savedToken
-    );
-
-    const payEmail =
-      localStorage.getItem(
-        "payEmail"
-      );
-
-    const payAmount =
-      localStorage.getItem(
-        "payAmount"
-      );
-
-    if (payEmail) {
-      setReceiverEmail(
-        payEmail
-      );
-
-      localStorage.removeItem(
-        "payEmail"
-      );
-    }
-
-    if (payAmount) {
-      setAmount(payAmount);
-
-      localStorage.removeItem(
-        "payAmount"
-      );
-    }
-  }, []);
-
-  const loadUser = async (
-    userEmail: string,
-    token: string
-  ) => {
-    try {
-      const res = await fetch(
-        `${API_URL}/user/${userEmail}`,
-        {
-          headers: {
-            Authorization:
-              `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data =
-        await res.json();
-
-      setBalance(
-        data.balance || 0
-      );
-
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  const loadTransactions =
-    async (
-      userEmail: string,
-      token: string
-    ) => {
       try {
+
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        const email =
+          localStorage.getItem(
+            "email"
+          );
+
+        if (
+          !token ||
+          !email
+        ) {
+
+          window.location.href =
+            "/login";
+
+          return;
+
+        }
+
         const res =
           await fetch(
-            `${API_URL}/transactions/${userEmail}`,
+            `${API_URL}/user/${email}`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const data =
+          await res.json();
+
+        setBalance(
+          data.balance || 0
+        );
+
+        setTwoFactorEnabled(
+          data.twoFactorEnabled ||
+            false
+        );
+
+      } catch (err) {
+
+        console.log(err);
+
+      }
+
+    };
+
+  // =========================
+  // LOAD TRANSACTIONS
+  // =========================
+
+  const loadTransactions =
+    async () => {
+
+      try {
+
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        const email =
+          localStorage.getItem(
+            "email"
+          );
+
+        const res =
+          await fetch(
+            `${API_URL}/transactions/${email}`,
             {
               headers: {
                 Authorization:
@@ -177,19 +293,30 @@ export default function DashboardPage() {
         setTransactions(data);
 
       } catch (err) {
+
         console.log(err);
+
       }
+
     };
 
+  // =========================
+  // LOAD ANALYTICS
+  // =========================
+
   const loadAnalytics =
-    async (
-      email: string,
-      token: string
-    ) => {
+    async () => {
+
       try {
+
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
         const res =
           await fetch(
-            `${API_URL}/analytics/${email}`,
+            `${API_URL}/analytics`,
             {
               headers: {
                 Authorization:
@@ -204,19 +331,30 @@ export default function DashboardPage() {
         setAnalytics(data);
 
       } catch (err) {
+
         console.log(err);
+
       }
+
     };
 
-  const loadActivities =
-    async (
-      userEmail: string,
-      token: string
-    ) => {
+  // =========================
+  // LOAD MERCHANT ANALYTICS
+  // =========================
+
+  const loadMerchantAnalytics =
+    async () => {
+
       try {
-        const txRes =
+
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        const res =
           await fetch(
-            `${API_URL}/transactions/${userEmail}`,
+            `${API_URL}/merchant/analytics`,
             {
               headers: {
                 Authorization:
@@ -225,38 +363,30 @@ export default function DashboardPage() {
             }
           );
 
-        const txData =
-          await txRes.json();
+        const data =
+          await res.json();
 
-        const formatted =
-          txData.map(
-            (tx: any) => ({
-              type:
-                tx.type,
-
-              amount:
-                tx.amount,
-
-              createdAt:
-                tx.createdAt,
-            })
-          );
-
-        setActivities(
-          formatted.slice(
-            0,
-            10
-          )
+        setMerchantAnalytics(
+          data
         );
 
       } catch (err) {
+
         console.log(err);
+
       }
+
     };
 
-  const transfer =
+  // =========================
+  // LOAD DEPOSITS
+  // =========================
+
+  const loadDeposits =
     async () => {
+
       try {
+
         const token =
           localStorage.getItem(
             "token"
@@ -264,7 +394,125 @@ export default function DashboardPage() {
 
         const res =
           await fetch(
-            `${API_URL}/transfer`,
+            `${API_URL}/deposits`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const data =
+          await res.json();
+
+        setDeposits(
+          data
+        );
+
+      } catch (err) {
+
+        console.log(err);
+
+      }
+
+    };
+
+  // =========================
+  // LOAD WITHDRAWALS
+  // =========================
+
+  const loadWithdrawals =
+    async () => {
+
+      try {
+
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        const res =
+          await fetch(
+            `${API_URL}/withdrawals`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const data =
+          await res.json();
+
+        setWithdrawals(
+          data
+        );
+
+      } catch (err) {
+
+        console.log(err);
+
+      }
+
+    };
+
+  // =========================
+  // LOAD INVOICES
+  // =========================
+
+  const loadInvoices =
+    async () => {
+
+      try {
+
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        const res =
+          await fetch(
+            `${API_URL}/merchant/invoices`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const data =
+          await res.json();
+
+        setInvoices(data);
+
+      } catch (err) {
+
+        console.log(err);
+
+      }
+
+    };
+
+  // =========================
+  // CREATE DEPOSIT
+  // =========================
+
+  const createDeposit =
+    async () => {
+
+      try {
+
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        const res =
+          await fetch(
+            `${API_URL}/deposits`,
             {
               method: "POST",
 
@@ -277,13 +525,14 @@ export default function DashboardPage() {
               },
 
               body: JSON.stringify({
-                fromEmail:
-                  email,
+                amount:
+                  depositAmount,
 
-                toEmail:
-                  receiverEmail,
+                method:
+                  depositMethod,
 
-                amount,
+                reference:
+                  "Wallet Funding",
               }),
             }
           );
@@ -291,758 +540,795 @@ export default function DashboardPage() {
         const data =
           await res.json();
 
-        alert(data.message);
-
-        setAmount("");
-
-        setReceiverEmail("");
-
-        loadUser(
-          email,
-          token || ""
+        alert(
+          data.message
         );
 
-        loadTransactions(
-          email,
-          token || ""
-        );
+        setDepositAmount("");
 
-        loadAnalytics(
-          email,
-          token || ""
-        );
+        loadUser();
 
-        loadActivities(
-          email,
-          token || ""
-        );
+        loadDeposits();
+
+        loadAnalytics();
 
       } catch (err) {
-        alert("Server error");
+
+        console.log(err);
+
       }
+
     };
 
-  const downloadReceipt =
-    (tx: any) => {
-      const content = `
-FLOWPAY RECEIPT
+  // =========================
+  // CREATE WITHDRAWAL
+  // =========================
 
-Type: ${tx.type}
+  const createWithdrawal =
+    async () => {
 
-From: ${tx.fromEmail}
+      try {
 
-To: ${tx.toEmail}
+        const token =
+          localStorage.getItem(
+            "token"
+          );
 
-Amount: $${tx.amount}
+        const res =
+          await fetch(
+            `${API_URL}/withdrawals`,
+            {
+              method: "POST",
 
-Fee: $${tx.fee}
+              headers: {
+                "Content-Type":
+                  "application/json",
 
-Net Amount: $${tx.netAmount}
+                Authorization:
+                  `Bearer ${token}`,
+              },
 
-Date:
-${new Date(
-  tx.createdAt
-).toLocaleString()}
-`;
+              body: JSON.stringify({
+                amount:
+                  withdrawalAmount,
 
-      const blob =
-        new Blob([content], {
-          type: "text/plain",
-        });
+                method:
+                  withdrawalMethod,
 
-      const url =
-        URL.createObjectURL(
-          blob
+                destination:
+                  withdrawalDestination,
+              }),
+            }
+          );
+
+        const data =
+          await res.json();
+
+        alert(
+          data.message
         );
 
-      const a =
-        document.createElement(
-          "a"
+        setWithdrawalAmount("");
+
+        setWithdrawalDestination(
+          ""
         );
 
-      a.href = url;
+        loadUser();
 
-      a.download =
-        "receipt.txt";
+        loadWithdrawals();
 
-      a.click();
+      } catch (err) {
 
-      URL.revokeObjectURL(
-        url
+        console.log(err);
+
+        alert(
+          "Withdrawal failed"
+        );
+
+      }
+
+    };
+
+  // =========================
+  // EFFECT
+  // =========================
+
+  useEffect(() => {
+
+    setMounted(true);
+
+    const savedTheme =
+      localStorage.getItem(
+        "theme"
       );
+
+    if (savedTheme) {
+      setTheme(savedTheme);
+    }
+
+    socket.on(
+      "wallet_update",
+      () => {
+
+        loadUser();
+
+        loadTransactions();
+
+        loadAnalytics();
+
+      }
+    );
+
+    socket.on(
+      "deposit_created",
+      () => {
+
+        loadDeposits();
+
+        loadUser();
+
+      }
+    );
+
+    socket.on(
+      "withdrawal_created",
+      () => {
+
+        loadWithdrawals();
+
+        loadUser();
+
+      }
+    );
+
+    const savedEmail =
+      localStorage.getItem(
+        "email"
+      );
+
+    const savedToken =
+      localStorage.getItem(
+        "token"
+      );
+
+    if (
+      !savedEmail ||
+      !savedToken
+    ) {
+
+      window.location.href =
+        "/login";
+
+      return;
+
+    }
+
+    setEmail(savedEmail);
+
+    loadUser();
+
+    loadTransactions();
+
+    loadAnalytics();
+
+    loadDeposits();
+
+    loadWithdrawals();
+
+    loadInvoices();
+
+    loadMerchantAnalytics();
+
+    return () => {
+
+      socket.off(
+        "wallet_update"
+      );
+
+      socket.off(
+        "deposit_created"
+      );
+
+      socket.off(
+        "withdrawal_created"
+      );
+
     };
+
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div
       style={{
         display: "flex",
-
         background:
-          localStorage.getItem(
-            "theme"
-          ) === "light"
+          theme === "light"
             ? "#f3f4f6"
             : "#0f172a",
-
         minHeight: "100vh",
       }}
     >
+
       <Sidebar />
 
       <div
         style={{
           marginLeft: 250,
-
           padding: 40,
-
           width: "100%",
-
           color:
-            localStorage.getItem(
-              "theme"
-            ) === "light"
+            theme === "light"
               ? "#111827"
               : "white",
+          marginTop: 70,
         }}
       >
-        <h1>
-          🚀 Dashboard
-        </h1>
 
-        <br />
+        {/* HEADER */}
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent:
+              "space-between",
+            alignItems:
+              "center",
+            marginBottom: 20,
+          }}
+        >
+
+          <div>
+
+            <h1>
+              🚀 Merchant Dashboard
+            </h1>
+
+            <br />
+
+            <p>
+              Logged in as:
+              {" "}
+              <strong>
+                {email}
+              </strong>
+            </p>
+
+          </div>
+
+          <button
+            onClick={() => {
+
+              localStorage.clear();
+
+              window.location.href =
+                "/login";
+
+            }}
+
+            style={{
+              padding:
+                "10px 20px",
+              background:
+                "#dc2626",
+              color:
+                "white",
+              border:
+                "none",
+              borderRadius:
+                10,
+              cursor:
+                "pointer",
+              fontWeight:
+                "bold",
+            }}
+          >
+            Logout
+          </button>
+
+        </div>
+
+        {/* 2FA */}
 
         <div
           style={{
             background:
-              localStorage.getItem(
-                "theme"
-              ) === "light"
-                ? "white"
-                : "#111827",
-
-            padding: 30,
-
+              "#111827",
+            padding: 25,
             borderRadius: 20,
-
             marginBottom: 30,
-
-            maxWidth: 500,
-
-            boxShadow:
-              "0 0 10px rgba(0,0,0,0.1)",
           }}
         >
+
           <h2>
-            💰 Wallet Balance
+            🔐 Security
           </h2>
-
-          <br />
-
-          <h1>
-            ${balance}
-          </h1>
 
           <br />
 
           <p>
-            Logged in as:
-          </p>
+            Two-Factor Authentication:
+            {" "}
 
-          <strong>
-            {email}
-          </strong>
-        </div>
-
-        <BalanceChart
-          balance={balance}
-        />
-
-        {analytics && (
-          <>
-            <h2>
-              📊 Analytics
-            </h2>
-
-            <br />
-
-            <div
+            <strong
               style={{
-                display: "grid",
-
-                gridTemplateColumns:
-                  "repeat(auto-fit,minmax(220px,1fr))",
-
-                gap: 20,
-
-                marginBottom: 40,
+                color:
+                  twoFactorEnabled
+                    ? "#16a34a"
+                    : "#dc2626",
               }}
             >
-              <div
-                style={{
-                  background:
-                    localStorage.getItem(
-                      "theme"
-                    ) ===
-                    "light"
-                      ? "white"
-                      : "#111827",
 
-                  padding: 20,
+              {twoFactorEnabled
+                ? "Enabled"
+                : "Disabled"}
 
-                  borderRadius: 15,
-                }}
-              >
-                <h3>
-                  💸 Total Sent
-                </h3>
+            </strong>
+          </p>
 
-                <br />
+        </div>
 
-                <h2>
-                  $
-                  {
-                    analytics.totalSent
-                  }
-                </h2>
-              </div>
-
-              <div
-                style={{
-                  background:
-                    localStorage.getItem(
-                      "theme"
-                    ) ===
-                    "light"
-                      ? "white"
-                      : "#111827",
-
-                  padding: 20,
-
-                  borderRadius: 15,
-                }}
-              >
-                <h3>
-                  💰 Total Received
-                </h3>
-
-                <br />
-
-                <h2>
-                  $
-                  {
-                    analytics.totalReceived
-                  }
-                </h2>
-              </div>
-
-              <div
-                style={{
-                  background:
-                    localStorage.getItem(
-                      "theme"
-                    ) ===
-                    "light"
-                      ? "white"
-                      : "#111827",
-
-                  padding: 20,
-
-                  borderRadius: 15,
-                }}
-              >
-                <h3>
-                  🏦 Deposits
-                </h3>
-
-                <br />
-
-                <h2>
-                  {
-                    analytics.deposits
-                  }
-                </h2>
-              </div>
-
-              <div
-                style={{
-                  background:
-                    localStorage.getItem(
-                      "theme"
-                    ) ===
-                    "light"
-                      ? "white"
-                      : "#111827",
-
-                  padding: 20,
-
-                  borderRadius: 15,
-                }}
-              >
-                <h3>
-                  💸 Withdraws
-                </h3>
-
-                <br />
-
-                <h2>
-                  {
-                    analytics.withdraws
-                  }
-                </h2>
-              </div>
-
-              <div
-                style={{
-                  background:
-                    localStorage.getItem(
-                      "theme"
-                    ) ===
-                    "light"
-                      ? "white"
-                      : "#111827",
-
-                  padding: 20,
-
-                  borderRadius: 15,
-                }}
-              >
-                <h3>
-                  📋 Requests
-                </h3>
-
-                <br />
-
-                <h2>
-                  {
-                    analytics.totalRequests
-                  }
-                </h2>
-              </div>
-
-              <div
-                style={{
-                  background:
-                    localStorage.getItem(
-                      "theme"
-                    ) ===
-                    "light"
-                      ? "white"
-                      : "#111827",
-
-                  padding: 20,
-
-                  borderRadius: 15,
-                }}
-              >
-                <h3>
-                  🔔 Notifications
-                </h3>
-
-                <br />
-
-                <h2>
-                  {
-                    analytics.totalNotifications
-                  }
-                </h2>
-              </div>
-
-              <div
-                style={{
-                  background:
-                    localStorage.getItem(
-                      "theme"
-                    ) ===
-                    "light"
-                      ? "white"
-                      : "#111827",
-
-                  padding: 20,
-
-                  borderRadius: 15,
-                }}
-              >
-                <h3>
-                  💵 Total Fees
-                </h3>
-
-                <br />
-
-                <h2>
-                  $
-                  {
-                    analytics.totalFees
-                  }
-                </h2>
-              </div>
-            </div>
-          </>
-        )}
+        {/* ADD FUNDS */}
 
         <div
           style={{
             background:
-              localStorage.getItem(
-                "theme"
-              ) === "light"
-                ? "white"
-                : "#111827",
-
-            padding: 30,
-
+              "#111827",
+            padding: 25,
             borderRadius: 20,
-
-            marginBottom: 40,
-
-            maxWidth: 500,
-
-            boxShadow:
-              "0 0 10px rgba(0,0,0,0.1)",
+            marginBottom: 30,
           }}
         >
+
           <h2>
-            💸 Internal Transfer
+            💳 Add Funds
           </h2>
 
           <br />
 
           <input
-            type="email"
-            placeholder="Receiver Email"
+            type="number"
+            placeholder="Deposit Amount"
             value={
-              receiverEmail
+              depositAmount
             }
             onChange={(e) =>
-              setReceiverEmail(
+              setDepositAmount(
                 e.target.value
               )
             }
             style={{
               width: "100%",
-
               padding: 15,
-
-              borderRadius: 10,
-
+              borderRadius: 12,
               border: "none",
-
               marginBottom: 15,
             }}
           />
+
+          <select
+            value={
+              depositMethod
+            }
+            onChange={(e) =>
+              setDepositMethod(
+                e.target.value
+              )
+            }
+            style={{
+              width: "100%",
+              padding: 15,
+              borderRadius: 12,
+              border: "none",
+              marginBottom: 15,
+            }}
+          >
+
+            <option value="paypal">
+              PayPal
+            </option>
+
+            <option value="bank">
+              Bank Transfer
+            </option>
+
+            <option value="crypto">
+              Crypto
+            </option>
+
+          </select>
+
+          <button
+            onClick={
+              createDeposit
+            }
+            style={{
+              width: "100%",
+              padding: 15,
+              background:
+                "#16a34a",
+              color:
+                "white",
+              border:
+                "none",
+              borderRadius:
+                12,
+              cursor:
+                "pointer",
+              fontWeight:
+                "bold",
+            }}
+          >
+            Add Funds
+          </button>
+
+        </div>
+
+        {/* WITHDRAW FUNDS */}
+
+        <div
+          style={{
+            background:
+              "#111827",
+            padding: 25,
+            borderRadius: 20,
+            marginBottom: 30,
+          }}
+        >
+
+          <h2>
+            💸 Withdraw Funds
+          </h2>
+
+          <br />
 
           <input
             type="number"
-            placeholder="Amount"
-            value={amount}
+            placeholder="Withdrawal Amount"
+            value={
+              withdrawalAmount
+            }
             onChange={(e) =>
-              setAmount(
+              setWithdrawalAmount(
                 e.target.value
               )
             }
             style={{
               width: "100%",
-
               padding: 15,
-
-              borderRadius: 10,
-
+              borderRadius: 12,
               border: "none",
-
               marginBottom: 15,
             }}
           />
+
+          <select
+            value={
+              withdrawalMethod
+            }
+            onChange={(e) =>
+              setWithdrawalMethod(
+                e.target.value
+              )
+            }
+            style={{
+              width: "100%",
+              padding: 15,
+              borderRadius: 12,
+              border: "none",
+              marginBottom: 15,
+            }}
+          >
+
+            <option value="paypal">
+              PayPal
+            </option>
+
+            <option value="bank">
+              Bank Transfer
+            </option>
+
+            <option value="crypto">
+              Crypto
+            </option>
+
+          </select>
+
+          <input
+            type="text"
+            placeholder="Destination Address / Email"
+            value={
+              withdrawalDestination
+            }
+            onChange={(e) =>
+              setWithdrawalDestination(
+                e.target.value
+              )
+            }
+            style={{
+              width: "100%",
+              padding: 15,
+              borderRadius: 12,
+              border: "none",
+              marginBottom: 15,
+            }}
+          />
+
+          <button
+            onClick={
+              createWithdrawal
+            }
+            style={{
+              width: "100%",
+              padding: 15,
+              background:
+                "#2563eb",
+              color:
+                "white",
+              border:
+                "none",
+              borderRadius:
+                12,
+              cursor:
+                "pointer",
+              fontWeight:
+                "bold",
+            }}
+          >
+            Withdraw Funds
+          </button>
+
+        </div>
+
+        {/* WALLET */}
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns:
+              "repeat(auto-fit,minmax(250px,1fr))",
+            gap: 20,
+            marginBottom: 30,
+          }}
+        >
 
           <div
             style={{
               background:
-                localStorage.getItem(
-                  "theme"
-                ) ===
-                "light"
-                  ? "#e5e7eb"
-                  : "#1f2937",
-
-              padding: 20,
-
-              borderRadius: 15,
-
-              marginBottom: 20,
+                "#111827",
+              padding: 25,
+              borderRadius: 20,
             }}
           >
-            <p>
-              💵 Amount:
-              <strong>
-                {" "}
-                $
-                {Number(
-                  amount || 0
-                ).toFixed(2)}
-              </strong>
-            </p>
+
+            <h2>
+              Wallet Balance
+            </h2>
 
             <br />
 
-            <p>
-              🧾 Fee:
-              <strong>
-                {" "}
-                $
-                {fee.toFixed(4)}
-              </strong>
-            </p>
+            <h1>
+              ${balance}
+            </h1>
 
-            <br />
-
-            <p>
-              ✅ Receiver Gets:
-              <strong>
-                {" "}
-                $
-                {netAmount.toFixed(
-                  4
-                )}
-              </strong>
-            </p>
           </div>
 
-          <button
-            onClick={transfer}
-            style={{
-              width: "100%",
-
-              padding: 15,
-
-              background:
-                "#16a34a",
-
-              border: "none",
-
-              borderRadius: 10,
-
-              color: "white",
-
-              cursor: "pointer",
-            }}
-          >
-            Send Money
-          </button>
-
-          <br />
-          <br />
-
-          <p>
-            Internal transfer
-            fee:
-            <strong>
-              {" "}
-              0.01%
-            </strong>
-          </p>
         </div>
 
-        <h2>
-          🧠 Recent Activity
-        </h2>
-
-        <br />
+        {/* DEPOSIT HISTORY */}
 
         <div
           style={{
-            marginBottom: 40,
+            background:
+              "#111827",
+            padding: 25,
+            borderRadius: 20,
+            marginBottom: 30,
           }}
         >
-          {activities.length ===
-          0 ? (
-            <p>
-              No activity yet
-            </p>
-          ) : (
-            activities.map(
-              (
-                activity,
-                index
-              ) => (
-                <div
-                  key={index}
-                  style={{
-                    background:
-                      localStorage.getItem(
-                        "theme"
-                      ) ===
-                      "light"
-                        ? "white"
-                        : "#111827",
 
-                    padding: 20,
+          <h2>
+            💰 Deposit History
+          </h2>
 
-                    borderRadius: 15,
+          <br />
 
-                    marginBottom: 15,
+          {deposits.map(
+            (
+              deposit: any,
+              index: number
+            ) => (
 
-                    borderLeft:
-                      "5px solid #22c55e",
-
-                    boxShadow:
-                      "0 0 10px rgba(0,0,0,0.1)",
-                  }}
-                >
-                  <h3>
-                    {
-                      activity.type
-                    }
-                  </h3>
-
-                  <br />
-
-                  <p>
-                    Amount:
-                    <strong>
-                      {" "}
-                      $
-                      {
-                        activity.amount
-                      }
-                    </strong>
-                  </p>
-
-                  <br />
-
-                  <p>
-                    {new Date(
-                      activity.createdAt
-                    ).toLocaleString()}
-                  </p>
-                </div>
-              )
-            )
-          )}
-        </div>
-
-        <h2>
-          📜 Transaction History
-        </h2>
-
-        <br />
-
-        {transactions.length ===
-        0 ? (
-          <p>
-            No transactions yet
-          </p>
-        ) : (
-          transactions.map(
-            (tx) => (
               <div
-                key={tx._id}
+                key={index}
                 style={{
                   background:
-                    localStorage.getItem(
-                      "theme"
-                    ) ===
-                    "light"
-                      ? "white"
-                      : "#111827",
-
+                    "#1f2937",
                   padding: 20,
-
                   borderRadius: 15,
-
                   marginBottom: 15,
-
-                  boxShadow:
-                    "0 0 10px rgba(0,0,0,0.1)",
                 }}
               >
-                <p>
-                  <strong>
-                    Type:
-                  </strong>{" "}
-                  {tx.type}
-                </p>
-
-                <p>
-                  <strong>
-                    From:
-                  </strong>{" "}
-                  {
-                    tx.fromEmail
-                  }
-                </p>
-
-                <p>
-                  <strong>
-                    To:
-                  </strong>{" "}
-                  {tx.toEmail}
-                </p>
 
                 <p>
                   <strong>
                     Amount:
                   </strong>{" "}
-                  $
-                  {tx.amount}
+                  ${deposit.amount}
                 </p>
+
+                <br />
 
                 <p>
                   <strong>
-                    Fee:
+                    Method:
                   </strong>{" "}
-                  $
-                  {tx.fee}
+                  {deposit.method}
                 </p>
 
-                <p>
-                  <strong>
-                    Net:
-                  </strong>{" "}
-                  $
-                  {tx.netAmount}
-                </p>
+                <br />
 
                 <p>
                   <strong>
                     Date:
                   </strong>{" "}
                   {new Date(
-                    tx.createdAt
+                    deposit.createdAt
                   ).toLocaleString()}
+                </p>
+
+              </div>
+
+            )
+          )}
+
+        </div>
+
+        {/* WITHDRAWAL HISTORY */}
+
+        <div
+          style={{
+            background:
+              "#111827",
+            padding: 25,
+            borderRadius: 20,
+            marginBottom: 30,
+          }}
+        >
+
+          <h2>
+            🏦 Withdrawal History
+          </h2>
+
+          <br />
+
+          {withdrawals.map(
+            (
+              withdrawal,
+              index
+            ) => (
+
+              <div
+                key={index}
+                style={{
+                  background:
+                    "#1f2937",
+                  padding: 20,
+                  borderRadius: 15,
+                  marginBottom: 15,
+                }}
+              >
+
+                <p>
+                  <strong>
+                    Amount:
+                  </strong>{" "}
+                  ${withdrawal.amount}
                 </p>
 
                 <br />
 
-                <button
-                  onClick={() =>
-                    downloadReceipt(
-                      tx
-                    )
-                  }
-                  style={{
-                    marginTop: 10,
+                <p>
+                  <strong>
+                    Method:
+                  </strong>{" "}
+                  {withdrawal.method}
+                </p>
 
-                    padding: 10,
+                <br />
 
-                    background:
-                      "#2563eb",
+                <p>
+                  <strong>
+                    Destination:
+                  </strong>{" "}
+                  {withdrawal.destination}
+                </p>
 
-                    border: "none",
+                <br />
 
-                    borderRadius: 10,
+                <p>
+                  <strong>
+                    Status:
+                  </strong>{" "}
 
-                    color: "white",
+                  <span
+                    style={{
+                      color:
+                        withdrawal.status ===
+                        "approved"
+                          ? "#16a34a"
+                          : withdrawal.status ===
+                            "rejected"
+                          ? "#dc2626"
+                          : "#facc15",
 
-                    cursor:
-                      "pointer",
-                  }}
-                >
-                  📄 Download
-                  Receipt
-                </button>
+                      fontWeight:
+                        "bold",
+                    }}
+                  >
+                    {withdrawal.status}
+                  </span>
+
+                </p>
+
+                <br />
+
+                <p>
+                  <strong>
+                    Risk:
+                  </strong>{" "}
+
+                  <span
+                    style={{
+                      color:
+                        withdrawal.riskLevel ===
+                        "high"
+                          ? "#dc2626"
+                          : "#16a34a",
+
+                      fontWeight:
+                        "bold",
+                    }}
+                  >
+                    {withdrawal.riskLevel}
+                  </span>
+
+                </p>
+
+                <br />
+
+                <p>
+                  <strong>
+                    Date:
+                  </strong>{" "}
+                  {new Date(
+                    withdrawal.createdAt
+                  ).toLocaleString()}
+                </p>
+
               </div>
+
             )
-          )
-        )}
+          )}
+
+        </div>
+
+        <MerchantAnalytics
+          analytics={
+            merchantAnalytics
+          }
+        />
+
+        <BalanceChart
+          balance={balance}
+        />
+
       </div>
+
     </div>
   );
 }

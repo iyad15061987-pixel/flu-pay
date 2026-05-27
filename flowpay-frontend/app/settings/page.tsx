@@ -1,48 +1,120 @@
 "use client";
 
-import { useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import Sidebar from "../components/Sidebar";
 
 import API_URL from "@/lib/api";
 
 export default function SettingsPage() {
-  const [currency, setCurrency] =
-    useState("USD");
-
-  const [theme, setTheme] =
-    useState(
-      localStorage.getItem(
-        "theme"
-      ) || "dark"
-    );
 
   const [
-    oldPassword,
-    setOldPassword,
+    password,
+    setPassword,
+  ] = useState("");
+
+  // =========================
+  // 2FA
+  // =========================
+
+  const [
+    twoFactorEnabled,
+    setTwoFactorEnabled,
+  ] = useState(false);
+
+  const [
+    qrCode,
+    setQrCode,
   ] = useState("");
 
   const [
-    newPassword,
-    setNewPassword,
+    twoFactorCode,
+    setTwoFactorCode,
   ] = useState("");
 
-  const updateCurrency =
+  const [
+    disablePassword,
+    setDisablePassword,
+  ] = useState("");
+
+  // =========================
+  // LOAD USER
+  // =========================
+
+  const loadUser =
     async () => {
+
       try {
+
         const token =
           localStorage.getItem(
             "token"
           );
 
-        const userId =
+        const email =
           localStorage.getItem(
-            "userId"
+            "email"
+          );
+
+        if (
+          !token ||
+          !email
+        ) {
+
+          window.location.href =
+            "/login";
+
+          return;
+
+        }
+
+        const res =
+          await fetch(
+            `${API_URL}/user/${email}`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const data =
+          await res.json();
+
+        setTwoFactorEnabled(
+          data.twoFactorEnabled ||
+            false
+        );
+
+      } catch (err) {
+
+        console.log(err);
+
+      }
+
+    };
+
+  // =========================
+  // UPDATE PASSWORD
+  // =========================
+
+  const updatePassword =
+    async () => {
+
+      try {
+
+        const token =
+          localStorage.getItem(
+            "token"
           );
 
         const res =
           await fetch(
-            `${API_URL}/update-currency`,
+            `${API_URL}/update-password`,
             {
               method: "POST",
 
@@ -55,8 +127,7 @@ export default function SettingsPage() {
               },
 
               body: JSON.stringify({
-                userId,
-                currency,
+                password,
               }),
             }
           );
@@ -64,42 +135,83 @@ export default function SettingsPage() {
         const data =
           await res.json();
 
-        alert(data.message);
+        alert(
+          data.message
+        );
+
+        setPassword("");
 
       } catch (err) {
-        alert("Server error");
+
+        console.log(err);
+
       }
+
     };
 
-  const saveTheme = () => {
-    localStorage.setItem(
-      "theme",
-      theme
-    );
+  // =========================
+  // SETUP 2FA
+  // =========================
 
-    alert(
-      "Theme updated"
-    );
-
-    window.location.reload();
-  };
-
-  const changePassword =
+  const setup2FA =
     async () => {
+
       try {
+
         const token =
           localStorage.getItem(
             "token"
           );
 
-        const userId =
+        const res =
+          await fetch(
+            `${API_URL}/2fa/setup`,
+            {
+              method: "POST",
+
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const data =
+          await res.json();
+
+        setQrCode(
+          data.qrCode
+        );
+
+      } catch (err) {
+
+        console.log(err);
+
+        alert(
+          "Failed to setup 2FA"
+        );
+
+      }
+
+    };
+
+  // =========================
+  // VERIFY 2FA
+  // =========================
+
+  const verify2FA =
+    async () => {
+
+      try {
+
+        const token =
           localStorage.getItem(
-            "userId"
+            "token"
           );
 
         const res =
           await fetch(
-            `${API_URL}/change-password`,
+            `${API_URL}/2fa/verify`,
             {
               method: "POST",
 
@@ -112,9 +224,8 @@ export default function SettingsPage() {
               },
 
               body: JSON.stringify({
-                userId,
-                oldPassword,
-                newPassword,
+                token:
+                  twoFactorCode,
               }),
             }
           );
@@ -122,23 +233,117 @@ export default function SettingsPage() {
         const data =
           await res.json();
 
-        alert(data.message);
+        alert(
+          data.message
+        );
 
-        setOldPassword("");
+        if (
+          data.message ===
+          "2FA enabled successfully"
+        ) {
 
-        setNewPassword("");
+          setTwoFactorEnabled(
+            true
+          );
+
+          setQrCode("");
+
+          setTwoFactorCode(
+            ""
+          );
+
+        }
 
       } catch (err) {
-        alert("Server error");
+
+        console.log(err);
+
+        alert(
+          "2FA verification failed"
+        );
+
       }
+
     };
 
-  const logout = () => {
-    localStorage.clear();
+  // =========================
+  // DISABLE 2FA
+  // =========================
 
-    window.location.href =
-      "/login";
-  };
+  const disable2FA =
+    async () => {
+
+      try {
+
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        const res =
+          await fetch(
+            `${API_URL}/2fa/disable`,
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                Authorization:
+                  `Bearer ${token}`,
+              },
+
+              body: JSON.stringify({
+                password:
+                  disablePassword,
+              }),
+            }
+          );
+
+        const data =
+          await res.json();
+
+        alert(
+          data.message
+        );
+
+        if (
+          data.message ===
+          "2FA disabled successfully"
+        ) {
+
+          setTwoFactorEnabled(
+            false
+          );
+
+          setDisablePassword(
+            ""
+          );
+
+        }
+
+      } catch (err) {
+
+        console.log(err);
+
+        alert(
+          "Failed to disable 2FA"
+        );
+
+      }
+
+    };
+
+  // =========================
+  // EFFECT
+  // =========================
+
+  useEffect(() => {
+
+    loadUser();
+
+  }, []);
 
   return (
     <div
@@ -146,15 +351,16 @@ export default function SettingsPage() {
         display: "flex",
 
         background:
-          localStorage.getItem(
-            "theme"
-          ) === "light"
-            ? "#f3f4f6"
-            : "#0f172a",
+          "#0f172a",
 
-        minHeight: "100vh",
+        minHeight:
+          "100vh",
+
+        color:
+          "white",
       }}
     >
+
       <Sidebar />
 
       <div
@@ -164,222 +370,360 @@ export default function SettingsPage() {
           padding: 40,
 
           width: "100%",
-
-          color:
-            localStorage.getItem(
-              "theme"
-            ) === "light"
-              ? "#111827"
-              : "white",
         }}
       >
+
         <h1>
-          ⚙ Settings
+          ⚙️ Settings
         </h1>
 
         <br />
 
+        {/* ========================= */}
+        {/* PASSWORD */}
+        {/* ========================= */}
+
         <div
           style={{
             background:
-              localStorage.getItem(
-                "theme"
-              ) === "light"
-                ? "white"
-                : "#111827",
+              "#111827",
 
             padding: 30,
 
             borderRadius: 20,
 
-            maxWidth: 500,
+            maxWidth: 700,
 
-            boxShadow:
-              "0 0 10px rgba(0,0,0,0.1)",
+            marginBottom: 30,
           }}
         >
+
           <h2>
-            💱 Currency
+            🔑 Change Password
           </h2>
 
           <br />
 
-          <select
-            value={currency}
+          <input
+            type="password"
+
+            placeholder="New Password"
+
+            value={password}
+
             onChange={(e) =>
-              setCurrency(
+              setPassword(
                 e.target.value
               )
             }
+
             style={{
               width: "100%",
+
               padding: 15,
-              borderRadius: 10,
-              marginBottom: 15,
+
+              borderRadius: 12,
+
+              border: "none",
+
+              marginBottom: 20,
             }}
-          >
-            <option>
-              USD
-            </option>
-
-            <option>
-              EUR
-            </option>
-
-            <option>
-              GBP
-            </option>
-          </select>
+          />
 
           <button
             onClick={
-              updateCurrency
+              updatePassword
             }
+
             style={{
               width: "100%",
+
               padding: 15,
+
               background:
                 "#2563eb",
-              border: "none",
-              borderRadius: 10,
+
               color: "white",
-              cursor: "pointer",
-              marginBottom: 20,
+
+              border: "none",
+
+              borderRadius: 12,
+
+              cursor:
+                "pointer",
+
+              fontWeight:
+                "bold",
             }}
           >
-            Save Currency
+            Update Password
           </button>
 
-          <br />
-          <br />
-
-          <h2>
-            🌙 Theme
-          </h2>
-
-          <br />
-
-          <select
-            value={theme}
-            onChange={(e) =>
-              setTheme(
-                e.target.value
-              )
-            }
-            style={{
-              width: "100%",
-              padding: 15,
-              borderRadius: 10,
-              marginBottom: 15,
-            }}
-          >
-            <option value="dark">
-              Dark
-            </option>
-
-            <option value="light">
-              Light
-            </option>
-          </select>
-
-          <button
-            onClick={saveTheme}
-            style={{
-              width: "100%",
-              padding: 15,
-              background:
-                "#7c3aed",
-              border: "none",
-              borderRadius: 10,
-              color: "white",
-              cursor: "pointer",
-              marginBottom: 20,
-            }}
-          >
-            Save Theme
-          </button>
-
-          <br />
-          <br />
-
-          <h2>
-            🔐 Change Password
-          </h2>
-
-          <br />
-
-          <input
-            type="password"
-            placeholder="Old Password"
-            value={oldPassword}
-            onChange={(e) =>
-              setOldPassword(
-                e.target.value
-              )
-            }
-            style={{
-              width: "100%",
-              padding: 15,
-              borderRadius: 10,
-              border: "none",
-              marginBottom: 15,
-            }}
-          />
-
-          <input
-            type="password"
-            placeholder="New Password"
-            value={newPassword}
-            onChange={(e) =>
-              setNewPassword(
-                e.target.value
-              )
-            }
-            style={{
-              width: "100%",
-              padding: 15,
-              borderRadius: 10,
-              border: "none",
-              marginBottom: 15,
-            }}
-          />
-
-          <button
-            onClick={
-              changePassword
-            }
-            style={{
-              width: "100%",
-              padding: 15,
-              background:
-                "#16a34a",
-              border: "none",
-              borderRadius: 10,
-              color: "white",
-              cursor: "pointer",
-              marginBottom: 20,
-            }}
-          >
-            Change Password
-          </button>
-
-          <button
-            onClick={logout}
-            style={{
-              width: "100%",
-              padding: 15,
-              border: "none",
-              borderRadius: 10,
-              background:
-                "#dc2626",
-              color: "white",
-              cursor: "pointer",
-            }}
-          >
-            Logout
-          </button>
         </div>
+
+        {/* ========================= */}
+        {/* 2FA */}
+        {/* ========================= */}
+
+        <div
+          style={{
+            background:
+              "#111827",
+
+            padding: 30,
+
+            borderRadius: 20,
+
+            maxWidth: 700,
+          }}
+        >
+
+          <h2>
+            🔐 Two-Factor Authentication
+          </h2>
+
+          <br />
+
+          <p>
+            Status:
+            {" "}
+
+            <strong
+              style={{
+                color:
+                  twoFactorEnabled
+                    ? "#16a34a"
+                    : "#dc2626",
+              }}
+            >
+
+              {twoFactorEnabled
+                ? "Enabled"
+                : "Disabled"}
+
+            </strong>
+          </p>
+
+          <br />
+
+          {/* ENABLE */}
+
+          {!twoFactorEnabled && (
+
+            <button
+              onClick={
+                setup2FA
+              }
+
+              style={{
+                padding:
+                  "12px 20px",
+
+                background:
+                  "#2563eb",
+
+                color:
+                  "white",
+
+                border:
+                  "none",
+
+                borderRadius:
+                  10,
+
+                cursor:
+                  "pointer",
+
+                fontWeight:
+                  "bold",
+              }}
+            >
+              Enable 2FA
+            </button>
+
+          )}
+
+          {/* QR */}
+
+          {qrCode && (
+
+            <div
+              style={{
+                marginTop: 30,
+              }}
+            >
+
+              <h3>
+                Scan QR Code
+              </h3>
+
+              <br />
+
+              <img
+                src={qrCode}
+                alt="QR Code"
+
+                style={{
+                  width: 220,
+
+                  background:
+                    "white",
+
+                  padding: 10,
+
+                  borderRadius: 15,
+                }}
+              />
+
+              <br />
+              <br />
+
+              <input
+                type="text"
+
+                placeholder="Enter 6-digit code"
+
+                value={
+                  twoFactorCode
+                }
+
+                onChange={(e) =>
+                  setTwoFactorCode(
+                    e.target.value
+                  )
+                }
+
+                style={{
+                  width: 300,
+
+                  padding: 12,
+
+                  borderRadius: 10,
+
+                  border:
+                    "none",
+
+                  marginBottom: 15,
+                }}
+              />
+
+              <br />
+
+              <button
+                onClick={
+                  verify2FA
+                }
+
+                style={{
+                  padding:
+                    "12px 20px",
+
+                  background:
+                    "#16a34a",
+
+                  color:
+                    "white",
+
+                  border:
+                    "none",
+
+                  borderRadius:
+                    10,
+
+                  cursor:
+                    "pointer",
+
+                  fontWeight:
+                    "bold",
+                }}
+              >
+                Verify & Enable
+              </button>
+
+            </div>
+
+          )}
+
+          {/* DISABLE */}
+
+          {twoFactorEnabled && (
+
+            <div
+              style={{
+                marginTop: 30,
+              }}
+            >
+
+              <input
+                type="password"
+
+                placeholder="Confirm password"
+
+                value={
+                  disablePassword
+                }
+
+                onChange={(e) =>
+                  setDisablePassword(
+                    e.target.value
+                  )
+                }
+
+                style={{
+                  width: 300,
+
+                  padding: 12,
+
+                  borderRadius: 10,
+
+                  border:
+                    "none",
+
+                  marginBottom: 15,
+                }}
+              />
+
+              <br />
+
+              <button
+                onClick={
+                  disable2FA
+                }
+
+                style={{
+                  padding:
+                    "12px 20px",
+
+                  background:
+                    "#dc2626",
+
+                  color:
+                    "white",
+
+                  border:
+                    "none",
+
+                  borderRadius:
+                    10,
+
+                  cursor:
+                    "pointer",
+
+                  fontWeight:
+                    "bold",
+                }}
+              >
+                Disable 2FA
+              </button>
+
+            </div>
+
+          )}
+
+        </div>
+
       </div>
+
     </div>
   );
 }

@@ -9,11 +9,42 @@ import Sidebar from "../components/Sidebar";
 
 import API_URL from "@/lib/api";
 
+interface RequestItem {
+  _id: string;
+
+  type: string;
+
+  amount: number;
+
+  status: string;
+
+  method: string;
+}
+
 export default function RequestsPage() {
+  const [mounted, setMounted] =
+    useState(false);
+
+  const [theme, setTheme] =
+    useState("dark");
+
   const [requests, setRequests] =
-    useState<any[]>([]);
+    useState<RequestItem[]>(
+      []
+    );
 
   useEffect(() => {
+    setMounted(true);
+
+    const savedTheme =
+      localStorage.getItem(
+        "theme"
+      );
+
+    if (savedTheme) {
+      setTheme(savedTheme);
+    }
+
     loadRequests();
   }, []);
 
@@ -29,6 +60,13 @@ export default function RequestsPage() {
           localStorage.getItem(
             "email"
           );
+
+        if (
+          !token ||
+          !email
+        ) {
+          return;
+        }
 
         const depositRes =
           await fetch(
@@ -68,15 +106,17 @@ export default function RequestsPage() {
       }
     };
 
+  if (!mounted) {
+    return null;
+  }
+
   return (
     <div
       style={{
         display: "flex",
 
         background:
-          localStorage.getItem(
-            "theme"
-          ) === "light"
+          theme === "light"
             ? "#f3f4f6"
             : "#0f172a",
 
@@ -94,9 +134,7 @@ export default function RequestsPage() {
           width: "100%",
 
           color:
-            localStorage.getItem(
-              "theme"
-            ) === "light"
+            theme === "light"
               ? "#111827"
               : "white",
         }}
@@ -112,7 +150,9 @@ export default function RequestsPage() {
           <div
             style={{
               background:
-                "#111827",
+                theme === "light"
+                  ? "white"
+                  : "#111827",
 
               padding: 30,
 
@@ -120,6 +160,9 @@ export default function RequestsPage() {
 
               textAlign:
                 "center",
+
+              boxShadow:
+                "0 0 10px rgba(0,0,0,0.1)",
             }}
           >
             <h2>
@@ -134,14 +177,19 @@ export default function RequestsPage() {
           </div>
         ) : (
           requests.map(
-            (request) => (
+            (
+              request:
+                RequestItem,
+              index: number
+            ) => (
               <div
-                key={request._id}
+                key={
+                  request._id ||
+                  index
+                }
                 style={{
                   background:
-                    localStorage.getItem(
-                      "theme"
-                    ) ===
+                    theme ===
                     "light"
                       ? "white"
                       : "#111827",

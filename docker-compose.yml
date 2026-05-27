@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context:
+        ./flowpay-backend
+
+    container_name:
+      flowpay_backend
+
+    ports:
+      - "5000:5000"
+
+    env_file:
+      - ./flowpay-backend/.env
+
+    restart:
+      always
+
+    depends_on:
+      - redis
+
+  frontend:
+    build:
+      context:
+        ./flowpay-frontend
+
+    container_name:
+      flowpay_frontend
+
+    ports:
+      - "3000:3000"
+
+    restart:
+      always
+
+    depends_on:
+      - backend
+
+  redis:
+    image: redis:7
+
+    container_name:
+      flowpay_redis
+
+    ports:
+      - "6379:6379"
+
+    restart:
+      always

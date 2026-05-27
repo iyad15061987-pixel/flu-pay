@@ -1,17 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import Sidebar from "../components/Sidebar";
 
 import API_URL from "@/lib/api";
 
 export default function DepositPage() {
+  const [mounted, setMounted] =
+    useState(false);
+
+  const [theme, setTheme] =
+    useState("dark");
+
   const [amount, setAmount] =
     useState("");
 
   const [method, setMethod] =
     useState("PayPal");
+
+  useEffect(() => {
+    setMounted(true);
+
+    const savedTheme =
+      localStorage.getItem(
+        "theme"
+      );
+
+    if (savedTheme) {
+      setTheme(savedTheme);
+    }
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
 
   const fee =
     Number(amount || 0) *
@@ -23,22 +49,22 @@ export default function DepositPage() {
 
   const createRequest =
     async () => {
-      const token =
-        localStorage.getItem(
-          "token"
-        );
-
-      const userId =
-        localStorage.getItem(
-          "userId"
-        );
-
-      const email =
-        localStorage.getItem(
-          "email"
-        );
-
       try {
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        const userId =
+          localStorage.getItem(
+            "userId"
+          );
+
+        const email =
+          localStorage.getItem(
+            "email"
+          );
+
         const res =
           await fetch(
             `${API_URL}/create-deposit-request`,
@@ -70,7 +96,11 @@ export default function DepositPage() {
         setAmount("");
 
       } catch (err) {
-        alert("Server error");
+        console.log(err);
+
+        alert(
+          "Server error"
+        );
       }
     };
 
@@ -80,9 +110,7 @@ export default function DepositPage() {
         display: "flex",
 
         background:
-          localStorage.getItem(
-            "theme"
-          ) === "light"
+          theme === "light"
             ? "#f3f4f6"
             : "#0f172a",
 
@@ -100,9 +128,7 @@ export default function DepositPage() {
           width: "100%",
 
           color:
-            localStorage.getItem(
-              "theme"
-            ) === "light"
+            theme === "light"
               ? "#111827"
               : "white",
         }}
@@ -116,9 +142,7 @@ export default function DepositPage() {
         <div
           style={{
             background:
-              localStorage.getItem(
-                "theme"
-              ) === "light"
+              theme === "light"
                 ? "white"
                 : "#111827",
 
@@ -141,9 +165,7 @@ export default function DepositPage() {
           <div
             style={{
               background:
-                localStorage.getItem(
-                  "theme"
-                ) === "light"
+                theme === "light"
                   ? "#e5e7eb"
                   : "#1f2937",
 
@@ -203,212 +225,110 @@ export default function DepositPage() {
               gap: 20,
             }}
           >
-            <div
-              style={{
-                background:
-                  localStorage.getItem(
-                    "theme"
-                  ) ===
-                  "light"
-                    ? "#e5e7eb"
-                    : "#1f2937",
+            {[
+              {
+                name: "BTC",
 
-                padding: 20,
+                address:
+                  "bc1qztfc7yp5p8mjr9002sdweh7ks9gydhm0lrcpty",
+              },
 
-                borderRadius: 15,
+              {
+                name:
+                  "USDT TRC20",
 
-                textAlign:
-                  "center",
-              }}
-            >
-              <h3>
-                BTC
-              </h3>
+                address:
+                  "TCriCVuuWBWV8DW9aFNfjFvtrd5anyZSwp",
+              },
 
-              <br />
+              {
+                name: "ETH",
 
-              <img
-                src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=bc1qztfc7yp5p8mjr9002sdweh7ks9gydhm0lrcpty"
-                width="150"
-              />
+                address:
+                  "0x3fa91e9Cb73306C4566D2fEf640E212B9bf034CE",
+              },
+            ].map(
+              (
+                wallet: any,
+                index: number
+              ) => (
+                <div
+                  key={index}
+                  style={{
+                    background:
+                      theme ===
+                      "light"
+                        ? "#e5e7eb"
+                        : "#1f2937",
 
-              <br />
-              <br />
+                    padding: 20,
 
-              <p
-                style={{
-                  wordBreak:
-                    "break-all",
-                }}
-              >
-                bc1qztfc7yp5p8mjr9002sdweh7ks9gydhm0lrcpty
-              </p>
+                    borderRadius: 15,
 
-              <button
-                onClick={() =>
-                  navigator.clipboard.writeText(
-                    "bc1qztfc7yp5p8mjr9002sdweh7ks9gydhm0lrcpty"
-                  )
-                }
-                style={{
-                  marginTop: 10,
+                    textAlign:
+                      "center",
+                  }}
+                >
+                  <h3>
+                    {
+                      wallet.name
+                    }
+                  </h3>
 
-                  padding: 10,
+                  <br />
 
-                  border: "none",
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${wallet.address}`}
+                    width="150"
+                    alt="QR Code"
+                  />
 
-                  borderRadius: 10,
+                  <br />
+                  <br />
 
-                  background:
-                    "#2563eb",
+                  <p
+                    style={{
+                      wordBreak:
+                        "break-all",
+                    }}
+                  >
+                    {
+                      wallet.address
+                    }
+                  </p>
 
-                  color: "white",
+                  <button
+                    onClick={() =>
+                      navigator.clipboard.writeText(
+                        wallet.address
+                      )
+                    }
+                    style={{
+                      marginTop: 10,
 
-                  cursor:
-                    "pointer",
-                }}
-              >
-                Copy Address
-              </button>
-            </div>
+                      padding: 10,
 
-            <div
-              style={{
-                background:
-                  localStorage.getItem(
-                    "theme"
-                  ) ===
-                  "light"
-                    ? "#e5e7eb"
-                    : "#1f2937",
+                      border:
+                        "none",
 
-                padding: 20,
+                      borderRadius:
+                        10,
 
-                borderRadius: 15,
+                      background:
+                        "#2563eb",
 
-                textAlign:
-                  "center",
-              }}
-            >
-              <h3>
-                USDT TRC20
-              </h3>
+                      color:
+                        "white",
 
-              <br />
-
-              <img
-                src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=TCriCVuuWBWV8DW9aFNfjFvtrd5anyZSwp"
-                width="150"
-              />
-
-              <br />
-              <br />
-
-              <p
-                style={{
-                  wordBreak:
-                    "break-all",
-                }}
-              >
-                TCriCVuuWBWV8DW9aFNfjFvtrd5anyZSwp
-              </p>
-
-              <button
-                onClick={() =>
-                  navigator.clipboard.writeText(
-                    "TCriCVuuWBWV8DW9aFNfjFvtrd5anyZSwp"
-                  )
-                }
-                style={{
-                  marginTop: 10,
-
-                  padding: 10,
-
-                  border: "none",
-
-                  borderRadius: 10,
-
-                  background:
-                    "#2563eb",
-
-                  color: "white",
-
-                  cursor:
-                    "pointer",
-                }}
-              >
-                Copy Address
-              </button>
-            </div>
-
-            <div
-              style={{
-                background:
-                  localStorage.getItem(
-                    "theme"
-                  ) ===
-                  "light"
-                    ? "#e5e7eb"
-                    : "#1f2937",
-
-                padding: 20,
-
-                borderRadius: 15,
-
-                textAlign:
-                  "center",
-              }}
-            >
-              <h3>
-                ETH
-              </h3>
-
-              <br />
-
-              <img
-                src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=0x3fa91e9Cb73306C4566D2fEf640E212B9bf034CE"
-                width="150"
-              />
-
-              <br />
-              <br />
-
-              <p
-                style={{
-                  wordBreak:
-                    "break-all",
-                }}
-              >
-                0x3fa91e9Cb73306C4566D2fEf640E212B9bf034CE
-              </p>
-
-              <button
-                onClick={() =>
-                  navigator.clipboard.writeText(
-                    "0x3fa91e9Cb73306C4566D2fEf640E212B9bf034CE"
-                  )
-                }
-                style={{
-                  marginTop: 10,
-
-                  padding: 10,
-
-                  border: "none",
-
-                  borderRadius: 10,
-
-                  background:
-                    "#2563eb",
-
-                  color: "white",
-
-                  cursor:
-                    "pointer",
-                }}
-              >
-                Copy Address
-              </button>
-            </div>
+                      cursor:
+                        "pointer",
+                    }}
+                  >
+                    Copy Address
+                  </button>
+                </div>
+              )
+            )}
           </div>
 
           <br />
@@ -465,9 +385,7 @@ export default function DepositPage() {
           <div
             style={{
               background:
-                localStorage.getItem(
-                  "theme"
-                ) ===
+                theme ===
                 "light"
                   ? "#e5e7eb"
                   : "#1f2937",
@@ -546,9 +464,7 @@ export default function DepositPage() {
           <div
             style={{
               background:
-                localStorage.getItem(
-                  "theme"
-                ) ===
+                theme ===
                 "light"
                   ? "#e5e7eb"
                   : "#1f2937",

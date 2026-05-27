@@ -1,0 +1,19 @@
+{
+  "users": [
+    {
+      "revenue": 0,
+      "currency": "USD",
+      "verified": false,
+      "_id": "6a05d5928e0e23ad3ec2d417",
+      "email": "alkingiyad19811111@gmail.com",
+      "password": "$2a$10$m2P/Kx73qri.h1GKV.ab4OO5z9wmNhggjaxkZw4GP.k.Gm/I7UN..",
+      "balance": 22,
+      "role": "admin",
+      "frozen": false,
+      "__v": 0
+    }
+  ],
+  "transactions": [],
+  "notifications": [],
+  "createdAt": "2026-05-18T20:09:34.475Z"
+}

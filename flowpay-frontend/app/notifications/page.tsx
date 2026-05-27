@@ -13,11 +13,9 @@ export default function NotificationsPage() {
   const [
     notifications,
     setNotifications,
-  ] = useState<any[]>([]);
-
-  useEffect(() => {
-    loadNotifications();
-  }, []);
+  ] = useState<any[]>(
+    []
+  );
 
   const loadNotifications =
     async () => {
@@ -27,14 +25,9 @@ export default function NotificationsPage() {
             "token"
           );
 
-        const email =
-          localStorage.getItem(
-            "email"
-          );
-
         const res =
           await fetch(
-            `${API_URL}/notifications/${email}`,
+            `${API_URL}/notifications`,
             {
               headers: {
                 Authorization:
@@ -55,19 +48,23 @@ export default function NotificationsPage() {
       }
     };
 
+  useEffect(() => {
+    loadNotifications();
+  }, []);
+
   return (
     <div
       style={{
         display: "flex",
 
         background:
-          localStorage.getItem(
-            "theme"
-          ) === "light"
-            ? "#f3f4f6"
-            : "#0f172a",
+          "#0f172a",
 
-        minHeight: "100vh",
+        minHeight:
+          "100vh",
+
+        color:
+          "white",
       }}
     >
       <Sidebar />
@@ -79,13 +76,6 @@ export default function NotificationsPage() {
           padding: 40,
 
           width: "100%",
-
-          color:
-            localStorage.getItem(
-              "theme"
-            ) === "light"
-              ? "#111827"
-              : "white",
         }}
       >
         <h1>
@@ -94,82 +84,29 @@ export default function NotificationsPage() {
 
         <br />
 
-        {notifications.length ===
-        0 ? (
-          <div
-            style={{
-              background:
-                "#111827",
+        {notifications.map(
+          (n) => (
+            <div
+              key={n._id}
+              style={{
+                background:
+                  "#111827",
 
-              padding: 30,
+                padding: 20,
 
-              borderRadius: 20,
+                borderRadius: 14,
 
-              textAlign:
-                "center",
-            }}
-          >
-            <h2>
-              📭 Empty
-            </h2>
+                marginBottom: 15,
+              }}
+            >
+              <h3>
+                {n.title}
+              </h3>
 
-            <br />
-
-            <p>
-              No notifications
-            </p>
-          </div>
-        ) : (
-          notifications.map(
-            (
-              notification
-            ) => (
-              <div
-                key={
-                  notification._id
-                }
-                style={{
-                  background:
-                    localStorage.getItem(
-                      "theme"
-                    ) ===
-                    "light"
-                      ? "white"
-                      : "#111827",
-
-                  padding: 25,
-
-                  borderRadius: 20,
-
-                  marginBottom: 20,
-
-                  boxShadow:
-                    "0 0 10px rgba(0,0,0,0.1)",
-                }}
-              >
-                <h3>
-                  {
-                    notification.title
-                  }
-                </h3>
-
-                <br />
-
-                <p>
-                  {
-                    notification.message
-                  }
-                </p>
-
-                <br />
-
-                <small>
-                  {new Date(
-                    notification.createdAt
-                  ).toLocaleString()}
-                </small>
-              </div>
-            )
+              <p>
+                {n.message}
+              </p>
+            </div>
           )
         )}
       </div>

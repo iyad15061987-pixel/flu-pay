@@ -3,3 +3,4 @@ flowpay-backend/node_modules
 flowpay-frontend/node_modules
 .env
 .next
+flowpay-backend/firebase/serviceAccount.json
