@@ -6,6 +6,7 @@ const router =
 
 const {
   auth,
+  adminOnly,
 } = require(
   "../middleware/auth"
 );
@@ -14,6 +15,10 @@ const LedgerEntry =
   require(
     "../models/LedgerEntry"
   );
+
+// =========================
+// GET USER LEDGER
+// =========================
 
 router.get(
   "/ledger/:email",
@@ -24,6 +29,7 @@ router.get(
 
   async (req, res) => {
     try {
+
       const entries =
         await LedgerEntry.find({
           email:
@@ -32,14 +38,15 @@ router.get(
           createdAt: -1,
         });
 
-      res.json(
+      return res.json(
         entries
       );
 
     } catch (err) {
+
       console.log(err);
 
-      res.status(500).json({
+      return res.status(500).json({
         message:
           "Server error",
       });
