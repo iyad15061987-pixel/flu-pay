@@ -6,6 +6,7 @@ const router =
 
 const {
   auth,
+  adminOnly,
 } = require(
   "../middleware/auth"
 );
@@ -24,10 +25,9 @@ router.get(
 
   auth,
 
-  adminOnly,
-
   async (req, res) => {
     try {
+
       const user =
         await User.findById(
           req.user.id
@@ -45,6 +45,7 @@ router.get(
       res.json(user);
 
     } catch (err) {
+
       console.log(err);
 
       res.status(500).json({
