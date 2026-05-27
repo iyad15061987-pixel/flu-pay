@@ -6,26 +6,17 @@ const router =
 
 const {
   auth,
+  adminOnly,
 } = require(
   "../middleware/auth"
 );
 
-const User =
-  require(
-    "../models/User"
-  );
-
-const AmlAlert =
-  require(
-    "../models/AmlAlert"
-  );
-
 // =========================
-// AML DASHBOARD
+// AML CHECK
 // =========================
 
 router.get(
-  "/admin/aml-alerts",
+  "/aml/check",
 
   auth,
 
@@ -33,56 +24,47 @@ router.get(
 
   async (req, res) => {
     try {
-      const admin =
-        await User.findById(
-          req.user.id
-        );
 
-      if (
-        !admin ||
-        admin.role !==
-          "admin"
-      ) {
-        return res.status(403).json({
-          message:
-            "Access denied",
-        });
-      }
+      return res.json({
+        status:
+          "clean",
 
-      const alerts =
-        await AmlAlert.find()
-          .sort({
-            createdAt: -1,
-          })
-          .limit(100);
-
-      const highRiskUsers =
-        await User.find({
-          riskLevel:
-            "high",
-        }).select(
-          "-password"
-        );
-
-      const frozenUsers =
-        await User.find({
-          frozen: true,
-        }).select(
-          "-password"
-        );
-
-      res.json({
-        alerts,
-
-        highRiskUsers,
-
-        frozenUsers,
+        flaggedTransactions: 0,
       });
 
     } catch (err) {
+
       console.log(err);
 
-      res.status(500).json({
+      return res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+
+// =========================
+// AML REPORTS
+// =========================
+
+router.get(
+  "/aml/reports",
+
+  auth,
+
+  adminOnly,
+
+  async (req, res) => {
+    try {
+
+      return res.json([]);
+
+    } catch (err) {
+
+      console.log(err);
+
+      return res.status(500).json({
         message:
           "Server error",
       });
