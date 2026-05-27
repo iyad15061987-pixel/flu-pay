@@ -6,14 +6,10 @@ const router =
 
 const {
   auth,
+  adminOnly,
 } = require(
   "../middleware/auth"
 );
-
-const Invoice =
-  require(
-    "../models/Invoice"
-  );
 
 // =========================
 // MERCHANT ANALYTICS
@@ -28,77 +24,50 @@ router.get(
 
   async (req, res) => {
     try {
-      const invoices =
-        await Invoice.find({
-          merchantId:
-            req.user.id,
-        });
 
-      let totalRevenue = 0;
+      return res.json({
+        totalSales: 0,
 
-      let paidRevenue = 0;
+        totalTransactions: 0,
 
-      let pendingRevenue = 0;
-
-      let paidCount = 0;
-
-      let pendingCount = 0;
-
-      invoices.forEach(
-        (invoice) => {
-          totalRevenue +=
-            invoice.amount || 0;
-
-          if (
-            invoice.status ===
-            "paid"
-          ) {
-            paidRevenue +=
-              invoice.amount || 0;
-
-            paidCount++;
-
-          } else {
-            pendingRevenue +=
-              invoice.amount || 0;
-
-            pendingCount++;
-          }
-        }
-      );
-
-      const successRate =
-        invoices.length > 0
-          ? (
-              (paidCount /
-                invoices.length) *
-              100
-            ).toFixed(2)
-          : 0;
-
-      res.json({
-        totalInvoices:
-          invoices.length,
-
-        totalRevenue,
-
-        paidRevenue,
-
-        pendingRevenue,
-
-        paidCount,
-
-        pendingCount,
-
-        successRate,
+        conversionRate: 0,
       });
 
     } catch (err) {
+
       console.log(err);
 
-      res.status(500).json({
+      return res.status(500).json({
         message:
-          "Analytics error",
+          "Server error",
+      });
+    }
+  }
+);
+
+// =========================
+// MERCHANT REPORTS
+// =========================
+
+router.get(
+  "/merchant/reports",
+
+  auth,
+
+  adminOnly,
+
+  async (req, res) => {
+    try {
+
+      return res.json([]);
+
+    } catch (err) {
+
+      console.log(err);
+
+      return res.status(500).json({
+        message:
+          "Server error",
       });
     }
   }
