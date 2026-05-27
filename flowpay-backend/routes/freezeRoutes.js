@@ -46,7 +46,7 @@ router.post(
 
       await user.save();
 
-      res.json({
+      return res.json({
         message:
           "User frozen successfully",
       });
@@ -55,7 +55,7 @@ router.post(
 
       console.log(err);
 
-      res.status(500).json({
+      return res.status(500).json({
         message:
           "Server error",
       });
@@ -93,7 +93,7 @@ router.post(
 
       await user.save();
 
-      res.json({
+      return res.json({
         message:
           "User unfrozen successfully",
       });
@@ -102,7 +102,7 @@ router.post(
 
       console.log(err);
 
-      res.status(500).json({
+      return res.status(500).json({
         message:
           "Server error",
       });
