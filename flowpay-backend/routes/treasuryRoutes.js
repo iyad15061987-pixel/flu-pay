@@ -1,23 +1,15 @@
-const allowRoles =
-  require(
-    "../middleware/roles"
-  );
-
 const express =
   require("express");
 
 const router =
   express.Router();
 
-const adminAuth =
-  require(
-    "../middleware/adminAuth"
-  );
-
-const Treasury =
-  require(
-    "../models/Treasury"
-  );
+const {
+  auth,
+  adminOnly,
+} = require(
+  "../middleware/auth"
+);
 
 const User =
   require(
@@ -25,62 +17,50 @@ const User =
   );
 
 // =========================
-// GET TREASURY
+// TREASURY OVERVIEW
 // =========================
 
 router.get(
-  "/admin/treasury",
+  "/treasury/overview",
 
-  adminauth,
+  auth,
 
   adminOnly,
 
   async (req, res) => {
     try {
-      const treasury =
-        await Treasury.find();
 
       const users =
         await User.find();
 
-      let liabilities =
-        0;
+      let totalBalances = 0;
+
+      let totalRevenue = 0;
 
       users.forEach(
         (user) => {
-          liabilities +=
-            user.balance;
+          totalBalances +=
+            user.balance || 0;
+
+          totalRevenue +=
+            user.revenue || 0;
         }
       );
 
-      let reserves =
-        0;
+      return res.json({
+        totalUsers:
+          users.length,
 
-      treasury.forEach(
-        (wallet) => {
-          reserves +=
-            wallet.hotWallet +
-            wallet.coldWallet +
-            wallet.reserveWallet;
-        }
-      );
+        totalBalances,
 
-      res.json({
-        treasury,
-
-        liabilities,
-
-        reserves,
-
-        coverageRatio:
-          reserves /
-          liabilities,
+        totalRevenue,
       });
 
     } catch (err) {
+
       console.log(err);
 
-      res.status(500).json({
+      return res.status(500).json({
         message:
           "Server error",
       });
@@ -89,63 +69,32 @@ router.get(
 );
 
 // =========================
-// UPDATE TREASURY
+// TREASURY HEALTH
 // =========================
 
-router.post(
-  "/admin/update-treasury",
+router.get(
+  "/treasury/health",
 
-  adminAuth,
+  auth,
 
-  allowRoles(
-  "SuperAdmin",
-  "Treasury"
-),
+  adminOnly,
 
   async (req, res) => {
     try {
-      const {
-        currency,
 
-        hotWallet,
+      return res.json({
+        status:
+          "healthy",
 
-        coldWallet,
-
-        reserveWallet,
-      } = req.body;
-
-      const updated =
-        await Treasury.findOneAndUpdate(
-          {
-            currency,
-          },
-
-          {
-            hotWallet,
-
-            coldWallet,
-
-            reserveWallet,
-          },
-
-          {
-            upsert: true,
-
-            new: true,
-          }
-        );
-
-      res.json({
-        message:
-          "Treasury updated",
-
-        updated,
+        treasury:
+          "active",
       });
 
     } catch (err) {
+
       console.log(err);
 
-      res.status(500).json({
+      return res.status(500).json({
         message:
           "Server error",
       });
