@@ -1,12 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import Sidebar from "../components/Sidebar";
 
 import API_URL from "@/lib/api";
 
 export default function WithdrawPage() {
+  const [mounted, setMounted] =
+    useState(false);
+
+  const [theme, setTheme] =
+    useState("dark");
+
   const [amount, setAmount] =
     useState("");
 
@@ -15,6 +24,19 @@ export default function WithdrawPage() {
 
   const [wallet, setWallet] =
     useState("");
+
+  useEffect(() => {
+    setMounted(true);
+
+    const savedTheme =
+      localStorage.getItem(
+        "theme"
+      );
+
+    if (savedTheme) {
+      setTheme(savedTheme);
+    }
+  }, []);
 
   const fee =
     Number(amount || 0) *
@@ -80,15 +102,17 @@ export default function WithdrawPage() {
       }
     };
 
+  if (!mounted) {
+    return null;
+  }
+
   return (
     <div
       style={{
         display: "flex",
 
         background:
-          localStorage.getItem(
-            "theme"
-          ) === "light"
+          theme === "light"
             ? "#f3f4f6"
             : "#0f172a",
 
@@ -106,9 +130,7 @@ export default function WithdrawPage() {
           width: "100%",
 
           color:
-            localStorage.getItem(
-              "theme"
-            ) === "light"
+            theme === "light"
               ? "#111827"
               : "white",
         }}
@@ -122,9 +144,7 @@ export default function WithdrawPage() {
         <div
           style={{
             background:
-              localStorage.getItem(
-                "theme"
-              ) === "light"
+              theme === "light"
                 ? "white"
                 : "#111827",
 
@@ -153,8 +173,11 @@ export default function WithdrawPage() {
             }
             style={{
               width: "100%",
+
               padding: 15,
+
               borderRadius: 10,
+
               marginBottom: 15,
             }}
           >
@@ -186,10 +209,24 @@ export default function WithdrawPage() {
             }
             style={{
               width: "100%",
+
               padding: 15,
+
               borderRadius: 10,
+
               border: "none",
+
               marginBottom: 15,
+
+              background:
+                theme === "light"
+                  ? "#f9fafb"
+                  : "#1f2937",
+
+              color:
+                theme === "light"
+                  ? "#111827"
+                  : "white",
             }}
           />
 
@@ -204,20 +241,31 @@ export default function WithdrawPage() {
             }
             style={{
               width: "100%",
+
               padding: 15,
+
               borderRadius: 10,
+
               border: "none",
+
               marginBottom: 15,
+
+              background:
+                theme === "light"
+                  ? "#f9fafb"
+                  : "#1f2937",
+
+              color:
+                theme === "light"
+                  ? "#111827"
+                  : "white",
             }}
           />
 
           <div
             style={{
               background:
-                localStorage.getItem(
-                  "theme"
-                ) ===
-                "light"
+                theme === "light"
                   ? "#e5e7eb"
                   : "#1f2937",
 
@@ -270,7 +318,9 @@ export default function WithdrawPage() {
             }
             style={{
               width: "100%",
+
               padding: 15,
+
               background:
                 "#dc2626",
 
@@ -281,6 +331,9 @@ export default function WithdrawPage() {
               borderRadius: 10,
 
               cursor: "pointer",
+
+              fontWeight:
+                "bold",
             }}
           >
             Create Withdraw
@@ -293,10 +346,7 @@ export default function WithdrawPage() {
           <div
             style={{
               background:
-                localStorage.getItem(
-                  "theme"
-                ) ===
-                "light"
+                theme === "light"
                   ? "#e5e7eb"
                   : "#1f2937",
 

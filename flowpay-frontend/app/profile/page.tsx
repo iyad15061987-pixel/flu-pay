@@ -1,16 +1,68 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import Sidebar from "../components/Sidebar";
 
 import API_URL from "@/lib/api";
 
+interface Profile {
+  email: string;
+
+  balance: number;
+
+  revenue: number;
+
+  currency: string;
+
+  role: string;
+
+  frozen: boolean;
+
+  totalTransactions?: number;
+
+  createdAt: string;
+}
+
 export default function ProfilePage() {
+  const [mounted, setMounted] =
+    useState(false);
+
+  const [theme, setTheme] =
+    useState("dark");
+
   const [profile, setProfile] =
-    useState<any>(null);
+    useState<Profile | null>(
+      null
+    );
+
+  const [origin, setOrigin] =
+    useState("");
 
   useEffect(() => {
+    setMounted(true);
+
+    const savedTheme =
+      localStorage.getItem(
+        "theme"
+      );
+
+    if (savedTheme) {
+      setTheme(savedTheme);
+    }
+
+    if (
+      typeof window !==
+      "undefined"
+    ) {
+      setOrigin(
+        window.location.origin
+      );
+    }
+
     loadProfile();
   }, []);
 
@@ -22,14 +74,16 @@ export default function ProfilePage() {
             "token"
           );
 
-        const email =
-          localStorage.getItem(
-            "email"
-          );
+        if (!token) {
+          window.location.href =
+            "/login";
+
+          return;
+        }
 
         const res =
           await fetch(
-            `${API_URL}/profile/${email}`,
+            `${API_URL}/profile`,
             {
               headers: {
                 Authorization:
@@ -48,14 +102,16 @@ export default function ProfilePage() {
       }
     };
 
+  if (!mounted) {
+    return null;
+  }
+
   if (!profile) {
     return (
       <div
         style={{
           background:
-            localStorage.getItem(
-              "theme"
-            ) === "light"
+            theme === "light"
               ? "#f3f4f6"
               : "#0f172a",
 
@@ -63,9 +119,7 @@ export default function ProfilePage() {
             "100vh",
 
           color:
-            localStorage.getItem(
-              "theme"
-            ) === "light"
+            theme === "light"
               ? "#111827"
               : "white",
 
@@ -83,9 +137,7 @@ export default function ProfilePage() {
         display: "flex",
 
         background:
-          localStorage.getItem(
-            "theme"
-          ) === "light"
+          theme === "light"
             ? "#f3f4f6"
             : "#0f172a",
 
@@ -103,9 +155,7 @@ export default function ProfilePage() {
           width: "100%",
 
           color:
-            localStorage.getItem(
-              "theme"
-            ) === "light"
+            theme === "light"
               ? "#111827"
               : "white",
         }}
@@ -119,9 +169,7 @@ export default function ProfilePage() {
         <div
           style={{
             background:
-              localStorage.getItem(
-                "theme"
-              ) === "light"
+              theme === "light"
                 ? "white"
                 : "#111827",
 
@@ -146,6 +194,7 @@ export default function ProfilePage() {
             <img
               src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${profile.email}`}
               width="200"
+              alt="QR Code"
             />
 
             <br />
@@ -160,9 +209,7 @@ export default function ProfilePage() {
             <div
               style={{
                 background:
-                  localStorage.getItem(
-                    "theme"
-                  ) ===
+                  theme ===
                   "light"
                     ? "#e5e7eb"
                     : "#1f2937",
@@ -175,11 +222,7 @@ export default function ProfilePage() {
                   "break-all",
               }}
             >
-              {
-                window
-                  .location
-                  .origin
-              }
+              {origin}
               /pay/
               {profile.email}
             </div>
@@ -248,9 +291,8 @@ export default function ProfilePage() {
               Total
               Transactions:
             </strong>{" "}
-            {
-              profile.totalTransactions
-            }
+            {profile.totalTransactions ||
+              0}
           </p>
 
           <br />

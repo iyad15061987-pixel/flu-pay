@@ -1,12 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import Sidebar from "../components/Sidebar";
 
 export default function SupportPage() {
+  const [mounted, setMounted] =
+    useState(false);
+
+  const [theme, setTheme] =
+    useState("dark");
+
   const [message, setMessage] =
     useState("");
+
+  useEffect(() => {
+    setMounted(true);
+
+    const savedTheme =
+      localStorage.getItem(
+        "theme"
+      );
+
+    if (savedTheme) {
+      setTheme(savedTheme);
+    }
+  }, []);
 
   const sendSupport =
     () => {
@@ -17,15 +39,17 @@ export default function SupportPage() {
       setMessage("");
     };
 
+  if (!mounted) {
+    return null;
+  }
+
   return (
     <div
       style={{
         display: "flex",
 
         background:
-          localStorage.getItem(
-            "theme"
-          ) === "light"
+          theme === "light"
             ? "#f3f4f6"
             : "#0f172a",
 
@@ -43,9 +67,7 @@ export default function SupportPage() {
           width: "100%",
 
           color:
-            localStorage.getItem(
-              "theme"
-            ) === "light"
+            theme === "light"
               ? "#111827"
               : "white",
         }}
@@ -59,9 +81,7 @@ export default function SupportPage() {
         <div
           style={{
             background:
-              localStorage.getItem(
-                "theme"
-              ) === "light"
+              theme === "light"
                 ? "white"
                 : "#111827",
 
@@ -70,6 +90,9 @@ export default function SupportPage() {
             borderRadius: 20,
 
             maxWidth: 700,
+
+            boxShadow:
+              "0 0 10px rgba(0,0,0,0.1)",
           }}
         >
           <textarea
@@ -90,6 +113,20 @@ export default function SupportPage() {
               borderRadius: 10,
 
               marginBottom: 20,
+
+              border: "none",
+
+              resize: "none",
+
+              background:
+                theme === "light"
+                  ? "#f9fafb"
+                  : "#1f2937",
+
+              color:
+                theme === "light"
+                  ? "#111827"
+                  : "white",
             }}
           />
 
@@ -112,6 +149,9 @@ export default function SupportPage() {
               color: "white",
 
               cursor: "pointer",
+
+              fontWeight:
+                "bold",
             }}
           >
             Send Support Request

@@ -1,0 +1,135 @@
+version: "3.9"
+
+services:
+
+  # =========================
+  # BACKEND
+  # =========================
+
+  backend:
+
+    build:
+      context:
+        ./flowpay-backend
+
+    container_name:
+      flowpay_backend_prod
+
+    restart:
+      always
+
+    env_file:
+      - ./flowpay-backend/.env
+
+    environment:
+      NODE_ENV: production
+
+    expose:
+      - "5000"
+
+    networks:
+      - flowpay_network
+
+    depends_on:
+      - redis
+
+  # =========================
+  # FRONTEND
+  # =========================
+
+  frontend:
+
+    build:
+      context:
+        ./flowpay-frontend
+
+    container_name:
+      flowpay_frontend_prod
+
+    restart:
+      always
+
+    environment:
+      NODE_ENV: production
+
+    expose:
+      - "3000"
+
+    depends_on:
+      - backend
+
+    networks:
+      - flowpay_network
+
+  # =========================
+  # REDIS
+  # =========================
+
+  redis:
+
+    image: redis:7-alpine
+
+    container_name:
+      flowpay_redis
+
+    restart:
+      always
+
+    expose:
+      - "6379"
+
+    command:
+      redis-server --appendonly yes
+
+    volumes:
+      - redis_data:/data
+
+    networks:
+      - flowpay_network
+
+  # =========================
+  # NGINX
+  # =========================
+
+  nginx:
+
+    image: nginx:latest
+
+    container_name:
+      flowpay_nginx
+
+    restart:
+      always
+
+    ports:
+      - "80:80"
+      - "443:443"
+
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+
+    depends_on:
+      - frontend
+      - backend
+
+    networks:
+      - flowpay_network
+
+# =========================
+# NETWORKS
+# =========================
+
+networks:
+
+  flowpay_network:
+
+    driver: bridge
+
+# =========================
+# VOLUMES
+# =========================
+
+volumes:
+
+  redis_data:
