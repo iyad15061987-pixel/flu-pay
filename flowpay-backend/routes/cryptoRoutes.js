@@ -1,20 +1,56 @@
 const express =
   require("express");
 
-const axios =
-  require("axios");
-
 const router =
   express.Router();
 
 const {
   auth,
+  adminOnly,
 } = require(
   "../middleware/auth"
 );
 
+// =========================
+// GET CRYPTO STATUS
+// =========================
+
+router.get(
+  "/crypto/status",
+
+  auth,
+
+  async (req, res) => {
+    try {
+
+      return res.json({
+        enabled: true,
+
+        supportedCoins: [
+          "BTC",
+          "ETH",
+          "USDT",
+        ],
+      });
+
+    } catch (err) {
+
+      console.log(err);
+
+      return res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+
+// =========================
+// ADMIN CRYPTO SETTINGS
+// =========================
+
 router.post(
-  "/create-crypto-payment",
+  "/crypto/settings",
 
   auth,
 
@@ -22,53 +58,19 @@ router.post(
 
   async (req, res) => {
     try {
-      const {
-        price_amount,
-        pay_currency,
-      } = req.body;
 
-      const response =
-        await axios.post(
-          "https://api.nowpayments.io/v1/payment",
-
-          {
-            price_amount,
-
-            price_currency:
-              "usd",
-
-            pay_currency,
-
-            order_id:
-              req.user.email,
-
-            ipn_callback_url:
-              "https://flu-pay.onrender.com/api/crypto-webhook",
-          },
-
-          {
-            headers: {
-              "x-api-key":
-                process
-                  .env
-                  .NOWPAYMENTS_API_KEY,
-            },
-          }
-        );
-
-      res.json(
-        response.data
-      );
+      return res.json({
+        message:
+          "Crypto settings updated",
+      });
 
     } catch (err) {
-      console.log(
-        err.response?.data ||
-          err
-      );
 
-      res.status(500).json({
+      console.log(err);
+
+      return res.status(500).json({
         message:
-          "Crypto payment error",
+          "Server error",
       });
     }
   }
