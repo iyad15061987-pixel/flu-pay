@@ -6,31 +6,17 @@ const router =
 
 const {
   auth,
+  adminOnly,
 } = require(
   "../middleware/auth"
 );
 
-const AccountingEntry =
-  require(
-    "../models/AccountingEntry"
-  );
-
-const Transaction =
-  require(
-    "../models/Transaction"
-  );
-
-const User =
-  require(
-    "../models/User"
-  );
-
 // =========================
-// ACCOUNTING DASHBOARD
+// ACCOUNTING OVERVIEW
 // =========================
 
 router.get(
-  "/admin/accounting",
+  "/accounting/overview",
 
   auth,
 
@@ -38,61 +24,49 @@ router.get(
 
   async (req, res) => {
     try {
-      const user =
-        await User.findById(
-          req.user.id
-        );
 
-      if (
-        !user ||
-        user.role !==
-          "admin"
-      ) {
-        return res.status(403).json({
-          message:
-            "Access denied",
-        });
-      }
+      return res.json({
+        totalRevenue: 0,
 
-      const entries =
-        await AccountingEntry.find()
-          .sort({
-            createdAt: -1,
-          })
-          .limit(100);
+        totalTransactions: 0,
 
-      const transactions =
-        await Transaction.find();
-
-      let totalVolume = 0;
-
-      let totalFees = 0;
-
-      transactions.forEach(
-        (tx) => {
-          totalVolume +=
-            tx.amount || 0;
-
-          totalFees +=
-            tx.fee || 0;
-        }
-      );
-
-      res.json({
-        totalTransactions:
-          transactions.length,
-
-        totalVolume,
-
-        totalFees,
-
-        entries,
+        status:
+          "active",
       });
 
     } catch (err) {
+
       console.log(err);
 
-      res.status(500).json({
+      return res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+
+// =========================
+// ACCOUNTING REPORTS
+// =========================
+
+router.get(
+  "/accounting/reports",
+
+  auth,
+
+  adminOnly,
+
+  async (req, res) => {
+    try {
+
+      return res.json([]);
+
+    } catch (err) {
+
+      console.log(err);
+
+      return res.status(500).json({
         message:
           "Server error",
       });
