@@ -4,38 +4,60 @@ const express =
 const router =
   express.Router();
 
-const adminAuth =
-  require(
-    "../middleware/adminAuth"
-  );
+const {
+  auth,
+  adminOnly,
+} = require(
+  "../middleware/auth"
+);
 
-const ActivityLog =
-  require(
-    "../models/ActivityLog"
-  );
+// =========================
+// GET USER ACTIVITY
+// =========================
 
 router.get(
-  "/admin/activity-logs",
+  "/activity",
 
-  adminauth,
+  auth,
+
+  async (req, res) => {
+    try {
+
+      return res.json([]);
+
+    } catch (err) {
+
+      console.log(err);
+
+      return res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+
+// =========================
+// ADMIN ACTIVITY MONITOR
+// =========================
+
+router.get(
+  "/admin/activity",
+
+  auth,
 
   adminOnly,
 
   async (req, res) => {
     try {
-      const logs =
-        await ActivityLog.find().sort({
-          createdAt: -1,
-        });
 
-      res.json(
-        logs
-      );
+      return res.json([]);
 
     } catch (err) {
+
       console.log(err);
 
-      res.status(500).json({
+      return res.status(500).json({
         message:
           "Server error",
       });
