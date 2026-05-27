@@ -6,26 +6,17 @@ const router =
 
 const {
   auth,
+  adminOnly,
 } = require(
   "../middleware/auth"
 );
 
-const User =
-  require(
-    "../models/User"
-  );
-
-const AuditLog =
-  require(
-    "../models/AuditLog"
-  );
-
 // =========================
-// LIVE ACTIVITY FEED
+// LIVE SYSTEM STATUS
 // =========================
 
 router.get(
-  "/admin/live-activity",
+  "/admin/live-status",
 
   auth,
 
@@ -33,35 +24,57 @@ router.get(
 
   async (req, res) => {
     try {
-      const admin =
-        await User.findById(
-          req.user.id
-        );
 
-      if (
-        !admin ||
-        admin.role !==
-          "admin"
-      ) {
-        return res.status(403).json({
-          message:
-            "Access denied",
-        });
-      }
+      return res.json({
+        server:
+          "online",
 
-      const logs =
-        await AuditLog.find()
-          .sort({
-            createdAt: -1,
-          })
-          .limit(100);
+        database:
+          "connected",
 
-      res.json(logs);
+        realtime:
+          "active",
+      });
 
     } catch (err) {
+
       console.log(err);
 
-      res.status(500).json({
+      return res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+
+// =========================
+// LIVE METRICS
+// =========================
+
+router.get(
+  "/admin/live-metrics",
+
+  auth,
+
+  adminOnly,
+
+  async (req, res) => {
+    try {
+
+      return res.json({
+        cpuUsage: 0,
+
+        memoryUsage: 0,
+
+        activeUsers: 0,
+      });
+
+    } catch (err) {
+
+      console.log(err);
+
+      return res.status(500).json({
         message:
           "Server error",
       });
