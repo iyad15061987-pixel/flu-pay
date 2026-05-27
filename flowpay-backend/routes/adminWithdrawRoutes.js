@@ -1,58 +1,50 @@
-const allowRoles =
-  require(
-    "../middleware/roles"
-  );
-
 const express =
   require("express");
-
-const axios =
-  require("axios");
 
 const router =
   express.Router();
 
-const adminAuth =
-  require(
-    "../middleware/adminAuth"
-  );
+const {
+  auth,
+  adminOnly,
+} = require(
+  "../middleware/auth"
+);
 
-const WithdrawalRequest =
+const Withdrawal =
   require(
-    "../models/WithdrawalRequest"
+    "../models/Withdrawal"
   );
 
 // =========================
-// GET PENDING
+// GET ALL WITHDRAWALS
 // =========================
 
 router.get(
-  "/admin/pending-withdrawals",
+  "/admin/withdrawals",
 
-  adminauth,
+  auth,
 
   adminOnly,
 
   async (req, res) => {
     try {
-      const requests =
-        await WithdrawalRequest.find(
-          {
-            status:
-              "Pending",
-          }
-        ).sort({
-          createdAt: -1,
-        });
 
-      res.json(
-        requests
+      const withdrawals =
+        await Withdrawal.find()
+          .sort({
+            createdAt: -1,
+          });
+
+      return res.json(
+        withdrawals
       );
 
     } catch (err) {
+
       console.log(err);
 
-      res.status(500).json({
+      return res.status(500).json({
         message:
           "Server error",
       });
@@ -61,125 +53,100 @@ router.get(
 );
 
 // =========================
-// APPROVE WITHDRAW
+// APPROVE WITHDRAWAL
 // =========================
 
 router.post(
-  "/admin/approve-withdrawal",
+  "/admin/withdrawals/:id/approve",
 
-  adminAuth,
+  auth,
 
-  allowRoles(
-  "SuperAdmin",
-  "Treasury"
-),
+  adminOnly,
 
   async (req, res) => {
     try {
-      const {
-        withdrawalId,
-      } = req.body;
 
-      const request =
-        await WithdrawalRequest.findById(
-          withdrawalId
+      const withdrawal =
+        await Withdrawal.findById(
+          req.params.id
         );
 
-      if (!request) {
+      if (!withdrawal) {
         return res.status(404).json({
           message:
-            "Request not found",
+            "Withdrawal not found",
         });
       }
 
-      if (
-        request.approvedBy.includes(
-          req.user.email
-        )
-      ) {
-        return res.status(400).json({
-          message:
-            "Already approved",
-        });
-      }
+      withdrawal.status =
+        "approved";
 
-      request.approvals +=
-        1;
+      withdrawal.processedAt =
+        new Date();
 
-      request.approvedBy.push(
-        req.user.email
-      );
+      await withdrawal.save();
 
-      // =========================
-      // MULTI SIG
-      // =========================
-
-      if (
-        request.approvals >=
-        2
-      ) {
-        const payout =
-          await axios.post(
-            "https://api.nowpayments.io/v1/payout",
-
-            {
-              withdrawals: [
-                {
-                  address:
-                    request.address,
-
-                  currency:
-                    request.currency,
-
-                  amount:
-                    request.amount -
-                    request.fee,
-
-                  userData:
-                    request.email,
-                },
-              ],
-            },
-
-            {
-              headers: {
-                "x-api-key":
-                  process
-                    .env
-                    .NOWPAYMENTS_API_KEY,
-
-                "Content-Type":
-                  "application/json",
-              },
-            }
-          );
-
-        request.status =
-          "Approved";
-
-        request.txHash =
-          JSON.stringify(
-            payout.data
-          );
-      }
-
-      await request.save();
-
-      res.json({
+      return res.json({
         message:
-          request.approvals >=
-          2
-            ? "Withdrawal approved and sent"
-            : "First approval completed",
+          "Withdrawal approved",
       });
 
     } catch (err) {
-      console.log(
-        err.response?.data ||
-          err
-      );
 
-      res.status(500).json({
+      console.log(err);
+
+      return res.status(500).json({
+        message:
+          "Server error",
+      });
+    }
+  }
+);
+
+// =========================
+// REJECT WITHDRAWAL
+// =========================
+
+router.post(
+  "/admin/withdrawals/:id/reject",
+
+  auth,
+
+  adminOnly,
+
+  async (req, res) => {
+    try {
+
+      const withdrawal =
+        await Withdrawal.findById(
+          req.params.id
+        );
+
+      if (!withdrawal) {
+        return res.status(404).json({
+          message:
+            "Withdrawal not found",
+        });
+      }
+
+      withdrawal.status =
+        "rejected";
+
+      withdrawal.processedAt =
+        new Date();
+
+      await withdrawal.save();
+
+      return res.json({
+        message:
+          "Withdrawal rejected",
+      });
+
+    } catch (err) {
+
+      console.log(err);
+
+      return res.status(500).json({
         message:
           "Server error",
       });
