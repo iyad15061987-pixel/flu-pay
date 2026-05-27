@@ -4,37 +4,55 @@ const express =
 const router =
   express.Router();
 
-const adminAuth =
-  require(
-    "../middleware/adminAuth"
-  );
+const {
+  auth,
+  adminOnly,
+} = require(
+  "../middleware/auth"
+);
 
 const User =
   require(
     "../models/User"
   );
 
+// =========================
+// FREEZE USER
+// =========================
+
 router.post(
-  "/freeze-user",
-  adminauth,
+  "/freeze/:id",
+
+  auth,
 
   adminOnly,
 
   async (req, res) => {
     try {
-      await User.findByIdAndUpdate(
-        req.body.userId,
-        {
-          frozen: true,
-        }
-      );
+
+      const user =
+        await User.findById(
+          req.params.id
+        );
+
+      if (!user) {
+        return res.status(404).json({
+          message:
+            "User not found",
+        });
+      }
+
+      user.frozen = true;
+
+      await user.save();
 
       res.json({
         message:
-          "User frozen",
+          "User frozen successfully",
       });
 
     } catch (err) {
+
       console.log(err);
 
       res.status(500).json({
@@ -45,55 +63,43 @@ router.post(
   }
 );
 
+// =========================
+// UNFREEZE USER
+// =========================
+
 router.post(
-  "/unfreeze-user",
-  adminauth,
+  "/unfreeze/:id",
+
+  auth,
 
   adminOnly,
 
   async (req, res) => {
     try {
-      await User.findByIdAndUpdate(
-        req.body.userId,
-        {
-          frozen: false,
-        }
-      );
+
+      const user =
+        await User.findById(
+          req.params.id
+        );
+
+      if (!user) {
+        return res.status(404).json({
+          message:
+            "User not found",
+        });
+      }
+
+      user.frozen = false;
+
+      await user.save();
 
       res.json({
         message:
-          "User unfrozen",
+          "User unfrozen successfully",
       });
 
     } catch (err) {
-      console.log(err);
 
-      res.status(500).json({
-        message:
-          "Server error",
-      });
-    }
-  }
-);
-
-router.post(
-  "/delete-user",
-  adminauth,
-
-  adminOnly,
-
-  async (req, res) => {
-    try {
-      await User.findByIdAndDelete(
-        req.body.userId
-      );
-
-      res.json({
-        message:
-          "User deleted",
-      });
-
-    } catch (err) {
       console.log(err);
 
       res.status(500).json({
