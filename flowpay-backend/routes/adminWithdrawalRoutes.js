@@ -6,6 +6,7 @@ const router =
 
 const {
   auth,
+  adminOnly,
 } = require(
   "../middleware/auth"
 );
@@ -15,13 +16,8 @@ const Withdrawal =
     "../models/Withdrawal"
   );
 
-const User =
-  require(
-    "../models/User"
-  );
-
 // =========================
-// LIST ALL WITHDRAWALS
+// GET ALL WITHDRAWALS
 // =========================
 
 router.get(
@@ -33,21 +29,6 @@ router.get(
 
   async (req, res) => {
     try {
-      const admin =
-        await User.findById(
-          req.user.id
-        );
-
-      if (
-        !admin ||
-        admin.role !==
-          "admin"
-      ) {
-        return res.status(403).json({
-          message:
-            "Access denied",
-        });
-      }
 
       const withdrawals =
         await Withdrawal.find()
@@ -55,14 +36,15 @@ router.get(
             createdAt: -1,
           });
 
-      res.json(
+      return res.json(
         withdrawals
       );
 
     } catch (err) {
+
       console.log(err);
 
-      res.status(500).json({
+      return res.status(500).json({
         message:
           "Server error",
       });
@@ -83,21 +65,6 @@ router.post(
 
   async (req, res) => {
     try {
-      const admin =
-        await User.findById(
-          req.user.id
-        );
-
-      if (
-        !admin ||
-        admin.role !==
-          "admin"
-      ) {
-        return res.status(403).json({
-          message:
-            "Access denied",
-        });
-      }
 
       const withdrawal =
         await Withdrawal.findById(
@@ -119,27 +86,18 @@ router.post(
 
       await withdrawal.save();
 
-      // REALTIME EVENT
-
-      if (global.io) {
-        global.io.emit(
-          "withdrawal_approved",
-
-          withdrawal
-        );
-      }
-
-      res.json({
+      return res.json({
         message:
           "Withdrawal approved",
       });
 
     } catch (err) {
+
       console.log(err);
 
-      res.status(500).json({
+      return res.status(500).json({
         message:
-          "Approval failed",
+          "Server error",
       });
     }
   }
@@ -158,21 +116,6 @@ router.post(
 
   async (req, res) => {
     try {
-      const admin =
-        await User.findById(
-          req.user.id
-        );
-
-      if (
-        !admin ||
-        admin.role !==
-          "admin"
-      ) {
-        return res.status(403).json({
-          message:
-            "Access denied",
-        });
-      }
 
       const withdrawal =
         await Withdrawal.findById(
@@ -186,32 +129,6 @@ router.post(
         });
       }
 
-      if (
-        withdrawal.status !==
-        "pending"
-      ) {
-        return res.status(400).json({
-          message:
-            "Already processed",
-        });
-      }
-
-      // =========================
-      // REFUND BALANCE
-      // =========================
-
-      const user =
-        await User.findById(
-          withdrawal.userId
-        );
-
-      if (user) {
-        user.balance +=
-          withdrawal.amount;
-
-        await user.save();
-      }
-
       withdrawal.status =
         "rejected";
 
@@ -220,27 +137,18 @@ router.post(
 
       await withdrawal.save();
 
-      // REALTIME EVENT
-
-      if (global.io) {
-        global.io.emit(
-          "withdrawal_rejected",
-
-          withdrawal
-        );
-      }
-
-      res.json({
+      return res.json({
         message:
           "Withdrawal rejected",
       });
 
     } catch (err) {
+
       console.log(err);
 
-      res.status(500).json({
+      return res.status(500).json({
         message:
-          "Rejection failed",
+          "Server error",
       });
     }
   }
