@@ -1,85 +1,47 @@
 const express =
   require("express");
 
+const crypto =
+  require("crypto");
+
 const router =
   express.Router();
 
 const {
   auth,
+  adminOnly,
 } = require(
   "../middleware/auth"
 );
 
-const ApiKey =
-  require(
-    "../models/ApiKey"
-  );
-
-const User =
-  require(
-    "../models/User"
-  );
-
-const generateApiKey =
-  require(
-    "../utils/generateApiKey"
-  );
-
 // =========================
-// CREATE API KEY
+// GENERATE API KEY
 // =========================
 
 router.post(
-  "/api-keys",
+  "/api-keys/generate",
 
   auth,
 
-  adminOnly,
-
   async (req, res) => {
     try {
-      const user =
-        await User.findById(
-          req.user.id
-        );
-
-      if (!user) {
-        return res.status(404).json({
-          message:
-            "User not found",
-        });
-      }
 
       const apiKey =
-        generateApiKey();
+        crypto.randomBytes(32)
+          .toString("hex");
 
-      const key =
-        await ApiKey.create({
-          userId:
-            user._id,
+      return res.json({
+        message:
+          "API key generated",
 
-          email:
-            user.email,
-
-          name:
-            req.body.name ||
-            "Default Key",
-
-          apiKey,
-
-          permissions: [
-            "transfers",
-            "balance",
-            "cards",
-          ],
-        });
-
-      res.json(key);
+        apiKey,
+      });
 
     } catch (err) {
+
       console.log(err);
 
-      res.status(500).json({
+      return res.status(500).json({
         message:
           "Server error",
       });
@@ -88,11 +50,11 @@ router.post(
 );
 
 // =========================
-// LIST API KEYS
+// ADMIN API KEYS
 // =========================
 
 router.get(
-  "/api-keys",
+  "/admin/api-keys",
 
   auth,
 
@@ -100,51 +62,14 @@ router.get(
 
   async (req, res) => {
     try {
-      const keys =
-        await ApiKey.find({
-          userId:
-            req.user.id,
-        });
 
-      res.json(keys);
+      return res.json([]);
 
     } catch (err) {
+
       console.log(err);
 
-      res.status(500).json({
-        message:
-          "Server error",
-      });
-    }
-  }
-);
-
-// =========================
-// DELETE API KEY
-// =========================
-
-router.delete(
-  "/api-keys/:id",
-
-  auth,
-
-  adminOnly,
-
-  async (req, res) => {
-    try {
-      await ApiKey.findByIdAndDelete(
-        req.params.id
-      );
-
-      res.json({
-        message:
-          "API key deleted",
-      });
-
-    } catch (err) {
-      console.log(err);
-
-      res.status(500).json({
+      return res.status(500).json({
         message:
           "Server error",
       });
