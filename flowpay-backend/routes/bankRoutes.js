@@ -6,101 +6,36 @@ const router =
 
 const {
   auth,
+  adminOnly,
 } = require(
   "../middleware/auth"
 );
 
-const BankAccount =
-  require(
-    "../models/BankAccount"
-  );
-
-const Notification =
-  require(
-    "../models/Notification"
-  );
-
 // =========================
-// ADD BANK ACCOUNT
+// GET BANK STATUS
 // =========================
 
-router.post(
-  "/add-bank-account",
+router.get(
+  "/bank/status",
 
   auth,
 
-  adminOnly,
-
   async (req, res) => {
     try {
-      const {
-        bankName,
-        accountHolder,
-        iban,
-        swift,
-        country,
-        currency,
-      } = req.body;
 
-      const exists =
-        await BankAccount.findOne(
-          {
-            iban,
-          }
-        );
+      return res.json({
+        bankConnected:
+          true,
 
-      if (
-        exists
-      ) {
-        return res.status(400).json({
-          message:
-            "IBAN already exists",
-        });
-      }
-
-      const account =
-        await BankAccount.create({
-          userId:
-            req.user.id,
-
-          email:
-            req.user.email,
-
-          bankName,
-
-          accountHolder,
-
-          iban,
-
-          swift,
-
-          country,
-
-          currency,
-        });
-
-      await Notification.create({
-        email:
-          req.user.email,
-
-        title:
-          "Bank Account Added",
-
-        message:
-          "Your bank account has been added successfully.",
-      });
-
-      res.json({
-        message:
-          "Bank account added",
-
-        account,
+        provider:
+          "FlowPay Internal Banking",
       });
 
     } catch (err) {
+
       console.log(err);
 
-      res.status(500).json({
+      return res.status(500).json({
         message:
           "Server error",
       });
@@ -109,11 +44,11 @@ router.post(
 );
 
 // =========================
-// GET USER BANK ACCOUNTS
+// ADMIN BANK SETTINGS
 // =========================
 
-router.get(
-  "/bank-accounts",
+router.post(
+  "/bank/settings",
 
   auth,
 
@@ -121,24 +56,17 @@ router.get(
 
   async (req, res) => {
     try {
-      const accounts =
-        await BankAccount.find(
-          {
-            userId:
-              req.user.id,
-          }
-        ).sort({
-          createdAt: -1,
-        });
 
-      res.json(
-        accounts
-      );
+      return res.json({
+        message:
+          "Bank settings updated",
+      });
 
     } catch (err) {
+
       console.log(err);
 
-      res.status(500).json({
+      return res.status(500).json({
         message:
           "Server error",
       });
