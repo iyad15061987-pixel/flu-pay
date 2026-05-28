@@ -1,47 +1,49 @@
-const PORT = 8080;#const PORT = 8080; const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;
-const PORT = 8080;#const PORT = 8080; const PORT = 8080;Bconst PORT = 8080;Aconst PORT = 8080;Sconst PORT = 8080;Econst PORT = 8080; const PORT = 8080;Iconst PORT = 8080;Mconst PORT = 8080;Aconst PORT = 8080;Gconst PORT = 8080;Econst PORT = 8080;
-const PORT = 8080;#const PORT = 8080; const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;
-const PORT = 8080;
-const PORT = 8080;Fconst PORT = 8080;Rconst PORT = 8080;Oconst PORT = 8080;Mconst PORT = 8080; const PORT = 8080;nconst PORT = 8080;oconst PORT = 8080;dconst PORT = 8080;econst PORT = 8080;:const PORT = 8080;2const PORT = 8080;0const PORT = 8080;-const PORT = 8080;aconst PORT = 8080;lconst PORT = 8080;pconst PORT = 8080;iconst PORT = 8080;nconst PORT = 8080;econst PORT = 8080;
-const PORT = 8080;
-const PORT = 8080;#const PORT = 8080; const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;
-const PORT = 8080;#const PORT = 8080; const PORT = 8080;Wconst PORT = 8080;Oconst PORT = 8080;Rconst PORT = 8080;Kconst PORT = 8080; const PORT = 8080;Dconst PORT = 8080;Iconst PORT = 8080;Rconst PORT = 8080;Econst PORT = 8080;Cconst PORT = 8080;Tconst PORT = 8080;Oconst PORT = 8080;Rconst PORT = 8080;Yconst PORT = 8080;
-const PORT = 8080;#const PORT = 8080; const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;
-const PORT = 8080;
-const PORT = 8080;Wconst PORT = 8080;Oconst PORT = 8080;Rconst PORT = 8080;Kconst PORT = 8080;Dconst PORT = 8080;Iconst PORT = 8080;Rconst PORT = 8080; const PORT = 8080;/const PORT = 8080;aconst PORT = 8080;pconst PORT = 8080;pconst PORT = 8080;
-const PORT = 8080;
-const PORT = 8080;#const PORT = 8080; const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;
-const PORT = 8080;#const PORT = 8080; const PORT = 8080;Cconst PORT = 8080;Oconst PORT = 8080;Pconst PORT = 8080;Yconst PORT = 8080; const PORT = 8080;Pconst PORT = 8080;Aconst PORT = 8080;Cconst PORT = 8080;Kconst PORT = 8080;Aconst PORT = 8080;Gconst PORT = 8080;Econst PORT = 8080; const PORT = 8080;Fconst PORT = 8080;Iconst PORT = 8080;Lconst PORT = 8080;Econst PORT = 8080;Sconst PORT = 8080;
-const PORT = 8080;#const PORT = 8080; const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;
-const PORT = 8080;
-const PORT = 8080;Cconst PORT = 8080;Oconst PORT = 8080;Pconst PORT = 8080;Yconst PORT = 8080; const PORT = 8080;pconst PORT = 8080;aconst PORT = 8080;cconst PORT = 8080;kconst PORT = 8080;aconst PORT = 8080;gconst PORT = 8080;econst PORT = 8080;*const PORT = 8080;.const PORT = 8080;jconst PORT = 8080;sconst PORT = 8080;oconst PORT = 8080;nconst PORT = 8080; const PORT = 8080;.const PORT = 8080;/const PORT = 8080;
-const PORT = 8080;
-const PORT = 8080;#const PORT = 8080; const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;
-const PORT = 8080;#const PORT = 8080; const PORT = 8080;Iconst PORT = 8080;Nconst PORT = 8080;Sconst PORT = 8080;Tconst PORT = 8080;Aconst PORT = 8080;Lconst PORT = 8080;Lconst PORT = 8080; const PORT = 8080;Dconst PORT = 8080;Econst PORT = 8080;Pconst PORT = 8080;Econst PORT = 8080;Nconst PORT = 8080;Dconst PORT = 8080;Econst PORT = 8080;Nconst PORT = 8080;Cconst PORT = 8080;Iconst PORT = 8080;Econst PORT = 8080;Sconst PORT = 8080;
-const PORT = 8080;#const PORT = 8080; const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;
-const PORT = 8080;
-const PORT = 8080;Rconst PORT = 8080;Uconst PORT = 8080;Nconst PORT = 8080; const PORT = 8080;nconst PORT = 8080;pconst PORT = 8080;mconst PORT = 8080; const PORT = 8080;iconst PORT = 8080;nconst PORT = 8080;sconst PORT = 8080;tconst PORT = 8080;aconst PORT = 8080;lconst PORT = 8080;lconst PORT = 8080;
-const PORT = 8080;
-const PORT = 8080;#const PORT = 8080; const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;
-const PORT = 8080;#const PORT = 8080; const PORT = 8080;Cconst PORT = 8080;Oconst PORT = 8080;Pconst PORT = 8080;Yconst PORT = 8080; const PORT = 8080;Sconst PORT = 8080;Oconst PORT = 8080;Uconst PORT = 8080;Rconst PORT = 8080;Cconst PORT = 8080;Econst PORT = 8080;
-const PORT = 8080;#const PORT = 8080; const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;
-const PORT = 8080;
-const PORT = 8080;Cconst PORT = 8080;Oconst PORT = 8080;Pconst PORT = 8080;Yconst PORT = 8080; const PORT = 8080;.const PORT = 8080; const PORT = 8080;.const PORT = 8080;
-const PORT = 8080;
-const PORT = 8080;#const PORT = 8080; const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;
-const PORT = 8080;#const PORT = 8080; const PORT = 8080;Econst PORT = 8080;Nconst PORT = 8080;Vconst PORT = 8080;Iconst PORT = 8080;Rconst PORT = 8080;Oconst PORT = 8080;Nconst PORT = 8080;Mconst PORT = 8080;Econst PORT = 8080;Nconst PORT = 8080;Tconst PORT = 8080;
-const PORT = 8080;#const PORT = 8080; const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;
-const PORT = 8080;
-const PORT = 8080;Econst PORT = 8080;Nconst PORT = 8080;Vconst PORT = 8080; const PORT = 8080;Nconst PORT = 8080;Oconst PORT = 8080;Dconst PORT = 8080;Econst PORT = 8080;_const PORT = 8080;Econst PORT = 8080;Nconst PORT = 8080;Vconst PORT = 8080;=const PORT = 8080;pconst PORT = 8080;rconst PORT = 8080;oconst PORT = 8080;dconst PORT = 8080;uconst PORT = 8080;cconst PORT = 8080;tconst PORT = 8080;iconst PORT = 8080;oconst PORT = 8080;nconst PORT = 8080;
-const PORT = 8080;
-const PORT = 8080;#const PORT = 8080; const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;
-const PORT = 8080;#const PORT = 8080; const PORT = 8080;Pconst PORT = 8080;Oconst PORT = 8080;Rconst PORT = 8080;Tconst PORT = 8080;
-const PORT = 8080;#const PORT = 8080; const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;
-const PORT = 8080;
-const PORT = 8080;Econst PORT = 8080;Xconst PORT = 8080;Pconst PORT = 8080;Oconst PORT = 8080;Sconst PORT = 8080;Econst PORT = 8080; const PORT = 8080;8const PORT = 8080;0const PORT = 8080;8const PORT = 8080;0const PORT = 8080;
-const PORT = 8080;
-const PORT = 8080;#const PORT = 8080; const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;
-const PORT = 8080;#const PORT = 8080; const PORT = 8080;Sconst PORT = 8080;Tconst PORT = 8080;Aconst PORT = 8080;Rconst PORT = 8080;Tconst PORT = 8080; const PORT = 8080;Sconst PORT = 8080;Econst PORT = 8080;Rconst PORT = 8080;Vconst PORT = 8080;Econst PORT = 8080;Rconst PORT = 8080;
-const PORT = 8080;#const PORT = 8080; const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;=const PORT = 8080;
-const PORT = 8080;
-const PORT = 8080;Cconst PORT = 8080;Mconst PORT = 8080;Dconst PORT = 8080; const PORT = 8080;[const PORT = 8080;"const PORT = 8080;nconst PORT = 8080;pconst PORT = 8080;mconst PORT = 8080;"const PORT = 8080;,const PORT = 8080; const PORT = 8080;"const PORT = 8080;sconst PORT = 8080;tconst PORT = 8080;aconst PORT = 8080;rconst PORT = 8080;tconst PORT = 8080;"const PORT = 8080;]const PORT = 8080;
+```dockerfile id="c3"
+# =========================
+# BASE IMAGE
+# =========================
+
+FROM node:20-alpine
+
+# =========================
+# WORK DIRECTORY
+# =========================
+
+WORKDIR /app
+
+# =========================
+# COPY PACKAGE FILES
+# =========================
+
+COPY package*.json ./
+
+# =========================
+# INSTALL DEPENDENCIES
+# =========================
+
+RUN npm install --production
+
+# =========================
+# COPY SOURCE
+# =========================
+
+COPY . .
+
+# =========================
+# ENVIRONMENT
+# =========================
+
+ENV NODE_ENV=production
+
+# =========================
+# EXPOSE PORT
+# =========================
+
+EXPOSE 8080
+
+# =========================
+# START SERVER
+# =========================
+
+CMD ["node", "server.js"]
+```
