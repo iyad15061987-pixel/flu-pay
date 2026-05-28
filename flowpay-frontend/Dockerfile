@@ -1,8 +1,4 @@
-# =========================
-# BUILD STAGE
-# =========================
-
-FROM node:20-alpine AS builder
+FROM node:20
 
 WORKDIR /app
 
@@ -12,19 +8,9 @@ RUN npm install
 
 COPY . .
 
+ENV NEXT_TELEMETRY_DISABLED=1
+
 RUN npm run build
-
-# =========================
-# PRODUCTION STAGE
-# =========================
-
-FROM node:20-alpine
-
-WORKDIR /app
-
-ENV NODE_ENV=production
-
-COPY --from=builder /app ./
 
 EXPOSE 3000
 
