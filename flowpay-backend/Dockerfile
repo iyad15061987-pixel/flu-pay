@@ -20,7 +20,7 @@ COPY package*.json ./
 # INSTALL DEPENDENCIES
 # =========================
 
-RUN npm install --production
+RUN npm install
 
 # =========================
 # COPY SOURCE
@@ -38,10 +38,10 @@ ENV NODE_ENV=production
 # PORT
 # =========================
 
-EXPOSE 5000
+EXPOSE 8080
 
 # =========================
 # START SERVER
 # =========================
 
-CMD ["node", "server.js"]
+CMD ["npm", "start"]
