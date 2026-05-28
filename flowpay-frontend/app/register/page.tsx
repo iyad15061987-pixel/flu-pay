@@ -7,6 +7,7 @@ import {
 import API_URL from "@/lib/api";
 
 export default function RegisterPage() {
+
   const [email, setEmail] =
     useState("");
 
@@ -20,7 +21,9 @@ export default function RegisterPage() {
 
   const handleRegister =
     async () => {
+
       try {
+
         setLoading(true);
 
         const res =
@@ -44,19 +47,26 @@ export default function RegisterPage() {
         const data =
           await res.json();
 
-        alert(data.message);
+        alert(
+          data.message
+        );
 
         if (res.ok) {
+
           window.location.href =
             "/login";
         }
 
       } catch (err) {
+
+        console.log(err);
+
         alert(
           "Server error"
         );
 
       } finally {
+
         setLoading(false);
       }
     };
@@ -109,13 +119,17 @@ export default function RegisterPage() {
 
         <input
           type="email"
+
           placeholder="Email"
+
           value={email}
+
           onChange={(e) =>
             setEmail(
               e.target.value
             )
           }
+
           style={{
             width: "100%",
 
@@ -132,13 +146,17 @@ export default function RegisterPage() {
 
         <input
           type="password"
+
           placeholder="Password"
+
           value={password}
+
           onChange={(e) =>
             setPassword(
               e.target.value
             )
           }
+
           style={{
             width: "100%",
 
@@ -157,7 +175,9 @@ export default function RegisterPage() {
           onClick={
             handleRegister
           }
+
           disabled={loading}
+
           style={{
             width: "100%",
 
@@ -199,19 +219,18 @@ export default function RegisterPage() {
               "center",
           }}
         >
-          Already have an
-          account?
+          Already have an account?
         </p>
 
         <br />
 
         <button
           onClick={() => {
-           window.location.href =
-  "/verify";
 
+            window.location.href =
+              "/login";
           }}
-  
+
           style={{
             width: "100%",
 
@@ -226,7 +245,8 @@ export default function RegisterPage() {
 
             borderRadius: 10,
 
-            cursor: "pointer",
+            cursor:
+              "pointer",
           }}
         >
           Go To Login
