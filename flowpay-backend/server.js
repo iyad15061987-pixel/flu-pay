@@ -651,6 +651,7 @@ app.use(
   errorHandler
 );
 
+```js
 // =========================
 // SERVER
 // =========================
@@ -659,7 +660,8 @@ console.log(
   "🔥 NEW SERVER FILE LOADED"
 );
 
-const PORT = 8080;
+const PORT =
+  process.env.PORT || 8080;
 
 server.listen(
   PORT,
