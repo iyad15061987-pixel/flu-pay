@@ -1,41 +1,26 @@
 require("dotenv").config();
 
-require(
-  "./utils/cronJobs"
-);
+require("./utils/cronJobs");
 
 // =========================
 // CORE
 // =========================
 
-const express =
-  require("express");
-
-const cors =
-  require("cors");
-
-const helmet =
-  require("helmet");
-
-const compression =
-  require("compression");
+const express = require("express");
+const cors = require("cors");
+const helmet = require("helmet");
+const compression = require("compression");
 
 const rateLimit =
-  require(
-    "express-rate-limit"
-  );
+  require("express-rate-limit");
 
-const http =
-  require("http");
+const http = require("http");
 
 const mongoose =
   require("mongoose");
 
-const {
-  Server,
-} = require(
-  "socket.io"
-);
+const { Server } =
+  require("socket.io");
 
 // =========================
 // MIDDLEWARE
@@ -278,12 +263,7 @@ const notificationRoutes =
 // APP
 // =========================
 
-const app =
-  express();
-
-// =========================
-// TRUST PROXY
-// =========================
+const app = express();
 
 app.set(
   "trust proxy",
@@ -295,9 +275,7 @@ app.set(
 // =========================
 
 const server =
-  http.createServer(
-    app
-  );
+  http.createServer(app);
 
 // =========================
 // SOCKET.IO
@@ -316,21 +294,12 @@ const io =
       credentials:
         true,
     },
-
-    transports: [
-      "websocket",
-      "polling",
-    ],
   });
-
-// =========================
-// GLOBAL SOCKET ACCESS
-// =========================
 
 global.io = io;
 
 // =========================
-// SOCKET CONNECTIONS
+// SOCKET CONNECTION
 // =========================
 
 io.on(
@@ -342,122 +311,20 @@ io.on(
       `🔌 Socket connected: ${socket.id}`
     );
 
-    // =========================
-    // INITIAL CONNECTION
-    // =========================
-
     socket.emit(
       "connected",
       {
         success: true,
-
-        socketId:
-          socket.id,
-
-        message:
-          "Realtime connection established",
       }
     );
-
-    // =========================
-    // ADMIN ROOM
-    // =========================
-
-    socket.on(
-      "join_admin",
-
-      () => {
-
-        socket.join(
-          "admins"
-        );
-
-        console.log(
-          `👑 Admin joined: ${socket.id}`
-        );
-
-      }
-    );
-
-    // =========================
-    // USER ROOM
-    // =========================
-
-    socket.on(
-      "join_user",
-
-      (userId) => {
-
-        if (!userId) {
-          return;
-        }
-
-        socket.join(
-          userId
-        );
-
-        console.log(
-          `👤 User joined room: ${userId}`
-        );
-
-      }
-    );
-
-    // =========================
-    // SOCKET PING
-    // =========================
-
-    socket.on(
-      "ping_server",
-
-      () => {
-
-        socket.emit(
-          "pong_server",
-          {
-            status:
-              "alive",
-
-            timestamp:
-              new Date(),
-          }
-        );
-
-      }
-    );
-
-    // =========================
-    // SOCKET ERROR
-    // =========================
-
-    socket.on(
-      "error",
-
-      (err) => {
-
-        console.log(
-          "Socket Error:",
-          err
-        );
-
-      }
-    );
-
-    // =========================
-    // DISCONNECT
-    // =========================
 
     socket.on(
       "disconnect",
 
-      (reason) => {
+      () => {
 
         console.log(
           `❌ Socket disconnected: ${socket.id}`
-        );
-
-        console.log(
-          `Reason: ${reason}`
         );
 
       }
@@ -470,9 +337,7 @@ io.on(
 // SECURITY
 // =========================
 
-app.use(
-  helmet()
-);
+app.use(helmet());
 
 app.use(
   helmet.crossOriginResourcePolicy({
@@ -481,9 +346,7 @@ app.use(
   })
 );
 
-app.use(
-  compression()
-);
+app.use(compression());
 
 // =========================
 // RATE LIMIT
@@ -500,9 +363,7 @@ const limiter =
       "Too many requests",
   });
 
-app.use(
-  limiter
-);
+app.use(limiter);
 
 // =========================
 // CORS
@@ -511,9 +372,7 @@ app.use(
 app.use(
   cors({
     origin: "*",
-
-    credentials:
-      true,
+    credentials: true,
   })
 );
 
@@ -535,22 +394,18 @@ app.use(
 );
 
 // =========================
-// REQUEST LOGGER
+// LOGGER
 // =========================
 
-app.use(
-  requestLogger
-);
+app.use(requestLogger);
 
 // =========================
-// STATIC FILES
+// STATIC
 // =========================
 
 app.use(
   "/uploads",
-  express.static(
-    "uploads"
-  )
+  express.static("uploads")
 );
 
 // =========================
@@ -559,9 +414,7 @@ app.use(
 
 mongoose
   .connect(
-    process.env
-      .MONGO_URI,
-
+    process.env.MONGO_URI,
     {
       serverSelectionTimeoutMS:
         30000,
@@ -581,11 +434,9 @@ mongoose
 
     setInterval(
       updateRates,
-
-      1000 *
-        60 *
-        60
+      1000 * 60 * 60
     );
+
   })
 
   .catch((err) => {
@@ -593,6 +444,7 @@ mongoose
     console.log(err);
 
     process.exit(1);
+
   });
 
 // =========================
@@ -641,7 +493,6 @@ app.use("/api", merchantAnalyticsRoutes);
 app.use("/api", withdrawalRoutes);
 app.use("/api", adminWithdrawalRoutes);
 app.use("/api", twoFactorRoutes);
-app.use("/api", notificationRoutes);
 
 // =========================
 // ROOT
@@ -669,23 +520,16 @@ app.get(
   (req, res) => {
 
     res.json({
-      status:
-        "OK",
+      status: "OK",
 
       database:
-        mongoose
-          .connection
-          .readyState ===
-        1
+        mongoose.connection
+          .readyState === 1
           ? "Connected"
           : "Disconnected",
 
       uptime:
         process.uptime(),
-
-      sockets:
-        io.engine
-          .clientsCount,
     });
 
   }
@@ -695,17 +539,14 @@ app.get(
 // ERROR HANDLER
 // =========================
 
-app.use(
-  errorHandler
-);
+app.use(errorHandler);
 
 // =========================
 // SERVER
 // =========================
 
 const PORT =
-  process.env.PORT ||
-  5000;
+  process.env.PORT || 8080;
 
 server.listen(
   PORT,
@@ -718,7 +559,7 @@ server.listen(
     );
 
     console.log(
-      `⚡ Realtime server enabled`
+      "⚡ Realtime server enabled"
     );
 
   }
