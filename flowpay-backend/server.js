@@ -339,9 +339,13 @@ io.on(
 
   (socket) => {
 
-    console.log(
-      `🔌 Socket connected: ${socket.id}`
-    );
+  ```js id="c3"
+console.log(
+  "Socket connected:",
+  socket.id
+);
+```
+
 
     socket.emit(
       "connected",
@@ -408,9 +412,12 @@ io.on(
 
       () => {
 
-        console.log(
-          `❌ Socket disconnected: ${socket.id}`
-        );
+       ```js id="e5"
+console.log(
+  "Socket disconnected:",
+  socket.id
+);
+```
 
       }
     );
