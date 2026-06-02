@@ -1,4 +1,3 @@
-```js
 require("dotenv").config();
 
 require(
@@ -339,13 +338,13 @@ io.on(
 
   (socket) => {
 
-  ```js id="c3"
-console.log(
-  "Socket connected:",
-  socket.id
-);
-```
+    console.log(
+      `🔌 Socket connected: ${socket.id}`
+    );
 
+    // =========================
+    // INITIAL CONNECTION
+    // =========================
 
     socket.emit(
       "connected",
@@ -360,6 +359,10 @@ console.log(
       }
     );
 
+    // =========================
+    // ADMIN ROOM
+    // =========================
+
     socket.on(
       "join_admin",
 
@@ -369,8 +372,16 @@ console.log(
           "admins"
         );
 
+        console.log(
+          `👑 Admin joined: ${socket.id}`
+        );
+
       }
     );
+
+    // =========================
+    // USER ROOM
+    // =========================
 
     socket.on(
       "join_user",
@@ -385,8 +396,16 @@ console.log(
           userId
         );
 
+        console.log(
+          `👤 User joined room: ${userId}`
+        );
+
       }
     );
+
+    // =========================
+    // SOCKET PING
+    // =========================
 
     socket.on(
       "ping_server",
@@ -407,17 +426,39 @@ console.log(
       }
     );
 
+    // =========================
+    // SOCKET ERROR
+    // =========================
+
+    socket.on(
+      "error",
+
+      (err) => {
+
+        console.log(
+          "Socket Error:",
+          err
+        );
+
+      }
+    );
+
+    // =========================
+    // DISCONNECT
+    // =========================
+
     socket.on(
       "disconnect",
 
-      () => {
+      (reason) => {
 
-       ```js id="e5"
-console.log(
-  "Socket disconnected:",
-  socket.id
-);
-```
+        console.log(
+          `❌ Socket disconnected: ${socket.id}`
+        );
+
+        console.log(
+          `Reason: ${reason}`
+        );
 
       }
     );
@@ -658,17 +699,13 @@ app.use(
   errorHandler
 );
 
-```js
 // =========================
 // SERVER
 // =========================
 
-console.log(
-  "🔥 NEW SERVER FILE LOADED"
-);
-
 const PORT =
-  process.env.PORT || 8080;
+  process.env.PORT ||
+  5000;
 
 server.listen(
   PORT,
@@ -686,4 +723,3 @@ server.listen(
 
   }
 );
-```

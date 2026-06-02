@@ -37,15 +37,6 @@ export default function AdminPage() {
   const [fraudAlerts, setFraudAlerts] =
     useState<any[]>([]);
 
-  // =========================
-  // WITHDRAWALS
-  // =========================
-
-  const [
-    withdrawals,
-    setWithdrawals,
-  ] = useState<any[]>([]);
-
   const [analytics, setAnalytics] =
     useState<any>(null);
 
@@ -61,30 +52,52 @@ export default function AdminPage() {
   ] = useState(false);
 
   // =========================
-  // REAL CHART DATA
+  // CHART DATA
   // =========================
 
-  const weeklyVolumeData =
-    analytics?.weeklyVolume?.map(
-      (item: any) => ({
-        name:
-          item._id,
+  const chartData = [
+    {
+      name: "Mon",
+      volume: 12000,
+      users: 20,
+    },
 
-        volume:
-          item.volume,
-      })
-    ) || [];
+    {
+      name: "Tue",
+      volume: 18000,
+      users: 35,
+    },
 
-  const userGrowthData =
-    analytics?.userGrowth?.map(
-      (item: any) => ({
-        name:
-          item._id,
+    {
+      name: "Wed",
+      volume: 24000,
+      users: 50,
+    },
 
-        users:
-          item.users,
-      })
-    ) || [];
+    {
+      name: "Thu",
+      volume: 16000,
+      users: 28,
+    },
+
+    {
+      name: "Fri",
+      volume: 42000,
+      users: 65,
+    },
+
+    {
+      name: "Sat",
+      volume: 38000,
+      users: 55,
+    },
+
+    {
+      name: "Sun",
+      volume: 52000,
+      users: 80,
+    },
+  ];
 
   // =========================
   // EFFECT
@@ -135,17 +148,11 @@ export default function AdminPage() {
       return;
     }
 
-    // =========================
-    // INITIAL DATA
-    // =========================
-
     loadTransactions();
 
     loadFraudAlerts();
 
     loadAnalytics();
-
-    loadWithdrawals();
 
     // =========================
     // SOCKET.IO
@@ -156,17 +163,8 @@ export default function AdminPage() {
         API_URL.replace(
           "/api",
           ""
-        ),
-        {
-          transports: [
-            "websocket",
-          ],
-        }
+        )
       );
-
-    // =========================
-    // CONNECT
-    // =========================
 
     socket.on(
       "connect",
@@ -180,17 +178,8 @@ export default function AdminPage() {
         setSocketConnected(
           true
         );
-
-        socket.emit(
-          "join_admin"
-        );
-
       }
     );
-
-    // =========================
-    // DISCONNECT
-    // =========================
 
     socket.on(
       "disconnect",
@@ -204,24 +193,6 @@ export default function AdminPage() {
         setSocketConnected(
           false
         );
-
-      }
-    );
-
-    // =========================
-    // SOCKET READY
-    // =========================
-
-    socket.on(
-      "connected",
-
-      (data) => {
-
-        console.log(
-          "Realtime Ready:",
-          data
-        );
-
       }
     );
 
@@ -234,24 +205,14 @@ export default function AdminPage() {
 
       (tx) => {
 
-        console.log(
-          "💸 New Transaction:",
-          tx
-        );
-
         setTransactions(
           (prev) => [
-            {
-              ...tx,
-              createdAt:
-                new Date(),
-            },
+            tx,
             ...prev,
           ]
         );
 
         loadAnalytics();
-
       }
     );
 
@@ -264,59 +225,12 @@ export default function AdminPage() {
 
       (alert) => {
 
-        console.log(
-          "🚨 Fraud Alert:",
-          alert
-        );
-
         setFraudAlerts(
           (prev) => [
             alert,
             ...prev,
           ]
         );
-
-      }
-    );
-
-    // =========================
-    // LIVE WITHDRAWALS
-    // =========================
-
-    socket.on(
-      "withdrawal_created",
-
-      (withdrawal) => {
-
-        console.log(
-          "🏦 Withdrawal:",
-          withdrawal
-        );
-
-        setWithdrawals(
-          (prev) => [
-            withdrawal,
-            ...prev,
-          ]
-        );
-
-      }
-    );
-
-    // =========================
-    // WALLET UPDATE
-    // =========================
-
-    socket.on(
-      "wallet_update",
-
-      (data) => {
-
-        console.log(
-          "💰 Wallet Update:",
-          data
-        );
-
       }
     );
 
@@ -325,37 +239,7 @@ export default function AdminPage() {
     // =========================
 
     return () => {
-
-      socket.off(
-        "connect"
-      );
-
-      socket.off(
-        "disconnect"
-      );
-
-      socket.off(
-        "connected"
-      );
-
-      socket.off(
-        "new_transaction"
-      );
-
-      socket.off(
-        "fraud_alert"
-      );
-
-      socket.off(
-        "withdrawal_created"
-      );
-
-      socket.off(
-        "wallet_update"
-      );
-
       socket.disconnect();
-
     };
 
   }, []);
@@ -366,7 +250,6 @@ export default function AdminPage() {
 
   const loadAnalytics =
     async () => {
-
       try {
 
         const token =
@@ -395,9 +278,7 @@ export default function AdminPage() {
       } catch (err) {
 
         console.log(err);
-
       }
-
     };
 
   // =========================
@@ -406,7 +287,6 @@ export default function AdminPage() {
 
   const loadTransactions =
     async () => {
-
       try {
 
         const token =
@@ -439,9 +319,7 @@ export default function AdminPage() {
       } finally {
 
         setLoading(false);
-
       }
-
     };
 
   // =========================
@@ -450,7 +328,6 @@ export default function AdminPage() {
 
   const loadFraudAlerts =
     async () => {
-
       try {
 
         const token =
@@ -479,149 +356,11 @@ export default function AdminPage() {
       } catch (err) {
 
         console.log(err);
-
       }
-
     };
 
   // =========================
-  // LOAD WITHDRAWALS
-  // =========================
-
-  const loadWithdrawals =
-    async () => {
-
-      try {
-
-        const token =
-          localStorage.getItem(
-            "token"
-          );
-
-        const res =
-          await fetch(
-            `${API_URL}/admin/withdrawals`,
-            {
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            }
-          );
-
-        const data =
-          await res.json();
-
-        setWithdrawals(
-          data
-        );
-
-      } catch (err) {
-
-        console.log(err);
-
-      }
-
-    };
-
-  // =========================
-  // APPROVE WITHDRAWAL
-  // =========================
-
-  const approveWithdrawal =
-    async (id: string) => {
-
-      try {
-
-        const token =
-          localStorage.getItem(
-            "token"
-          );
-
-        const res =
-          await fetch(
-            `${API_URL}/admin/withdrawals/${id}/approve`,
-            {
-              method: "POST",
-
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            }
-          );
-
-        const data =
-          await res.json();
-
-        alert(
-          data.message
-        );
-
-        loadWithdrawals();
-
-      } catch (err) {
-
-        console.log(err);
-
-      }
-
-    };
-
-  // =========================
-  // REJECT WITHDRAWAL
-  // =========================
-
-  const rejectWithdrawal =
-    async (id: string) => {
-
-      try {
-
-        const token =
-          localStorage.getItem(
-            "token"
-          );
-
-        const res =
-          await fetch(
-            `${API_URL}/admin/withdrawals/${id}/reject`,
-            {
-              method: "POST",
-
-              headers: {
-                "Content-Type":
-                  "application/json",
-
-                Authorization:
-                  `Bearer ${token}`,
-              },
-
-              body: JSON.stringify({
-                reason:
-                  "Rejected by admin",
-              }),
-            }
-          );
-
-        const data =
-          await res.json();
-
-        alert(
-          data.message
-        );
-
-        loadWithdrawals();
-
-      } catch (err) {
-
-        console.log(err);
-
-      }
-
-    };
-
-  // =========================
-  // FILTERED TRANSACTIONS
+  // FILTER
   // =========================
 
   const filteredTransactions =
@@ -648,7 +387,6 @@ export default function AdminPage() {
   }
 
   if (loading) {
-
     return (
       <div
         style={{
@@ -666,7 +404,6 @@ export default function AdminPage() {
         Loading...
       </div>
     );
-
   }
 
   return (
@@ -680,7 +417,6 @@ export default function AdminPage() {
         minHeight: "100vh",
       }}
     >
-
       <Sidebar />
 
       <div
@@ -694,7 +430,6 @@ export default function AdminPage() {
               : "white",
         }}
       >
-
         {/* HEADER */}
 
         <div
@@ -707,9 +442,7 @@ export default function AdminPage() {
             marginBottom: 30,
           }}
         >
-
           <div>
-
             <h1>
               🏦 FlowPay Admin Center
             </h1>
@@ -724,13 +457,10 @@ export default function AdminPage() {
                     : "#dc2626",
               }}
             >
-
               {socketConnected
                 ? "🟢 Live monitoring connected"
                 : "🔴 Disconnected"}
-
             </div>
-
           </div>
 
           <button
@@ -740,51 +470,39 @@ export default function AdminPage() {
 
               window.location.href =
                 "/login";
-
             }}
 
             style={{
               padding:
                 "10px 20px",
-
               background:
                 "#dc2626",
-
               color:
                 "white",
-
               border:
                 "none",
-
               borderRadius:
                 10,
-
               cursor:
                 "pointer",
             }}
           >
             Logout
           </button>
-
         </div>
 
         {/* ANALYTICS */}
 
         {analytics && (
-
           <div
             style={{
               display: "grid",
-
               gridTemplateColumns:
                 "repeat(auto-fit, minmax(250px, 1fr))",
-
               gap: 20,
-
               marginBottom: 40,
             }}
           >
-
             <Card
               title="👥 Total Users"
               value={
@@ -832,9 +550,7 @@ export default function AdminPage() {
                 analytics.approvedKyc
               }
             />
-
           </div>
-
         )}
 
         {/* CHARTS */}
@@ -842,15 +558,13 @@ export default function AdminPage() {
         <div
           style={{
             display: "grid",
-
             gridTemplateColumns:
               "1fr 1fr",
-
             gap: 20,
-
             marginBottom: 40,
           }}
         >
+          {/* WEEKLY VOLUME */}
 
           <div
             style={{
@@ -858,13 +572,10 @@ export default function AdminPage() {
                 theme === "light"
                   ? "white"
                   : "#111827",
-
               padding: 25,
-
               borderRadius: 20,
             }}
           >
-
             <h2>
               📈 Weekly Volume
             </h2>
@@ -875,13 +586,9 @@ export default function AdminPage() {
               width="100%"
               height={300}
             >
-
               <LineChart
-                data={
-                  weeklyVolumeData
-                }
+                data={chartData}
               >
-
                 <Line
                   type="monotone"
                   dataKey="volume"
@@ -900,12 +607,11 @@ export default function AdminPage() {
                 <YAxis />
 
                 <Tooltip />
-
               </LineChart>
-
             </ResponsiveContainer>
-
           </div>
+
+          {/* USER GROWTH */}
 
           <div
             style={{
@@ -913,13 +619,10 @@ export default function AdminPage() {
                 theme === "light"
                   ? "white"
                   : "#111827",
-
               padding: 25,
-
               borderRadius: 20,
             }}
           >
-
             <h2>
               👥 User Growth
             </h2>
@@ -930,13 +633,9 @@ export default function AdminPage() {
               width="100%"
               height={300}
             >
-
               <BarChart
-                data={
-                  userGrowthData
-                }
+                data={chartData}
               >
-
                 <Bar
                   dataKey="users"
                   fill="#16a34a"
@@ -953,39 +652,27 @@ export default function AdminPage() {
                 <YAxis />
 
                 <Tooltip />
-
               </BarChart>
-
             </ResponsiveContainer>
-
           </div>
-
         </div>
 
         {/* SEARCH */}
 
         <input
           type="text"
-
           placeholder="Search transaction..."
-
           value={search}
-
           onChange={(e) =>
             setSearch(
               e.target.value
             )
           }
-
           style={{
             width: "100%",
-
             padding: 15,
-
             borderRadius: 12,
-
             marginBottom: 30,
-
             border: "none",
           }}
         />
@@ -1003,52 +690,58 @@ export default function AdminPage() {
             alert: any,
             index: number
           ) => (
-
             <div
               key={index}
-
               style={{
                 background:
                   "#7f1d1d",
-
                 padding: 25,
-
                 borderRadius: 20,
-
                 marginBottom: 20,
-
                 color:
                   "white",
               }}
             >
-
               <p>
                 <strong>
-                  Type:
+                  Risk Score:
                 </strong>{" "}
-                {alert.type ||
-                  "Fraud Alert"}
+                {alert.riskScore}
               </p>
 
               <br />
 
               <p>
                 <strong>
-                  Severity:
+                  Flags:
                 </strong>{" "}
-                {alert.severity ||
-                  "high"}
+                {alert.flags.join(
+                  ", "
+                )}
               </p>
 
               <br />
 
               <p>
                 <strong>
-                  User:
+                  From:
                 </strong>{" "}
-                {alert.user ||
+                {
                   alert.transaction
-                    ?.fromEmail}
+                    .fromEmail
+                }
+              </p>
+
+              <br />
+
+              <p>
+                <strong>
+                  To:
+                </strong>{" "}
+                {
+                  alert.transaction
+                    .toEmail
+                }
               </p>
 
               <br />
@@ -1058,197 +751,12 @@ export default function AdminPage() {
                   Amount:
                 </strong>{" "}
                 $
-                {alert.amount ||
+                {
                   alert.transaction
-                    ?.amount}
+                    .amount
+                }
               </p>
-
             </div>
-
-          )
-        )}
-
-        {/* WITHDRAWALS */}
-
-        <h2>
-          🏦 Treasury Withdrawal Center
-        </h2>
-
-        <br />
-
-        {withdrawals.map(
-          (
-            withdrawal: any,
-            index: number
-          ) => (
-
-            <div
-              key={index}
-
-              style={{
-                background:
-                  "#111827",
-
-                padding: 25,
-
-                borderRadius: 20,
-
-                marginBottom: 20,
-              }}
-            >
-
-              <p>
-                <strong>
-                  User:
-                </strong>{" "}
-                {withdrawal.email}
-              </p>
-
-              <br />
-
-              <p>
-                <strong>
-                  Amount:
-                </strong>{" "}
-                ${withdrawal.amount}
-              </p>
-
-              <br />
-
-              <p>
-                <strong>
-                  Method:
-                </strong>{" "}
-                {withdrawal.method}
-              </p>
-
-              <br />
-
-              <p>
-                <strong>
-                  Destination:
-                </strong>{" "}
-                {withdrawal.destination}
-              </p>
-
-              <br />
-
-              <p>
-                <strong>
-                  Risk:
-                </strong>{" "}
-
-                <span
-                  style={{
-                    color:
-                      withdrawal.riskLevel ===
-                      "high"
-                        ? "#dc2626"
-                        : "#16a34a",
-
-                    fontWeight:
-                      "bold",
-                  }}
-                >
-                  {withdrawal.riskLevel}
-                </span>
-
-              </p>
-
-              <br />
-
-              <p>
-                <strong>
-                  Status:
-                </strong>{" "}
-                {withdrawal.status}
-              </p>
-
-              <br />
-
-              {withdrawal.status ===
-                "pending" && (
-
-                <div
-                  style={{
-                    display: "flex",
-
-                    gap: 10,
-                  }}
-                >
-
-                  <button
-                    onClick={() =>
-                      approveWithdrawal(
-                        withdrawal._id
-                      )
-                    }
-
-                    style={{
-                      padding:
-                        "10px 20px",
-
-                      background:
-                        "#16a34a",
-
-                      color:
-                        "white",
-
-                      border:
-                        "none",
-
-                      borderRadius:
-                        10,
-
-                      cursor:
-                        "pointer",
-
-                      fontWeight:
-                        "bold",
-                    }}
-                  >
-                    Approve
-                  </button>
-
-                  <button
-                    onClick={() =>
-                      rejectWithdrawal(
-                        withdrawal._id
-                      )
-                    }
-
-                    style={{
-                      padding:
-                        "10px 20px",
-
-                      background:
-                        "#dc2626",
-
-                      color:
-                        "white",
-
-                      border:
-                        "none",
-
-                      borderRadius:
-                        10,
-
-                      cursor:
-                        "pointer",
-
-                      fontWeight:
-                        "bold",
-                    }}
-                  >
-                    Reject
-                  </button>
-
-                </div>
-
-              )}
-
-            </div>
-
           )
         )}
 
@@ -1265,24 +773,18 @@ export default function AdminPage() {
             tx: any,
             index: number
           ) => (
-
             <div
               key={index}
-
               style={{
                 background:
                   theme === "light"
                     ? "white"
                     : "#111827",
-
                 padding: 25,
-
                 borderRadius: 20,
-
                 marginBottom: 20,
               }}
             >
-
               <p>
                 <strong>
                   From:
@@ -1341,35 +843,25 @@ export default function AdminPage() {
 
               {tx.amount >=
                 10000 && (
-
                 <div
                   style={{
                     background:
                       "#dc2626",
-
                     color:
                       "white",
-
                     padding: 15,
-
                     borderRadius: 12,
-
                     fontWeight:
                       "bold",
                   }}
                 >
                   🚨 Large transaction detected
                 </div>
-
               )}
-
             </div>
-
           )
         )}
-
       </div>
-
     </div>
   );
 }
@@ -1388,16 +880,12 @@ function Card({
       style={{
         background:
           "#111827",
-
         padding: 25,
-
         borderRadius: 20,
-
         color:
           "white",
       }}
     >
-
       <h3>
         {title}
       </h3>
@@ -1407,7 +895,6 @@ function Card({
       <h1>
         {value}
       </h1>
-
     </div>
   );
 }

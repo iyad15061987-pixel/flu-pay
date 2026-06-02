@@ -16,50 +16,49 @@ const User =
     "../models/User"
   );
 
+const {
+  setup2FA,
+  verify2FASetup,
+  verify2FALogin,
+  disable2FA,
+  getBackupCodes,
+  regenerateBackupCodes,
+} = require(
+  "../controllers/authController"
+);
+
 // =========================
-// ENABLE 2FA
+// SETUP 2FA
 // =========================
 
 router.post(
-  "/2fa/enable",
+  "/2fa/setup",
 
   auth,
 
-  async (req, res) => {
-    try {
+  setup2FA
+);
 
-      const user =
-        await User.findById(
-          req.user.id
-        );
+// =========================
+// VERIFY & ENABLE 2FA
+// =========================
 
-      if (!user) {
-        return res.status(404).json({
-          message:
-            "User not found",
-        });
-      }
+router.post(
+  "/2fa/verify-setup",
 
-      user.twoFactorEnabled =
-        true;
+  auth,
 
-      await user.save();
+  verify2FASetup
+);
 
-      return res.json({
-        message:
-          "Two-factor authentication enabled",
-      });
+// =========================
+// VERIFY LOGIN 2FA
+// =========================
 
-    } catch (err) {
+router.post(
+  "/2fa/verify-login",
 
-      console.log(err);
-
-      return res.status(500).json({
-        message:
-          "Server error",
-      });
-    }
-  }
+  verify2FALogin
 );
 
 // =========================
@@ -71,6 +70,42 @@ router.post(
 
   auth,
 
+  disable2FA
+);
+
+// =========================
+// GET BACKUP CODES
+// =========================
+
+router.get(
+  "/2fa/backup-codes",
+
+  auth,
+
+  getBackupCodes
+);
+
+// =========================
+// REGENERATE BACKUP CODES
+// =========================
+
+router.post(
+  "/2fa/regenerate-backup-codes",
+
+  auth,
+
+  regenerateBackupCodes
+);
+
+// =========================
+// GET MY 2FA STATUS
+// =========================
+
+router.get(
+  "/2fa/status",
+
+  auth,
+
   async (req, res) => {
     try {
 
@@ -86,14 +121,9 @@ router.post(
         });
       }
 
-      user.twoFactorEnabled =
-        false;
-
-      await user.save();
-
       return res.json({
-        message:
-          "Two-factor authentication disabled",
+        enabled:
+          user.twoFactorEnabled,
       });
 
     } catch (err) {
@@ -127,6 +157,7 @@ router.get(
           {},
           {
             email: 1,
+            role: 1,
             twoFactorEnabled: 1,
           }
         );

@@ -1,3 +1,8 @@
+const generateBackupCodes =
+  require(
+    "../utils/generateBackupCodes"
+  );
+
 const speakeasy =
   require(
     "speakeasy"
@@ -486,7 +491,10 @@ exports.verify2FASetup =
       // =========================
 
       user.twoFactorEnabled =
-        true;
+  true;
+
+      user.twoFactorBackupCodes =
+  generateBackupCodes();
 
       user.twoFactorSecret =
         user.twoFactorTempSecret;
@@ -500,10 +508,13 @@ exports.verify2FASetup =
       // RESPONSE
       // =========================
 
-      return res.json({
-        message:
-          "2FA enabled successfully",
-      });
+ return res.json({
+  message:
+    "2FA enabled successfully",
+
+  backupCodes:
+    user.twoFactorBackupCodes,
+});
 
     } catch (err) {
 
@@ -642,6 +653,94 @@ exports.verify2FALogin =
 
   };
 
+  // =========================
+// GET BACKUP CODES
+// =========================
+
+exports.getBackupCodes =
+  async (req, res) => {
+
+    try {
+
+      const user =
+        await User.findById(
+          req.user.id
+        );
+
+      if (!user) {
+
+        return res.status(404).json({
+          message:
+            "User not found",
+        });
+
+      }
+
+      return res.json({
+        backupCodes:
+          user.twoFactorBackupCodes ||
+          [],
+      });
+
+    } catch (err) {
+
+      console.log(err);
+
+      return res.status(500).json({
+        message:
+          "Server error",
+      });
+
+    }
+
+  };
+
+  // =========================
+// REGENERATE BACKUP CODES
+// =========================
+
+exports.regenerateBackupCodes =
+  async (req, res) => {
+
+    try {
+
+      const user =
+        await User.findById(
+          req.user.id
+        );
+
+      if (!user) {
+
+        return res.status(404).json({
+          message:
+            "User not found",
+        });
+
+      }
+
+      user.twoFactorBackupCodes =
+        generateBackupCodes();
+
+      await user.save();
+
+      return res.json({
+        backupCodes:
+          user.twoFactorBackupCodes,
+      });
+
+    } catch (err) {
+
+      console.log(err);
+
+      return res.status(500).json({
+        message:
+          "Server error",
+      });
+
+    }
+
+  };
+  
 // =========================
 // DISABLE 2FA
 // =========================
