@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+flowpay-backend/node_modules/
+flowpay-frontend/node_modules/
+
+# Next.js
+.next/
+out/
+
+# Environment
+.env
+.env.local
+flowpay-backend/.env
+flowpay-frontend/.env.local
+
+# Logs
+*.log
+
+# Build
+dist/
+build/
+
+# VSCode
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
