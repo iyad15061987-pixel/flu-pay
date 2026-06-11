@@ -64,16 +64,6 @@ router.post(
 
     try {
 
-      console.log(
-  "BODY =",
-  req.body
-);
-
-console.log(
-  "USER ID =",
-  req.user.id
-);
-
       const {
         amount,
         method,
@@ -88,11 +78,6 @@ console.log(
         await User.findById(
           req.user.id
         );
-
-        console.log(
-  "USER =",
-  user
-);
 
       if (!user) {
 
@@ -175,10 +160,6 @@ console.log(
 
       await user.save();
 
-      console.log(
-  "USER SAVED"
-);
-
       // =========================
       // TRANSACTION
       // =========================
@@ -211,17 +192,9 @@ console.log(
             "paypal",
         });
 
-        console.log(
-  "TRANSACTION CREATED"
-);
-
     // =========================
 // LEDGER
 // =========================
-
-console.log(
-  "BEFORE LEDGER"
-);
 
 await createLedgerEntry({
   userId:
@@ -250,25 +223,21 @@ await createLedgerEntry({
     "Wallet deposit completed",
 });
 
-console.log(
-  "AFTER LEDGER"
-);
-
 // =========================
 // NOTIFICATION
 // =========================
 
-console.log(
-  "BEFORE NOTIFICATION"
-);
+await createNotification({
+  email:
+    user.email,
 
-console.log(
-  "NOTIFICATION DISABLED TEMPORARILY"
-);
+  title:
+    "Deposit Completed",
 
-console.log(
-  "AFTER NOTIFICATION"
-);
+  message:
+    `Your wallet was funded with $${numericAmount}`,
+});
+
 
       // =========================
       // REALTIME EVENTS

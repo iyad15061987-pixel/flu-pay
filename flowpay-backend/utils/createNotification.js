@@ -1,6 +1,6 @@
-const notificationQueue =
+const Notification =
   require(
-    "../queues/notificationQueue"
+    "../models/Notification"
   );
 
 module.exports =
@@ -9,16 +9,40 @@ module.exports =
     title,
     message,
   }) => {
+
     try {
-      await notificationQueue.add({
-        email,
 
-        title,
+      const notification =
+        await Notification.create({
+          email,
+          title,
+          message,
+        });
 
-        message,
-      });
+      if (
+        global.io
+      ) {
+        global.io.emit(
+          "notification",
+          notification
+        );
+      }
+
+      console.log(
+        `🔔 Notification saved for ${email}`
+      );
+
+      return notification;
 
     } catch (err) {
-      console.log(err);
+
+      console.error(
+        "Notification Error:",
+        err
+      );
+
+      return null;
+
     }
+
   };

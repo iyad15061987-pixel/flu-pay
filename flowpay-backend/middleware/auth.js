@@ -15,25 +15,7 @@ const auth =
           " "
         )[1];
 
-      console.log(
-        "========================="
-      );
-
-      console.log(
-        "TOKEN =",
-        token
-      );
-
-      console.log(
-        "JWT_SECRET =",
-        process.env.JWT_SECRET
-      );
-
       if (!token) {
-
-        console.log(
-          "NO TOKEN FOUND"
-        );
 
         return res.status(401).json({
           message:
@@ -48,22 +30,12 @@ const auth =
           process.env.JWT_SECRET
         );
 
-      console.log(
-        "DECODED =",
-        decoded
-      );
-
       req.user =
         decoded;
 
       next();
 
     } catch (err) {
-
-      console.log(
-        "JWT ERROR =",
-        err.message
-      );
 
       return res.status(401).json({
         message:
