@@ -136,10 +136,22 @@ exports.createWithdrawal =
       const beforeBalance =
         user.balance;
 
+      // =========================
+      // UPDATE USER
+      // =========================
+
       user.balance -=
         numericAmount;
 
+      user.totalWithdrawals =
+        (user.totalWithdrawals || 0) +
+        numericAmount;
+
       await user.save();
+
+      // =========================
+      // WITHDRAWAL RECORD
+      // =========================
 
       const withdrawal =
         await Withdrawal.create({
@@ -171,7 +183,52 @@ exports.createWithdrawal =
 
           ipAddress:
             req.ip,
+        });
+
+        console.log(
+  "WITHDRAWAL CREATED",
+  withdrawal._id
+);
+
+      // =========================
+      // TRANSACTION RECORD
+      // =========================
+
+      await Transaction.create({
+        fromEmail:
+          user.email,
+
+        toEmail:
+          "SYSTEM",
+
+        amount:
+          numericAmount,
+
+        fee,
+
+        netAmount,
+
+        type:
+          "Withdrawal",
+
+        method:
+          method ||
+          "paypal",
+
+        reference:
+          destination,
+
+        status:
+          "completed",
       });
+
+      console.log(
+  "TRANSACTION CREATED"
+);
+
+      // =========================
+      // LEDGER
+      // =========================
 
       await createLedgerEntry({
         userId:
@@ -199,6 +256,14 @@ exports.createWithdrawal =
           "Withdrawal submitted",
       });
 
+      console.log(
+  "LEDGER CREATED"
+);
+
+      // =========================
+      // NOTIFICATION
+      // =========================
+
       await createNotification({
         email:
           user.email,
@@ -209,6 +274,14 @@ exports.createWithdrawal =
         message:
           `Withdrawal request for $${numericAmount} submitted`,
       });
+
+      console.log(
+  "NOTIFICATION CREATED"
+);
+
+      // =========================
+      // REALTIME EVENTS
+      // =========================
 
       emit(
         "withdrawal_created",
@@ -235,6 +308,10 @@ exports.createWithdrawal =
         }
       );
 
+      // =========================
+      // RESPONSE
+      // =========================
+
       res.json({
         success: true,
 
@@ -246,7 +323,15 @@ exports.createWithdrawal =
 
     } catch (err) {
 
-      console.log(err);
+      console.error(
+  "WITHDRAWAL ERROR:"
+);
+
+console.error(err);
+
+console.error(
+  err.stack
+);
 
       res.status(500).json({
         message:
@@ -280,7 +365,7 @@ exports.getUserWithdrawals =
 
     } catch (err) {
 
-      console.log(err);
+      console.error(err);
 
       res.status(500).json({
         message:
@@ -312,7 +397,7 @@ exports.getAllWithdrawals =
 
     } catch (err) {
 
-      console.log(err);
+      console.error(err);
 
       res.status(500).json({
         message:

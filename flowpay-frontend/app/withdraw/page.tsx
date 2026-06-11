@@ -20,7 +20,7 @@ export default function WithdrawPage() {
     useState("");
 
   const [method, setMethod] =
-    useState("PayPal");
+  useState("paypal");
 
   const [wallet, setWallet] =
     useState("");
@@ -66,7 +66,7 @@ export default function WithdrawPage() {
 
         const res =
           await fetch(
-            `${API_URL}/create-withdraw-request`,
+            `${API_URL}/withdrawals`,
             {
               method: "POST",
 
@@ -78,13 +78,12 @@ export default function WithdrawPage() {
                   `Bearer ${token}`,
               },
 
-              body: JSON.stringify({
-                userId,
-                email,
-                amount,
-                method,
-                wallet,
-              }),
+             body: JSON.stringify({
+  amount,
+  method,
+  destination: wallet,
+}),
+
             }
           );
 
