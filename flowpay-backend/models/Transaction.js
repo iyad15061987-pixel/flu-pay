@@ -10,11 +10,39 @@ const transactionSchema =
 
       amount: Number,
 
-      fee: Number,
+      fee: {
+        type: Number,
+        default: 0,
+      },
 
       netAmount: Number,
 
       type: String,
+
+      method: String,
+
+      reference: String,
+
+      status: {
+        type: String,
+        enum: [
+          "pending",
+          "approved",
+          "rejected",
+          "completed",
+        ],
+        default: "completed",
+      },
+
+      reviewedBy: {
+        type: String,
+        default: null,
+      },
+
+      reviewedAt: {
+        type: Date,
+        default: null,
+      },
     },
     {
       timestamps: true,
