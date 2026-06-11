@@ -400,30 +400,10 @@ router.get(
 
     try {
 
-      let user;
-
-try {
-
-  user =
-    await User.findById(
-      req.user.id
-    );
-
-  console.log(
-    "USER =",
-    user
-  );
-
-} catch (err) {
-
-  console.error(
-    "USER FIND ERROR =",
-    err
-  );
-
-  throw err;
-
-}
+      const user =
+        await User.findById(
+          req.user.id
+        );
 
       if (!user) {
 

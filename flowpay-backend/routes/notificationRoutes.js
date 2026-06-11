@@ -26,13 +26,13 @@ router.get(
 
   async (req, res) => {
     try {
-      const notifications =
-        await Notification.find({
-          userId:
-            req.user.id,
-        }).sort({
-          createdAt: -1,
-        });
+     const notifications =
+  await Notification.find({
+    email:
+      req.user.email,
+  }).sort({
+    createdAt: -1,
+  });
 
       res.json(
         notifications

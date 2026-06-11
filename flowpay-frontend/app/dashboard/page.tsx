@@ -82,9 +82,8 @@ export default function DashboardPage() {
 
   const [email, setEmail] =
     useState("");
-
-  const [balance, setBalance] =
-    useState(0);
+const [balance, setBalance] =
+  useState(0);
 
   // =========================
   // TRANSFER
@@ -194,68 +193,69 @@ export default function DashboardPage() {
     twoFactorEnabled,
     setTwoFactorEnabled,
   ] = useState(false);
+// =========================
+// LOAD USER
+// =========================
 
-  // =========================
-  // LOAD USER
-  // =========================
+const loadUser =
+  async () => {
 
-  const loadUser =
-    async () => {
+    try {
 
-      try {
-
-        const token =
-          localStorage.getItem(
-            "token"
-          );
-
-        const email =
-          localStorage.getItem(
-            "email"
-          );
-
-        if (
-          !token ||
-          !email
-        ) {
-
-          window.location.href =
-            "/login";
-
-          return;
-
-        }
-
-        const res =
-          await fetch(
-            `${API_URL}/user/${email}`,
-            {
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            }
-          );
-
-        const data =
-          await res.json();
-
-        setBalance(
-          data.balance || 0
+      const token =
+        localStorage.getItem(
+          "token"
         );
 
-        setTwoFactorEnabled(
-          data.twoFactorEnabled ||
-            false
+      const email =
+        localStorage.getItem(
+          "email"
         );
 
-      } catch (err) {
+      if (
+        !token ||
+        !email
+      ) {
 
-        console.log(err);
+        window.location.href =
+          "/login";
+
+        return;
 
       }
 
-    };
+      const res =
+        await fetch(
+          `${API_URL}/profile`,
+          {
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+            },
+          }
+        );
+
+      const data =
+        await res.json();
+
+      setBalance(
+        Number(
+          data.balance || 0
+        )
+      );
+
+      setTwoFactorEnabled(
+        data.twoFactorEnabled ||
+        false
+      );
+
+    } catch (err) {
+
+      console.log(err);
+
+    }
+
+  };
 
   // =========================
   // LOAD TRANSACTIONS
@@ -313,17 +313,16 @@ export default function DashboardPage() {
           localStorage.getItem(
             "token"
           );
-
-        const res =
-          await fetch(
-            `${API_URL}/analytics`,
-            {
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            }
-          );
+const res =
+  await fetch(
+    `${API_URL}/profile`,
+    {
+      headers: {
+        Authorization:
+          `Bearer ${token}`,
+      },
+    }
+  );
 
         const data =
           await res.json();
@@ -353,15 +352,15 @@ export default function DashboardPage() {
           );
 
         const res =
-          await fetch(
-            `${API_URL}/merchant/analytics`,
-            {
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            }
-          );
+  await fetch(
+    `${API_URL}/profile`,
+    {
+      headers: {
+        Authorization:
+          `Bearer ${token}`,
+      },
+    }
+  );
 
         const data =
           await res.json();
@@ -1110,10 +1109,9 @@ export default function DashboardPage() {
             </h2>
 
             <br />
-
-            <h1>
-              ${balance}
-            </h1>
+<h1>
+  ${Number(balance).toFixed(2)}
+</h1>
 
           </div>
 

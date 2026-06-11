@@ -4,23 +4,23 @@ const mongoose =
 const notificationSchema =
   new mongoose.Schema(
     {
-      userId: {
-        type:
-          mongoose.Schema.Types
-            .ObjectId,
-
-        ref: "User",
+      email: {
+        type: String,
+        required: true,
       },
 
-      title:
-        String,
+      title: {
+        type: String,
+        required: true,
+      },
 
-      message:
-        String,
+      message: {
+        type: String,
+        required: true,
+      },
 
       read: {
         type: Boolean,
-
         default: false,
       },
     },
