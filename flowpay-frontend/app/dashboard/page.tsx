@@ -566,6 +566,66 @@ const res =
   const createWithdrawal =
     async () => {
 
+      const createTransfer =
+  async () => {
+
+    try {
+
+      const token =
+        localStorage.getItem(
+          "token"
+        );
+
+      const res =
+        await fetch(
+          `${API_URL}/transfer`,
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              Authorization:
+                `Bearer ${token}`,
+            },
+
+            body: JSON.stringify({
+              toEmail:
+                receiverEmail,
+
+              amount,
+            }),
+          }
+        );
+
+      const data =
+        await res.json();
+
+      alert(
+        data.message
+      );
+
+      setReceiverEmail("");
+
+      setAmount("");
+
+      loadUser();
+
+      loadTransactions();
+
+    } catch (err) {
+
+      console.log(err);
+
+      alert(
+        "Transfer failed"
+      );
+
+    }
+
+  };
+
       try {
 
         const token =
@@ -633,6 +693,72 @@ const res =
   // EFFECT
   // =========================
 
+  const createTransfer =
+  async () => {
+
+    try {
+
+      const token =
+        localStorage.getItem(
+          "token"
+        );
+
+      const res =
+        await fetch(
+          `${API_URL}/transfer`,
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              Authorization:
+                `Bearer ${token}`,
+            },
+
+            body: JSON.stringify({
+              toEmail:
+                receiverEmail,
+
+              amount,
+            }),
+          }
+        );
+
+      const data =
+        await res.json();
+
+      alert(
+        data.message
+      );
+
+      if (
+        data.success
+      ) {
+
+        setReceiverEmail("");
+
+        setAmount("");
+
+        loadUser();
+
+        loadTransactions();
+
+      }
+
+    } catch (err) {
+
+      console.log(err);
+
+      alert(
+        "Transfer failed"
+      );
+
+    }
+
+  };
+  
   useEffect(() => {
 
     setMounted(true);
@@ -1083,6 +1209,86 @@ const res =
 
         </div>
 
+{/* TRANSFER FUNDS */}
+
+<div
+  style={{
+    background:
+      "#111827",
+    padding: 25,
+    borderRadius: 20,
+    marginBottom: 30,
+  }}
+>
+
+  <h2>
+    💸 Send Money
+  </h2>
+
+  <br />
+
+  <input
+    type="email"
+    placeholder="Receiver Email"
+    value={receiverEmail}
+    onChange={(e) =>
+      setReceiverEmail(
+        e.target.value
+      )
+    }
+    style={{
+      width: "100%",
+      padding: 15,
+      borderRadius: 12,
+      border: "none",
+      marginBottom: 15,
+    }}
+  />
+
+  <input
+    type="number"
+    placeholder="Amount"
+    value={amount}
+    onChange={(e) =>
+      setAmount(
+        e.target.value
+      )
+    }
+    style={{
+      width: "100%",
+      padding: 15,
+      borderRadius: 12,
+      border: "none",
+      marginBottom: 15,
+    }}
+  />
+
+  <button
+    onClick={
+      createTransfer
+    }
+    style={{
+      width: "100%",
+      padding: 15,
+      background:
+        "#7c3aed",
+      color:
+        "white",
+      border:
+        "none",
+      borderRadius:
+        12,
+      cursor:
+        "pointer",
+      fontWeight:
+        "bold",
+    }}
+  >
+    Send Money
+  </button>
+
+</div>
+
         {/* WALLET */}
 
         <div
@@ -1185,6 +1391,98 @@ const res =
           )}
 
         </div>
+
+{/* TRANSACTION HISTORY */}
+
+<div
+  style={{
+    background: "#111827",
+    padding: 25,
+    borderRadius: 20,
+    marginBottom: 30,
+  }}
+>
+  <h2>
+    📜 Transaction History
+  </h2>
+
+  <br />
+
+  {transactions.map(
+    (
+      tx: any,
+      index: number
+    ) => (
+
+      <div
+        key={index}
+        style={{
+          background: "#1f2937",
+          padding: 20,
+          borderRadius: 15,
+          marginBottom: 15,
+        }}
+      >
+
+        <p>
+          <strong>
+            Type:
+          </strong>{" "}
+          {tx.type}
+        </p>
+
+        <br />
+
+        <p>
+          <strong>
+            Amount:
+          </strong>{" "}
+          ${tx.amount}
+        </p>
+
+        <br />
+
+        <p>
+          <strong>
+            Fee:
+          </strong>{" "}
+          ${tx.fee || 0}
+        </p>
+
+        <br />
+
+        <p>
+          <strong>
+            From:
+          </strong>{" "}
+          {tx.fromEmail}
+        </p>
+
+        <br />
+
+        <p>
+          <strong>
+            To:
+          </strong>{" "}
+          {tx.toEmail}
+        </p>
+
+        <br />
+
+        <p>
+          <strong>
+            Date:
+          </strong>{" "}
+          {new Date(
+            tx.createdAt
+          ).toLocaleString()}
+        </p>
+
+      </div>
+
+    )
+  )}
+</div>
 
         {/* WITHDRAWAL HISTORY */}
 

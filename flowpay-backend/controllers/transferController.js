@@ -419,17 +419,25 @@ exports.transfer =
       // UPDATE BALANCES
       // =========================
 
-      sender.balance -=
-        numericAmount;
+     sender.balance -=
+  numericAmount;
 
-      sender.dailyUsed +=
-        numericAmount;
+sender.dailyUsed +=
+  numericAmount;
 
-      sender.monthlyUsed +=
-        numericAmount;
+sender.monthlyUsed +=
+  numericAmount;
 
-      receiver.balance +=
-        netAmount;
+sender.totalTransfersSent =
+  (sender.totalTransfersSent || 0) +
+  numericAmount;
+
+receiver.balance +=
+  netAmount;
+
+receiver.totalTransfersReceived =
+  (receiver.totalTransfersReceived || 0) +
+  netAmount;
 
       await sender.save({
         session,
@@ -438,28 +446,6 @@ exports.transfer =
       await receiver.save({
         session,
       });
-
-      // =========================
-      // NOTIFICATION RECORD
-      // =========================
-
-      await Notification.create(
-        [
-          {
-            userId:
-              receiver._id,
-
-            title:
-              "Money Received",
-
-            message:
-              `You received $${netAmount} from ${sender.email}`,
-          },
-        ],
-        {
-          session,
-        }
-      );
 
       // =========================
       // TRANSACTION RECORD
