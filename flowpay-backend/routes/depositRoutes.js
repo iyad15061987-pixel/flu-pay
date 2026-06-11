@@ -64,6 +64,16 @@ router.post(
 
     try {
 
+      console.log(
+  "BODY =",
+  req.body
+);
+
+console.log(
+  "USER ID =",
+  req.user.id
+);
+
       const {
         amount,
         method,
@@ -78,6 +88,11 @@ router.post(
         await User.findById(
           req.user.id
         );
+
+        console.log(
+  "USER =",
+  user
+);
 
       if (!user) {
 
@@ -160,6 +175,10 @@ router.post(
 
       await user.save();
 
+      console.log(
+  "USER SAVED"
+);
+
       // =========================
       // TRANSACTION
       // =========================
@@ -192,51 +211,64 @@ router.post(
             "paypal",
         });
 
-      // =========================
-      // LEDGER
-      // =========================
+        console.log(
+  "TRANSACTION CREATED"
+);
 
-      await createLedgerEntry({
-        userId:
-          user._id,
+    // =========================
+// LEDGER
+// =========================
 
-        email:
-          user.email,
+console.log(
+  "BEFORE LEDGER"
+);
 
-        type:
-          "Deposit",
+await createLedgerEntry({
+  userId:
+    user._id,
 
-        amount:
-          numericAmount,
+  email:
+    user.email,
 
-        balanceBefore:
-          beforeBalance,
+  type:
+    "Deposit",
 
-        balanceAfter:
-          user.balance,
+  amount:
+    numericAmount,
 
-        reference:
-          reference ||
-          "Wallet Funding",
+  balanceBefore:
+    beforeBalance,
 
-        description:
-          "Wallet deposit completed",
-      });
+  balanceAfter:
+    user.balance,
 
-      // =========================
-      // NOTIFICATION
-      // =========================
+  reference:
+    reference ||
+    "Wallet Funding",
 
-      await createNotification({
-        email:
-          user.email,
+  description:
+    "Wallet deposit completed",
+});
 
-        title:
-          "Deposit Completed",
+console.log(
+  "AFTER LEDGER"
+);
 
-        message:
-          `Your wallet was funded with $${numericAmount}`,
-      });
+// =========================
+// NOTIFICATION
+// =========================
+
+console.log(
+  "BEFORE NOTIFICATION"
+);
+
+console.log(
+  "NOTIFICATION DISABLED TEMPORARILY"
+);
+
+console.log(
+  "AFTER NOTIFICATION"
+);
 
       // =========================
       // REALTIME EVENTS
@@ -325,19 +357,24 @@ router.post(
 
         transaction,
       });
+} catch (err) {
 
-    } catch (err) {
+  console.error(
+    "DEPOSIT ERROR:",
+    err
+  );
 
-      console.log(err);
+  res.status(500).json({
+    message:
+      "Deposit failed",
+    error:
+      err.message,
+  });
 
-      res.status(500).json({
-        message:
-          "Deposit failed",
-      });
-
-    }
+}
 
   }
+
 );
 
 // =========================
@@ -394,10 +431,30 @@ router.get(
 
     try {
 
-      const user =
-        await User.findById(
-          req.user.id
-        );
+      let user;
+
+try {
+
+  user =
+    await User.findById(
+      req.user.id
+    );
+
+  console.log(
+    "USER =",
+    user
+  );
+
+} catch (err) {
+
+  console.error(
+    "USER FIND ERROR =",
+    err
+  );
+
+  throw err;
+
+}
 
       if (!user) {
 

@@ -10,6 +10,7 @@ import Sidebar from "../components/Sidebar";
 import API_URL from "@/lib/api";
 
 export default function DepositPage() {
+
   const [mounted, setMounted] =
     useState(false);
 
@@ -23,6 +24,7 @@ export default function DepositPage() {
     useState("PayPal");
 
   useEffect(() => {
+
     setMounted(true);
 
     const savedTheme =
@@ -33,6 +35,7 @@ export default function DepositPage() {
     if (savedTheme) {
       setTheme(savedTheme);
     }
+
   }, []);
 
   if (!mounted) {
@@ -49,7 +52,9 @@ export default function DepositPage() {
 
   const createRequest =
     async () => {
+
       try {
+
         const token =
           localStorage.getItem(
             "token"
@@ -66,8 +71,8 @@ export default function DepositPage() {
           );
 
         const res =
-          await fetch(
-            `${API_URL}/create-deposit-request`,
+         await fetch(
+ `${API_URL}/deposits`,
             {
               method: "POST",
 
@@ -91,20 +96,43 @@ export default function DepositPage() {
         const data =
           await res.json();
 
-        alert(data.message);
+        console.log(
+          "DEPOSIT RESPONSE:",
+          data
+        );
+
+        if (!res.ok) {
+
+          alert(
+            data.message ||
+            "Request failed"
+          );
+
+          return;
+
+        }
+
+        alert(
+          data.message ||
+          "Deposit request submitted successfully"
+        );
 
         setAmount("");
 
       } catch (err) {
+
         console.log(err);
 
         alert(
-          "Server error"
+          "Connection error"
         );
+
       }
+
     };
 
   return (
+
     <div
       style={{
         display: "flex",
@@ -117,6 +145,7 @@ export default function DepositPage() {
         minHeight: "100vh",
       }}
     >
+
       <Sidebar />
 
       <div
@@ -133,6 +162,7 @@ export default function DepositPage() {
               : "white",
         }}
       >
+
         <h1>
           🏦 Deposit Request
         </h1>
@@ -156,6 +186,7 @@ export default function DepositPage() {
               "0 0 10px rgba(0,0,0,0.1)",
           }}
         >
+
           <h2>
             💳 PayPal
           </h2>
@@ -225,6 +256,7 @@ export default function DepositPage() {
               gap: 20,
             }}
           >
+
             {[
               {
                 name: "BTC",
@@ -247,17 +279,18 @@ export default function DepositPage() {
                 address:
                   "0x3fa91e9Cb73306C4566D2fEf640E212B9bf034CE",
               },
+
             ].map(
               (
                 wallet: any,
                 index: number
               ) => (
+
                 <div
                   key={index}
                   style={{
                     background:
-                      theme ===
-                      "light"
+                      theme === "light"
                         ? "#e5e7eb"
                         : "#1f2937",
 
@@ -269,10 +302,9 @@ export default function DepositPage() {
                       "center",
                   }}
                 >
+
                   <h3>
-                    {
-                      wallet.name
-                    }
+                    {wallet.name}
                   </h3>
 
                   <br />
@@ -292,9 +324,7 @@ export default function DepositPage() {
                         "break-all",
                     }}
                   >
-                    {
-                      wallet.address
-                    }
+                    {wallet.address}
                   </p>
 
                   <button
@@ -326,9 +356,12 @@ export default function DepositPage() {
                   >
                     Copy Address
                   </button>
+
                 </div>
+
               )
             )}
+
           </div>
 
           <br />
@@ -351,6 +384,7 @@ export default function DepositPage() {
               marginBottom: 15,
             }}
           >
+
             <option>
               PayPal
             </option>
@@ -358,6 +392,7 @@ export default function DepositPage() {
             <option>
               Crypto
             </option>
+
           </select>
 
           <input
@@ -397,6 +432,7 @@ export default function DepositPage() {
               marginBottom: 20,
             }}
           >
+
             <p>
               💵 Deposit:
               <strong>
@@ -431,6 +467,7 @@ export default function DepositPage() {
                 )}
               </strong>
             </p>
+
           </div>
 
           <button
@@ -454,8 +491,7 @@ export default function DepositPage() {
               cursor: "pointer",
             }}
           >
-            Create Deposit
-            Request
+            Create Deposit Request
           </button>
 
           <br />
@@ -474,6 +510,7 @@ export default function DepositPage() {
               borderRadius: 15,
             }}
           >
+
             <h3>
               📌 Important
             </h3>
@@ -481,26 +518,29 @@ export default function DepositPage() {
             <br />
 
             <p>
-              After sending your
-              payment, create a
-              deposit request so
-              admin can verify
-              and approve it.
+              After sending your payment,
+              create a deposit request so
+              admin can verify and approve it.
             </p>
 
             <br />
 
             <p>
-              External deposits
-              fee:
+              External deposits fee:
               <strong>
                 {" "}
                 3.5%
               </strong>
             </p>
+
           </div>
+
         </div>
+
       </div>
+
     </div>
+
   );
+
 }
