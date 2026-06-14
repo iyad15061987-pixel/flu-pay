@@ -696,26 +696,83 @@ export default function Sidebar() {
         {/* FOOTER */}
 
         <div>
-          <div
-            style={{
-              background:
-                "#1f2937",
+  <div
+    style={{
+      background:
+        "#1f2937",
 
-              padding: 15,
+      padding: 15,
 
-              borderRadius: 14,
+      borderRadius: 14,
 
-              marginBottom: 15,
+      marginBottom: 15,
 
-              fontSize: 13,
+      fontSize: 13,
 
-              opacity: 0.85,
-            }}
-          >
-            💳 FlowPay
-            Fintech Platform
-          </div>
+      opacity: 0.85,
+    }}
+  >
+    💳 FlowPay
+    Fintech Platform
+  </div>
 
+  <div
+    style={{
+      fontSize: 12,
+      marginBottom: 20,
+      lineHeight: 1.8,
+    }}
+  >
+    <div>
+      <Link href="/about">
+        About
+      </Link>
+    </div>
+
+    <div>
+      <Link href="/privacy">
+        Privacy
+      </Link>
+    </div>
+
+    <div>
+      <Link href="/terms">
+        Terms
+      </Link>
+    </div>
+
+    <div>
+      <Link href="/aml">
+        AML
+      </Link>
+    </div>
+
+    <div>
+      <Link href="/kyc-policy">
+        KYC Policy
+      </Link>
+    </div>
+
+    <div>
+      <Link href="/refund-policy">
+        Refund Policy
+      </Link>
+    </div>
+
+    <div>
+      <Link href="/contact">
+        Contact
+      </Link>
+    </div>
+
+    <br />
+
+    <div>
+      Operated by
+      Global Mercy Foundation
+    </div>
+  </div>
+  
           <button
             onClick={logout}
             style={{

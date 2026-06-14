@@ -19,8 +19,23 @@ export default function RegisterPage() {
     setLoading,
   ] = useState(false);
 
+  const [
+  acceptedTerms,
+  setAcceptedTerms,
+] = useState(false);
+
   const handleRegister =
     async () => {
+
+      if (
+  !acceptedTerms
+) {
+  alert(
+    "You must accept the Terms of Service and Privacy Policy."
+  );
+
+  return;
+}
 
       try {
 
@@ -170,6 +185,46 @@ export default function RegisterPage() {
               "1px solid #d1d5db",
           }}
         />
+
+<div
+  style={{
+    marginBottom: 20,
+  }}
+>
+  <label>
+    <input
+      type="checkbox"
+      checked={
+        acceptedTerms
+      }
+      onChange={(e) =>
+        setAcceptedTerms(
+          e.target.checked
+        )
+      }
+    />
+
+    {" "}
+
+    I agree to the{" "}
+
+    <a
+      href="/terms"
+      target="_blank"
+    >
+      Terms of Service
+    </a>
+
+    {" "}and{" "}
+
+    <a
+      href="/privacy"
+      target="_blank"
+    >
+      Privacy Policy
+    </a>
+  </label>
+</div>
 
         <button
           onClick={
