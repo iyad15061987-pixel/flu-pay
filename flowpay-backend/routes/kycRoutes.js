@@ -151,22 +151,34 @@ router.post(
       // SAVE KYC
       // =========================
 
-      await Kyc.create({
-        userId:
-          req.user.id,
+      const {
+  fullName,
+  country,
+  documentType,
+} = req.body;
 
-        email:
-          req.user.email,
+     await Kyc.create({
+  userId:
+    req.user.id,
 
-        passportUrl:
-          passportUpload.secure_url,
+  email:
+    req.user.email,
 
-        selfieUrl:
-          selfieUpload.secure_url,
+  fullName,
 
-        status:
-          "pending",
-      });
+  country,
+
+  documentType,
+
+  passportUrl:
+    passportUpload.secure_url,
+
+  selfieUrl:
+    selfieUpload.secure_url,
+
+  status:
+    "pending",
+});
 
       // =========================
       // RESPONSE

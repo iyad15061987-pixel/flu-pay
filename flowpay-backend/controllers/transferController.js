@@ -200,6 +200,25 @@ exports.transfer =
       }
 
       // =========================
+// KYC REQUIRED
+// =========================
+
+if (
+  !sender.verified
+) {
+
+  await session.abortTransaction();
+
+  session.endSession();
+
+  return res.status(403).json({
+    message:
+      "KYC verification required",
+  });
+
+}
+
+      // =========================
       // FRAUD ANALYSIS
       // =========================
 

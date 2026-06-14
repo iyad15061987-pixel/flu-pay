@@ -1,3 +1,8 @@
+const Notification =
+  require(
+    "../models/Notification"
+  );
+  
 const mongoose =
   require("mongoose");
 

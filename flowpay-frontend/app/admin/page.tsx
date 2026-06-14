@@ -40,6 +40,9 @@ export default function AdminPage() {
   const [analytics, setAnalytics] =
     useState<any>(null);
 
+    const [users, setUsers] =
+  useState<any[]>([]);
+
   const [search, setSearch] =
     useState("");
 
@@ -148,11 +151,13 @@ export default function AdminPage() {
       return;
     }
 
-    loadTransactions();
+   loadTransactions();
 
-    loadFraudAlerts();
+loadFraudAlerts();
 
-    loadAnalytics();
+loadAnalytics();
+
+loadUsers();
 
     // =========================
     // SOCKET.IO
@@ -280,6 +285,48 @@ export default function AdminPage() {
         console.log(err);
       }
     };
+
+    // =========================
+// LOAD USERS
+// =========================
+
+const loadUsers =
+  async () => {
+
+    try {
+
+      const token =
+        localStorage.getItem(
+          "token"
+        );
+
+      const res =
+        await fetch(
+          `${API_URL}/admin/users`,
+          {
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+            },
+          }
+        );
+
+      const data =
+        await res.json();
+
+      setUsers(
+        Array.isArray(data)
+          ? data
+          : []
+      );
+
+    } catch (err) {
+
+      console.log(err);
+
+    }
+
+  };
 
   // =========================
   // LOAD TRANSACTIONS
@@ -656,6 +703,308 @@ export default function AdminPage() {
             </ResponsiveContainer>
           </div>
         </div>
+{/* USERS MANAGEMENT */}
+
+<h2>
+  👥 Users Management
+</h2>
+
+<br />
+
+<div
+  style={{
+    background:
+      theme === "light"
+        ? "white"
+        : "#111827",
+    padding: 25,
+    borderRadius: 20,
+    marginBottom: 40,
+  }}
+>
+  {users.map(
+    (user: any) => (
+
+      <div
+        key={user._id}
+        style={{
+          background:
+            "#1f2937",
+          padding: 20,
+          borderRadius: 15,
+          marginBottom: 15,
+        }}
+      >
+        <p>
+          <strong>
+            Email:
+          </strong>{" "}
+          {user.email}
+        </p>
+
+        <br />
+
+        <p>
+          <strong>
+            Balance:
+          </strong>{" "}
+          $
+          {Number(
+            user.balance || 0
+          ).toFixed(2)}
+        </p>
+
+        <br />
+
+        <p>
+          <strong>
+            Role:
+          </strong>{" "}
+          {user.role}
+        </p>
+
+        <br />
+
+        <p>
+          <strong>
+            Status:
+          </strong>{" "}
+          {user.frozen
+            ? "🔴 Frozen"
+            : "🟢 Active"}
+        </p>
+
+        <br />
+
+        {/* FREEZE */}
+
+        <button
+          onClick={async () => {
+
+            const token =
+              localStorage.getItem(
+                "token"
+              );
+
+            await fetch(
+              `${API_URL}/admin/users/${user._id}/freeze`,
+              {
+                method: "PUT",
+
+                headers: {
+                  Authorization:
+                    `Bearer ${token}`,
+                },
+              }
+            );
+
+            loadUsers();
+
+          }}
+          style={{
+            marginRight: 10,
+            padding:
+              "10px 15px",
+            border: "none",
+            borderRadius: 10,
+            cursor:
+              "pointer",
+          }}
+        >
+          Freeze
+        </button>
+
+        {/* UNFREEZE */}
+
+        <button
+          onClick={async () => {
+
+            const token =
+              localStorage.getItem(
+                "token"
+              );
+
+            await fetch(
+              `${API_URL}/admin/users/${user._id}/unfreeze`,
+              {
+                method: "PUT",
+
+                headers: {
+                  Authorization:
+                    `Bearer ${token}`,
+                },
+              }
+            );
+
+            loadUsers();
+
+          }}
+          style={{
+            marginRight: 10,
+            padding:
+              "10px 15px",
+            border: "none",
+            borderRadius: 10,
+            cursor:
+              "pointer",
+          }}
+        >
+          Unfreeze
+        </button>
+
+        {/* EDIT BALANCE */}
+
+        <button
+          onClick={async () => {
+
+            const balance =
+              prompt(
+                "Enter new balance"
+              );
+
+            if (
+              balance === null
+            ) return;
+
+            const token =
+              localStorage.getItem(
+                "token"
+              );
+
+            await fetch(
+              `${API_URL}/admin/users/${user._id}/balance`,
+              {
+                method: "PUT",
+
+                headers: {
+                  "Content-Type":
+                    "application/json",
+
+                  Authorization:
+                    `Bearer ${token}`,
+                },
+
+                body:
+                  JSON.stringify({
+                    balance,
+                  }),
+              }
+            );
+
+            loadUsers();
+
+          }}
+          style={{
+            marginRight: 10,
+            padding:
+              "10px 15px",
+            border: "none",
+            borderRadius: 10,
+            cursor:
+              "pointer",
+          }}
+        >
+          💰 Edit Balance
+        </button>
+
+        {/* MAKE ADMIN */}
+
+        <button
+          onClick={async () => {
+
+            const token =
+              localStorage.getItem(
+                "token"
+              );
+
+            await fetch(
+              `${API_URL}/admin/users/${user._id}/role`,
+              {
+                method: "PUT",
+
+                headers: {
+                  "Content-Type":
+                    "application/json",
+
+                  Authorization:
+                    `Bearer ${token}`,
+                },
+
+                body:
+                  JSON.stringify({
+                    role:
+                      "admin",
+                  }),
+              }
+            );
+
+            loadUsers();
+
+          }}
+          style={{
+            marginRight: 10,
+            padding:
+              "10px 15px",
+            border: "none",
+            borderRadius: 10,
+            cursor:
+              "pointer",
+          }}
+        >
+          👑 Make Admin
+        </button>
+
+        {/* MAKE USER */}
+
+        <button
+          onClick={async () => {
+
+            const token =
+              localStorage.getItem(
+                "token"
+              );
+
+            await fetch(
+              `${API_URL}/admin/users/${user._id}/role`,
+              {
+                method: "PUT",
+
+                headers: {
+                  "Content-Type":
+                    "application/json",
+
+                  Authorization:
+                    `Bearer ${token}`,
+                },
+
+                body:
+                  JSON.stringify({
+                    role:
+                      "user",
+                  }),
+              }
+            );
+
+            loadUsers();
+
+          }}
+          style={{
+            padding:
+              "10px 15px",
+            border: "none",
+            borderRadius: 10,
+            cursor:
+              "pointer",
+          }}
+        >
+          👤 Make User
+        </button>
+
+      </div>
+
+    )
+  )}
+</div>
 
         {/* SEARCH */}
 
@@ -807,7 +1156,10 @@ export default function AdminPage() {
                 <strong>
                   Amount:
                 </strong>{" "}
-                ${tx.amount}
+$
+{Number(
+  tx.amount || 0
+).toFixed(2)}
               </p>
 
               <br />
@@ -816,7 +1168,10 @@ export default function AdminPage() {
                 <strong>
                   Fee:
                 </strong>{" "}
-                ${tx.fee}
+$
+{Number(
+  tx.fee || 0
+).toFixed(2)}
               </p>
 
               <br />
@@ -825,7 +1180,10 @@ export default function AdminPage() {
                 <strong>
                   Net:
                 </strong>{" "}
-                ${tx.netAmount}
+$
+{Number(
+  tx.netAmount || 0
+).toFixed(2)}
               </p>
 
               <br />

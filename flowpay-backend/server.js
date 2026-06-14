@@ -279,6 +279,11 @@ const notificationRoutes =
     "./routes/notificationRoutes"
   );
 
+  const adminUserRoutes =
+  require(
+    "./routes/adminUserRoutes"
+  );
+
 // =========================
 // APP
 // =========================
@@ -607,6 +612,12 @@ mongoose
 app.use("/api", authRoutes);
 app.use("/api", transferRoutes);
 app.use("/api", notificationRoutes);
+
+app.use(
+  "/api",
+  adminUserRoutes
+);
+
 app.use("/api", transactionRoutes);
 app.use("/api", adminRoutes);
 app.use("/api", analyticsRoutes);
@@ -636,6 +647,20 @@ app.use("/api", accountingRoutes);
 app.use("/api", kycUploadRoutes);
 app.use("/api", cardTransactionRoutes);
 app.use("/api", amlRoutes);
+app.use(
+  "/api",
+  require(
+    "./routes/paymentLinkRoutes"
+  )
+);
+
+app.use(
+  "/api",
+  require(
+    "./routes/invoicePdfRoutes"
+  )
+);
+
 app.use("/api", adminLiveRoutes);
 app.use("/api", verifyRoutes);
 app.use("/api", passwordResetRoutes);
@@ -647,7 +672,6 @@ app.use("/api", withdrawalRoutes);
 app.use("/api", depositRoutes);
 app.use("/api", adminWithdrawalRoutes);
 app.use("/api", twoFactorRoutes);
-app.use("/api", notificationRoutes);
 
 // =========================
 // ROOT

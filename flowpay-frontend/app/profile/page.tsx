@@ -8,7 +8,6 @@ import {
 import Sidebar from "../components/Sidebar";
 
 import API_URL from "@/lib/api";
-
 interface Profile {
   email: string;
 
@@ -21,6 +20,10 @@ interface Profile {
   role: string;
 
   frozen: boolean;
+
+  verified?: boolean;
+
+  kycStatus?: string;
 
   totalTransactions?: number;
 
@@ -285,6 +288,22 @@ export default function ProfilePage() {
           </p>
 
           <br />
+
+<p>
+  <strong>
+    🪪 KYC Status:
+  </strong>{" "}
+
+  {profile.kycStatus ===
+  "approved"
+    ? "🟢 Approved"
+    : profile.kycStatus ===
+      "rejected"
+    ? "🔴 Rejected"
+    : "🟡 Pending"}
+</p>
+
+<br />
 
           <p>
             <strong>

@@ -11,19 +11,56 @@ const {
   "../middleware/auth"
 );
 
+const CardTransaction =
+  require(
+    "../models/CardTransaction"
+  );
+
+const VirtualCard =
+  require(
+    "../models/VirtualCard"
+  );
+
 // =========================
-// USER CARD TRANSACTIONS
+// CARD TRANSACTIONS
 // =========================
 
 router.get(
-  "/card-transactions",
+  "/card-transactions/:cardId",
 
   auth,
 
   async (req, res) => {
     try {
 
-      return res.json([]);
+      const card =
+        await VirtualCard.findOne({
+          _id:
+            req.params.cardId,
+
+          userId:
+            req.user.id,
+        });
+
+      if (!card) {
+
+        return res.status(404).json({
+          message:
+            "Card not found",
+        });
+      }
+
+      const transactions =
+        await CardTransaction.find({
+          cardId:
+            card._id,
+        }).sort({
+          createdAt: -1,
+        });
+
+      return res.json(
+        transactions
+      );
 
     } catch (err) {
 
@@ -51,7 +88,15 @@ router.get(
   async (req, res) => {
     try {
 
-      return res.json([]);
+      const transactions =
+        await CardTransaction.find()
+          .sort({
+            createdAt: -1,
+          });
+
+      return res.json(
+        transactions
+      );
 
     } catch (err) {
 

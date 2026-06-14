@@ -14,6 +14,11 @@ const virtualCardSchema =
 
       email: String,
 
+      cardHolder: {
+  type: String,
+  default: "",
+},
+
       cardNumber: String,
 
       cvv: String,

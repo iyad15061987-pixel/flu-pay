@@ -12,79 +12,83 @@ const {
 );
 
 const {
-  createWithdrawal,
-  getUserWithdrawals,
-  getAllWithdrawals,
-  approveWithdrawal,
-  rejectWithdrawal,
+  getAllUsers,
+  freezeUser,
+  unfreezeUser,
+  updateBalance,
+  updateRole,
 } = require(
-  "../controllers/withdrawalController"
+  "../controllers/adminUserController"
 );
 
 // =========================
-// CREATE WITHDRAWAL
-// =========================
-
-router.post(
-  "/withdrawals",
-
-  auth,
-
-  createWithdrawal
-);
-
-// =========================
-// USER WITHDRAWALS
+// GET ALL USERS
 // =========================
 
 router.get(
-  "/withdrawals",
-
-  auth,
-
-  getUserWithdrawals
-);
-
-// =========================
-// ADMIN WITHDRAWALS
-// =========================
-
-router.get(
-  "/admin/withdrawals",
+  "/admin/users",
 
   auth,
 
   adminOnly,
 
-  getAllWithdrawals
+  getAllUsers
 );
 
 // =========================
-// APPROVE WITHDRAWAL
+// FREEZE USER
 // =========================
 
-router.post(
-  "/admin/withdrawals/:id/approve",
+router.put(
+  "/admin/users/:id/freeze",
 
   auth,
 
   adminOnly,
 
-  approveWithdrawal
+  freezeUser
 );
 
 // =========================
-// REJECT WITHDRAWAL
+// UNFREEZE USER
 // =========================
 
-router.post(
-  "/admin/withdrawals/:id/reject",
+router.put(
+  "/admin/users/:id/unfreeze",
 
   auth,
 
   adminOnly,
 
-  rejectWithdrawal
+  unfreezeUser
+);
+
+// =========================
+// UPDATE BALANCE
+// =========================
+
+router.put(
+  "/admin/users/:id/balance",
+
+  auth,
+
+  adminOnly,
+
+  updateBalance
+);
+
+// =========================
+// UPDATE ROLE
+// =========================
+
+router.put(
+  "/admin/users/:id/role",
+
+  auth,
+
+  adminOnly,
+
+  updateRole
 );
 
 module.exports =

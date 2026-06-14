@@ -46,86 +46,92 @@ export default function KycPage() {
     }
   }, []);
 
-  const submitKyc =
-    async () => {
-      try {
-        if (
-          !documentFront ||
-          !selfie
-        ) {
-          alert(
-            "Upload required files"
-          );
+const submitKyc =
+  async () => {
+    try {
 
-          return;
-        }
-
-        setLoading(true);
-
-        const token =
-          localStorage.getItem(
-            "token"
-          );
-
-        const formData =
-          new FormData();
-
-        formData.append(
-          "fullName",
-          fullName
-        );
-
-        formData.append(
-          "country",
-          country
-        );
-
-        formData.append(
-          "documentType",
-          documentType
-        );
-
-        formData.append(
-          "documentFront",
-          documentFront
-        );
-
-        formData.append(
-          "selfie",
-          selfie
-        );
-
-        const res =
-          await fetch(
-            `${API_URL}/submit-kyc`,
-            {
-              method: "POST",
-
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-              },
-
-              body: formData,
-            }
-          );
-
-        const data =
-          await res.json();
-
-        alert(data.message);
-
-      } catch (err) {
-        console.log(err);
-
+      if (
+        !documentFront ||
+        !selfie
+      ) {
         alert(
-          "Server error"
+          "Upload required files"
+        );
+        return;
+      }
+
+      setLoading(true);
+
+      const token =
+        localStorage.getItem(
+          "token"
         );
 
-      } finally {
-        setLoading(false);
-      }
-    };
+      const formData =
+        new FormData();
+
+      formData.append(
+        "fullName",
+        fullName
+      );
+
+      formData.append(
+        "country",
+        country
+      );
+
+      formData.append(
+        "documentType",
+        documentType
+      );
+
+      formData.append(
+        "passport",
+        documentFront
+      );
+
+      formData.append(
+        "selfie",
+        selfie
+      );
+
+      const res =
+        await fetch(
+          `${API_URL}/upload-kyc`,
+          {
+            method: "POST",
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+            },
+            body:
+              formData,
+          }
+        );
+
+      const data =
+        await res.json();
+
+      alert(
+        data.message
+      );
+
+    } catch (err) {
+
+      console.log(err);
+
+      alert(
+        "Server error"
+      );
+
+    } finally {
+
+      setLoading(
+        false
+      );
+
+    }
+  };
 
   return (
     <div

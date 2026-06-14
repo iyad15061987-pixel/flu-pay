@@ -287,10 +287,14 @@ const loadUser =
             }
           );
 
-        const data =
-          await res.json();
+       const data =
+  await res.json();
 
-        setTransactions(data);
+setTransactions(
+  Array.isArray(data)
+    ? data
+    : []
+);
 
       } catch (err) {
 
@@ -315,7 +319,7 @@ const loadUser =
           );
 const res =
   await fetch(
-    `${API_URL}/profile`,
+    `${API_URL}/analytics`,
     {
       headers: {
         Authorization:
@@ -402,12 +406,25 @@ const res =
             }
           );
 
-        const data =
-          await res.json();
+       const data =
+  await res.json();
 
-        setDeposits(
-          data
-        );
+if (res.status === 401) {
+
+  localStorage.clear();
+
+  window.location.href =
+    "/login";
+
+  return;
+
+}
+
+setDeposits(
+  Array.isArray(data)
+    ? data
+    : []
+);
 
       } catch (err) {
 
@@ -442,12 +459,25 @@ const res =
             }
           );
 
-        const data =
-          await res.json();
+       const data =
+  await res.json();
 
-        setWithdrawals(
-          data
-        );
+if (res.status === 401) {
+
+  localStorage.clear();
+
+  window.location.href =
+    "/login";
+
+  return;
+
+}
+
+setWithdrawals(
+  Array.isArray(data)
+    ? data
+    : []
+);
 
       } catch (err) {
 
@@ -482,10 +512,25 @@ const res =
             }
           );
 
-        const data =
-          await res.json();
+       const data =
+  await res.json();
 
-        setInvoices(data);
+if (res.status === 401) {
+
+  localStorage.clear();
+
+  window.location.href =
+    "/login";
+
+  return;
+
+}
+
+setInvoices(
+  Array.isArray(data)
+    ? data
+    : []
+);
 
       } catch (err) {
 
@@ -565,66 +610,6 @@ const res =
 
   const createWithdrawal =
     async () => {
-
-      const createTransfer =
-  async () => {
-
-    try {
-
-      const token =
-        localStorage.getItem(
-          "token"
-        );
-
-      const res =
-        await fetch(
-          `${API_URL}/transfer`,
-          {
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json",
-
-              Authorization:
-                `Bearer ${token}`,
-            },
-
-            body: JSON.stringify({
-              toEmail:
-                receiverEmail,
-
-              amount,
-            }),
-          }
-        );
-
-      const data =
-        await res.json();
-
-      alert(
-        data.message
-      );
-
-      setReceiverEmail("");
-
-      setAmount("");
-
-      loadUser();
-
-      loadTransactions();
-
-    } catch (err) {
-
-      console.log(err);
-
-      alert(
-        "Transfer failed"
-      );
-
-    }
-
-  };
 
       try {
 
@@ -1291,37 +1276,124 @@ const res =
 
         {/* WALLET */}
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns:
-              "repeat(auto-fit,minmax(250px,1fr))",
-            gap: 20,
-            marginBottom: 30,
-          }}
-        >
+       <div
+  style={{
+    display: "grid",
+    gridTemplateColumns:
+      "repeat(auto-fit,minmax(250px,1fr))",
+    gap: 20,
+    marginBottom: 30,
+  }}
+>
 
-          <div
-            style={{
-              background:
-                "#111827",
-              padding: 25,
-              borderRadius: 20,
-            }}
-          >
+  <div
+    style={{
+      background:
+        "#111827",
+      padding: 25,
+      borderRadius: 20,
+    }}
+  >
+    <h2>
+      Wallet Balance
+    </h2>
 
-            <h2>
-              Wallet Balance
-            </h2>
+    <br />
 
-            <br />
-<h1>
-  ${Number(balance).toFixed(2)}
-</h1>
+    <h1>
+      $
+      {Number(
+        balance
+      ).toFixed(2)}
+    </h1>
+  </div>
 
-          </div>
+  <div
+    style={{
+      background:
+        "#111827",
+      padding: 25,
+      borderRadius: 20,
+    }}
+  >
+    <h2>
+      🔗 Payment Links
+    </h2>
 
-        </div>
+    <br />
+
+    <h1>
+      {
+        analytics?.totalPaymentLinks || 0
+      }
+    </h1>
+  </div>
+
+  <div
+    style={{
+      background:
+        "#111827",
+      padding: 25,
+      borderRadius: 20,
+    }}
+  >
+    <h2>
+      💰 Payment Revenue
+    </h2>
+
+    <br />
+
+    <h1>
+      $
+      {Number(
+        analytics?.paymentRevenue || 0
+      ).toFixed(2)}
+    </h1>
+  </div>
+
+  <div
+    style={{
+      background:
+        "#111827",
+      padding: 25,
+      borderRadius: 20,
+    }}
+  >
+    <h2>
+      📜 Transactions
+    </h2>
+
+    <br />
+
+    <h1>
+      {(analytics?.sentCount || 0) +
+        (analytics?.receivedCount || 0)}
+    </h1>
+  </div>
+
+  <div
+    style={{
+      background:
+        "#111827",
+      padding: 25,
+      borderRadius: 20,
+    }}
+  >
+    <h2>
+      📈 Revenue
+    </h2>
+
+    <br />
+
+    <h1>
+      $
+      {Number(
+        analytics?.totalReceived || 0
+      ).toFixed(2)}
+    </h1>
+  </div>
+
+</div>
 
         {/* DEPOSIT HISTORY */}
 
@@ -1433,21 +1505,27 @@ const res =
 
         <br />
 
-        <p>
-          <strong>
-            Amount:
-          </strong>{" "}
-          ${tx.amount}
-        </p>
+    <p>
+  <strong>
+    Amount:
+  </strong>{" "}
+  $
+  {Number(
+    tx.amount || 0
+  ).toFixed(2)}
+</p>
 
-        <br />
+<br />
 
-        <p>
-          <strong>
-            Fee:
-          </strong>{" "}
-          ${tx.fee || 0}
-        </p>
+<p>
+  <strong>
+    Fee:
+  </strong>{" "}
+  $
+  {Number(
+    tx.fee || 0
+  ).toFixed(2)}
+</p>
 
         <br />
 

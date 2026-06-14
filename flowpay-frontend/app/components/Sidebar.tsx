@@ -175,6 +175,28 @@ export default function Sidebar() {
         "💳",
     },
 
+   {
+  name:
+    "Payment Links",
+
+  path:
+    "/payment-links",
+
+  icon:
+    "🔗",
+},
+
+{
+  name:
+    "Transactions",
+
+  path:
+    "/transactions",
+
+  icon:
+    "📜",
+},
+
     {
       name:
         "KYC",

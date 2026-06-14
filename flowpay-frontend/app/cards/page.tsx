@@ -12,6 +12,8 @@ import API_URL from "@/lib/api";
 interface Card {
   _id: string;
 
+  cardHolder: string;
+
   cardNumber: string;
 
   cvv: string;
@@ -84,12 +86,15 @@ export default function CardsPage() {
               },
             }
           );
+const data =
+  await res.json();
 
-        const data =
-          await res.json();
+console.log(
+  "CARDS API:",
+  data
+);
 
-        setCards(data);
-
+setCards(data);
       } catch (err) {
         console.log(err);
       }
@@ -297,6 +302,18 @@ export default function CardsPage() {
                   card.cardNumber
                 }
               </h1>
+
+<br />
+
+<p
+  style={{
+    fontSize: 18,
+    fontWeight: "bold",
+    letterSpacing: 2,
+  }}
+>
+  {card.cardHolder}
+</p>
 
               <br />
 

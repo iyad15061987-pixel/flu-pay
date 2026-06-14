@@ -36,9 +36,10 @@ export default function CheckoutPage() {
   const loadInvoice =
     async () => {
       try {
+
         const res =
           await fetch(
-            `${API_URL}/merchant/invoice/${token}`
+            `${API_URL}/pay/${token}`
           );
 
         const data =
@@ -47,9 +48,11 @@ export default function CheckoutPage() {
         setInvoice(data);
 
       } catch (err) {
+
         console.log(err);
 
       } finally {
+
         setLoading(false);
       }
     };
@@ -61,132 +64,122 @@ export default function CheckoutPage() {
   }, [token]);
 
   const markAsPaid =
-    async () => {
-      try {
+  async () => {
+    try {
+
+      console.log(
+        "START PAYMENT"
+      );
+
+      const res =
         await fetch(
-          `${API_URL}/merchant/pay/${token}`,
+          `${API_URL}/pay/${token}/complete`,
           {
             method: "POST",
           }
         );
 
-        alert(
-          "Payment completed successfully"
-        );
+      console.log(
+        "STATUS:",
+        res.status
+      );
 
-        window.location.reload();
+      const data =
+        await res.json();
 
-      } catch (err) {
-        console.log(err);
-      }
-    };
+      console.log(
+        "RESPONSE:",
+        data
+      );
 
-  if (loading) {
-    return (
+      alert(
+        data.message
+      );
+
+      window.location.reload();
+
+    } catch (err) {
+
+      console.log(
+        "PAYMENT ERROR:",
+        err
+      );
+    }
+  };
+if (loading) {
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        background: "#0f172a",
+        color: "white",
+      }}
+    >
+      Loading...
+    </div>
+  );
+}
+
+if (
+  !invoice ||
+  invoice.message
+) {
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        background: "#0f172a",
+        color: "white",
+      }}
+    >
+      Payment Link Not Found
+    </div>
+  );
+}
+
+if (
+  invoice.status ===
+  "paid"
+) {
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        background: "#0f172a",
+        color: "white",
+      }}
+    >
       <div
         style={{
-          minHeight:
-            "100vh",
-
-          display: "flex",
-
-          justifyContent:
-            "center",
-
-          alignItems:
-            "center",
-
-          background:
-            "#0f172a",
-
-          color: "white",
+          background: "white",
+          color: "#111827",
+          padding: 40,
+          borderRadius: 24,
+          textAlign: "center",
         }}
       >
-        Loading...
+        <h1>
+          ✅ Payment Completed
+        </h1>
+
+        <br />
+
+        <p>
+          This payment link has already been paid.
+        </p>
       </div>
-    );
-  }
-
-  if (!invoice) {
-    return (
-      <div
-        style={{
-          minHeight:
-            "100vh",
-
-          display: "flex",
-
-          justifyContent:
-            "center",
-
-          alignItems:
-            "center",
-
-          background:
-            "#0f172a",
-
-          color: "white",
-        }}
-      >
-        Invoice not found
-      </div>
-    );
-  }
-
-  if (
-    invoice.status ===
-    "paid"
-  ) {
-    return (
-      <div
-        style={{
-          minHeight:
-            "100vh",
-
-          display: "flex",
-
-          justifyContent:
-            "center",
-
-          alignItems:
-            "center",
-
-          background:
-            "#0f172a",
-
-          color: "white",
-        }}
-      >
-        <div
-          style={{
-            background:
-              "white",
-
-            color: "#111827",
-
-            padding: 40,
-
-            borderRadius: 24,
-
-            textAlign:
-              "center",
-          }}
-        >
-          <h1>
-            ✅ Invoice Paid
-          </h1>
-
-          <br />
-
-          <p>
-            This invoice
-            has already
-            been paid.
-          </p>
-        </div>
-      </div>
-    );
-  }
+    </div>
+  );
+}
 
   return (
     <PayPalScriptProvider
@@ -246,9 +239,7 @@ export default function CheckoutPage() {
               marginBottom: 30,
             }}
           >
-            Secure payment
-            powered by
-            FlowPay
+            Secure payment powered by FlowPay
           </p>
 
           <div
@@ -270,9 +261,19 @@ export default function CheckoutPage() {
             </p>
 
             <p>
-              {
-                invoice.merchantEmail
-              }
+              {invoice.email}
+            </p>
+
+            <br />
+
+            <p>
+              <strong>
+                Title:
+              </strong>
+            </p>
+
+            <p>
+              {invoice.title}
             </p>
 
             <br />
@@ -284,23 +285,7 @@ export default function CheckoutPage() {
             </p>
 
             <p>
-              {
-                invoice.description
-              }
-            </p>
-
-            <br />
-
-            <p>
-              <strong>
-                Customer:
-              </strong>
-            </p>
-
-            <p>
-              {
-                invoice.customerEmail
-              }
+              {invoice.description}
             </p>
           </div>
 
@@ -321,9 +306,7 @@ export default function CheckoutPage() {
               }}
             >
               $
-              {
-                invoice.amount
-              }
+              {invoice.amount}
             </h1>
           </div>
 
@@ -341,12 +324,12 @@ export default function CheckoutPage() {
                     [
                       {
                         amount: {
-  currency_code:
-    "USD",
+                          currency_code:
+                            "USD",
 
-  value:
-    invoice.amount.toString(),
-},
+                          value:
+                            invoice.amount.toString(),
+                        },
                       },
                     ],
                 }
@@ -357,6 +340,7 @@ export default function CheckoutPage() {
               data,
               actions
             ) => {
+
               await actions.order?.capture();
 
               await markAsPaid();
@@ -375,9 +359,7 @@ export default function CheckoutPage() {
               fontSize: 13,
             }}
           >
-            🔒 Payments are
-            encrypted and
-            secure
+            🔒 Payments are encrypted and secure
           </p>
         </div>
       </div>

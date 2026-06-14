@@ -231,6 +231,81 @@ export default function AnalyticsPage() {
 
         <br />
 
+<div
+  style={{
+    background: "#111827",
+    padding: 25,
+    borderRadius: 20,
+  }}
+>
+  <h2>
+    💰 Payment Revenue
+  </h2>
+
+  <br />
+
+  <h1>
+    $
+    {Number(
+      data.paymentRevenue || 0
+    ).toFixed(2)}
+  </h1>
+</div>
+
+<div
+  style={{
+    background: "#111827",
+    padding: 25,
+    borderRadius: 20,
+  }}
+>
+  <h2>
+    🔗 Payment Links
+  </h2>
+
+  <br />
+
+  <h1>
+    {data.totalPaymentLinks || 0}
+  </h1>
+</div>
+
+<div
+  style={{
+    background: "#111827",
+    padding: 25,
+    borderRadius: 20,
+  }}
+>
+  <h2>
+    ✅ Paid Links
+  </h2>
+
+  <br />
+
+  <h1>
+    {data.paidLinks || 0}
+  </h1>
+</div>
+
+<div
+  style={{
+    background: "#111827",
+    padding: 25,
+    borderRadius: 20,
+  }}
+>
+  <h2>
+    🕒 Pending Links
+  </h2>
+
+  <br />
+
+  <h1>
+    {data.pendingLinks || 0}
+  </h1>
+</div>
+
         {/* CHARTS */}
 
         <div

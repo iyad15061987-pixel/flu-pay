@@ -19,16 +19,16 @@ export default function AdminKycPage() {
             "token"
           );
 
-        const res =
-          await fetch(
-            `${API_URL}/admin/kyc-requests`,
-            {
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            }
-          );
+       const res =
+  await fetch(
+    `${API_URL}/admin/kyc`,
+    {
+      headers: {
+        Authorization:
+          `Bearer ${token}`,
+      },
+    }
+  );
 
         const data =
           await res.json();
@@ -44,68 +44,74 @@ export default function AdminKycPage() {
     loadRequests();
   }, []);
 
-  const approveKyc =
-    async (
-      id: string
-    ) => {
-      const token =
-        localStorage.getItem(
-          "token"
-        );
+ const approveKyc =
+  async (id: string) => {
 
-      await fetch(
-        `${API_URL}/admin/approve-kyc/${id}`,
-        {
-          method: "POST",
-
-          headers: {
-            Authorization:
-              `Bearer ${token}`,
-          },
-        }
+    const token =
+      localStorage.getItem(
+        "token"
       );
 
-      loadRequests();
-    };
+    await fetch(
+      `${API_URL}/admin/kyc/approve`,
+      {
+        method: "POST",
 
-  const rejectKyc =
-    async (
-      id: string
-    ) => {
-      const reason =
-        prompt(
-          "Rejection reason"
-        );
+        headers: {
+          "Content-Type":
+            "application/json",
 
-      if (!reason) return;
+          Authorization:
+            `Bearer ${token}`,
+        },
 
-      const token =
-        localStorage.getItem(
-          "token"
-        );
+        body: JSON.stringify({
+          kycId: id,
+        }),
+      }
+    );
 
-      await fetch(
-        `${API_URL}/admin/reject-kyc/${id}`,
-        {
-          method: "POST",
+    loadRequests();
+  };
 
-          headers: {
-            "Content-Type":
-              "application/json",
+ const rejectKyc =
+  async (id: string) => {
 
-            Authorization:
-              `Bearer ${token}`,
-          },
-
-          body: JSON.stringify({
-            reason,
-          }),
-        }
+    const reason =
+      prompt(
+        "Rejection reason"
       );
 
-      loadRequests();
-    };
+    if (!reason) return;
 
+    const token =
+      localStorage.getItem(
+        "token"
+      );
+
+    await fetch(
+      `${API_URL}/admin/kyc/reject`,
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type":
+            "application/json",
+
+          Authorization:
+            `Bearer ${token}`,
+        },
+
+        body: JSON.stringify({
+          kycId: id,
+          reason,
+        }),
+      }
+    );
+
+    loadRequests();
+  };
+  
   return (
     <div
       style={{
@@ -183,11 +189,11 @@ export default function AdminKycPage() {
                   Document
                 </p>
 
-                <img
-                  src={`/api/${kyc.documentFront}`}
-                  width="250"
-                  alt=""
-                />
+               <img
+  src={kyc.passportUrl}
+  width="250"
+  alt=""
+/>
               </div>
 
               <div>
@@ -196,10 +202,10 @@ export default function AdminKycPage() {
                 </p>
 
                 <img
-                  src={`/api/${kyc.selfie}`}
-                  width="250"
-                  alt=""
-                />
+  src={kyc.selfieUrl}
+  width="250"
+  alt=""
+/>
               </div>
             </div>
 

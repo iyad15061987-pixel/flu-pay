@@ -86,10 +86,6 @@ router.post(
         });
       }
 
-      // =========================
-      // UPDATE KYC
-      // =========================
-
       kyc.status =
         "approved";
 
@@ -101,10 +97,6 @@ router.post(
 
       await kyc.save();
 
-      // =========================
-      // VERIFY USER
-      // =========================
-
       const user =
         await User.findById(
           kyc.userId
@@ -114,6 +106,9 @@ router.post(
 
         user.verified =
           true;
+
+        user.kycStatus =
+          "approved";
 
         await user.save();
       }
@@ -180,6 +175,22 @@ router.post(
         new Date();
 
       await kyc.save();
+
+      const user =
+        await User.findById(
+          kyc.userId
+        );
+
+      if (user) {
+
+        user.verified =
+          false;
+
+        user.kycStatus =
+          "rejected";
+
+        await user.save();
+      }
 
       return res.json({
         message:

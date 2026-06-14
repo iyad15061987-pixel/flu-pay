@@ -33,6 +33,11 @@ const Kyc =
     "../models/Kyc"
   );
 
+  const PaymentLink =
+  require(
+    "../models/PaymentLink"
+  );
+
 // =========================
 // USER ANALYTICS
 // =========================
@@ -143,27 +148,85 @@ router.get(
         receivedAggregation[0] ||
         {};
 
-      const responseData = {
-        totalSent:
-          sentData.totalSent ||
-          0,
+        const totalPaymentLinks =
+  await PaymentLink.countDocuments({
+    userId:
+      req.user.id,
+  });
 
-        totalReceived:
-          receivedData.totalReceived ||
-          0,
+const paidLinks =
+  await PaymentLink.countDocuments({
+    userId:
+      req.user.id,
 
-        totalFees:
-          sentData.totalFees ||
-          0,
+    status:
+      "paid",
+  });
 
-        sentCount:
-          sentData.sentCount ||
-          0,
+const pendingLinks =
+  await PaymentLink.countDocuments({
+    userId:
+      req.user.id,
 
-        receivedCount:
-          receivedData.receivedCount ||
-          0,
-      };
+    status:
+      "pending",
+  });
+
+const paymentRevenue =
+  await PaymentLink.aggregate([
+    {
+      $match: {
+        userId:
+          user._id,
+
+        status:
+          "paid",
+      },
+    },
+
+    {
+      $group: {
+        _id: null,
+
+        revenue: {
+          $sum:
+            "$amount",
+        },
+      },
+    },
+  ]);
+  
+  const responseData = {
+  totalSent:
+    sentData.totalSent ||
+    0,
+
+  totalReceived:
+    receivedData.totalReceived ||
+    0,
+
+  totalFees:
+    sentData.totalFees ||
+    0,
+
+  sentCount:
+    sentData.sentCount ||
+    0,
+
+  receivedCount:
+    receivedData.receivedCount ||
+    0,
+
+  totalPaymentLinks,
+
+  paidLinks,
+
+  pendingLinks,
+
+  paymentRevenue:
+    paymentRevenue[0]
+      ?.revenue || 0,
+};
 
       await setCache(
         cacheKey,
