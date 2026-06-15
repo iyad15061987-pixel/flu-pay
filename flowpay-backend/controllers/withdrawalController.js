@@ -152,19 +152,6 @@ if (
         user.balance;
 
       // =========================
-      // UPDATE USER
-      // =========================
-
-      user.balance -=
-        numericAmount;
-
-      user.totalWithdrawals =
-        (user.totalWithdrawals || 0) +
-        numericAmount;
-
-      await user.save();
-
-      // =========================
       // WITHDRAWAL RECORD
       // =========================
 
@@ -422,8 +409,7 @@ exports.getAllWithdrawals =
     }
 
   };
-
-  // =========================
+// =========================
 // APPROVE WITHDRAWAL
 // =========================
 
@@ -446,6 +432,29 @@ exports.approveWithdrawal =
 
       }
 
+      const user =
+        await User.findById(
+          withdrawal.userId
+        );
+
+      if (!user) {
+
+        return res.status(404).json({
+          message:
+            "User not found",
+        });
+
+      }
+
+      user.balance -=
+        withdrawal.amount;
+
+      user.totalWithdrawals =
+        (user.totalWithdrawals || 0) +
+        withdrawal.amount;
+
+      await user.save();
+
       withdrawal.status =
         "approved";
 
@@ -460,98 +469,6 @@ exports.approveWithdrawal =
 
         message:
           `Your withdrawal of $${withdrawal.amount} has been approved`,
-      });
-
-      res.json({
-        success: true,
-      });
-
-    } catch (err) {
-
-      console.error(err);
-
-      res.status(500).json({
-        message:
-          "Server error",
-      });
-
-    }
-
-  };
-  
-// =========================
-// REJECT WITHDRAWAL
-// =========================
-
-exports.rejectWithdrawal =
-  async (req, res) => {
-
-    try {
-
-      console.log(
-        "REJECT API CALLED"
-      );
-
-      const withdrawal =
-        await Withdrawal.findById(
-          req.params.id
-        );
-
-      if (!withdrawal) {
-
-        return res.status(404).json({
-          message:
-            "Withdrawal not found",
-        });
-
-      }
-
-      if (
-        withdrawal.status ===
-        "rejected"
-      ) {
-
-        return res.json({
-          success: true,
-        });
-
-      }
-
-      const user =
-        await User.findById(
-          withdrawal.userId
-        );
-
-      if (user) {
-
-        console.log(
-          "REFUNDING",
-          withdrawal.amount,
-          "TO",
-          user.email
-        );
-
-        user.balance +=
-          withdrawal.amount;
-
-        await user.save();
-
-      }
-
-      withdrawal.status =
-        "rejected";
-
-      await withdrawal.save();
-
-      await createNotification({
-        email:
-          withdrawal.email,
-
-        title:
-          "Withdrawal Rejected",
-
-        message:
-          `Your withdrawal of $${withdrawal.amount} has been rejected and funds returned`,
       });
 
       res.json({
