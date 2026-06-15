@@ -172,6 +172,7 @@ router.post(
             "Card already exists",
         });
       }
+
 const approvedKyc =
   await Kyc.findOne({
     userId:
@@ -401,25 +402,39 @@ router.post(
             "User not found",
         });
       }
+const numericAmount =
+  Number(amount);
 
-      const numericAmount =
-        Number(amount);
+if (
+  isNaN(numericAmount) ||
+  numericAmount <= 0
+) {
+  return res.status(400).json({
+    message:
+      "Invalid amount",
+  });
+}
 
-      if (
-        user.balance <
-        numericAmount
-      ) {
+if (
+  user.balance <
+  numericAmount
+) {
 
-        return res.status(400).json({
-          message:
-            "Insufficient balance",
-        });
-      }
+  return res.status(400).json({
+    message:
+      "Insufficient balance",
+  });
+}
 
       user.balance -=
         numericAmount;
 
       await user.save();
+
+      const Transaction =
+  require(
+    "../models/Transaction"
+  );
 
       await CardTransaction.create({
         cardId:
@@ -441,6 +456,29 @@ router.post(
         type:
           "purchase",
       });
+
+      await Transaction.create({
+  fromEmail:
+    user.email,
+
+  toEmail:
+    "CARD_NETWORK",
+
+  amount:
+    numericAmount,
+
+  fee: 0,
+
+  netAmount:
+    numericAmount,
+
+  type:
+    "Card Purchase",
+
+  reference:
+    merchant ||
+    "Card Purchase",
+});
 
       return res.json({
         success: true,
