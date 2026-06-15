@@ -14,6 +14,17 @@ const sendMail =
     text,
   }) => {
     try {
+
+      console.log(
+  "EMAIL_FROM:",
+  process.env.EMAIL_FROM
+);
+
+console.log(
+  "RESEND KEY EXISTS:",
+  !!process.env.RESEND_API_KEY
+);
+
       const response =
         await resend.emails.send({
           from:
@@ -34,9 +45,9 @@ const sendMail =
         });
 
       console.log(
-        "✅ Email sent:",
-        response.data?.id
-      );
+  "RESEND RESPONSE:",
+  JSON.stringify(response, null, 2)
+);
 
       return response;
 
