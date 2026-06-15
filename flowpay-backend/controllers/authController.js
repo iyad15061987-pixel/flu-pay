@@ -110,22 +110,6 @@ exports.register =
     otpExpires,
 });
 
-await User.create({
-  email,
-
-  password:
-    hashed,
-
-  verified:
-    true,
-
-  emailOtp:
-    otp,
-
-  emailOtpExpires:
-    otpExpires,
-});
-
       // =========================
       // SEND EMAIL
       // =========================
@@ -276,7 +260,7 @@ exports.login =
       // =========================
       // CHECK VERIFICATION
       // =========================
-      
+
 /*
 if (
   !user.verified
