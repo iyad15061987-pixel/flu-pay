@@ -1,68 +1,48 @@
-const express =
-  require("express");
-
-const router =
-  express.Router();
+const express = require("express");
+const router = express.Router();
 
 const {
   auth,
   adminOnly,
-} = require(
-  "../middleware/auth"
-);
+} = require("../middleware/auth");
 
 const Withdrawal =
-  require(
-    "../models/Withdrawal"
-  );
+  require("../models/Withdrawal");
 
-// =========================
+const User =
+  require("../models/User");
+
 // GET ALL WITHDRAWALS
-// =========================
 
 router.get(
   "/admin/withdrawals",
-
   auth,
-
   adminOnly,
-
   async (req, res) => {
     try {
-
       const withdrawals =
-        await Withdrawal.find()
-          .sort({
-            createdAt: -1,
-          });
+        await Withdrawal.find().sort({
+          createdAt: -1,
+        });
 
-      return res.json(
-        withdrawals
-      );
+      return res.json(withdrawals);
 
     } catch (err) {
-
       console.log(err);
 
       return res.status(500).json({
-        message:
-          "Server error",
+        message: "Server error",
       });
     }
   }
 );
 
-// =========================
-// APPROVE WITHDRAWAL
-// =========================
+// APPROVE
 
 router.post(
   "/admin/withdrawals/:id/approve",
-
   auth,
-
   adminOnly,
-
   async (req, res) => {
     try {
 
@@ -73,22 +53,35 @@ router.post(
 
       if (!withdrawal) {
         return res.status(404).json({
-          message:
-            "Withdrawal not found",
+          message: "Withdrawal not found",
         });
       }
 
-      withdrawal.status =
-        "approved";
+      const user =
+        await User.findById(
+          withdrawal.userId
+        );
 
-      withdrawal.processedAt =
-        new Date();
+      if (user) {
+
+        user.balance -=
+          Number(withdrawal.amount || 0);
+
+        user.totalWithdrawals =
+          (user.totalWithdrawals || 0) +
+          Number(withdrawal.amount || 0);
+
+        await user.save();
+      }
+
+      withdrawal.status = "approved";
+      withdrawal.processedAt = new Date();
 
       await withdrawal.save();
 
       return res.json({
-        message:
-          "Withdrawal approved",
+        success: true,
+        message: "Withdrawal approved",
       });
 
     } catch (err) {
@@ -96,23 +89,18 @@ router.post(
       console.log(err);
 
       return res.status(500).json({
-        message:
-          "Server error",
+        message: "Server error",
       });
     }
   }
 );
 
-// =========================
-// REJECT WITHDRAWAL
-// =========================
+// REJECT
+
 router.post(
   "/admin/withdrawals/:id/reject",
-
   auth,
-
   adminOnly,
-
   async (req, res) => {
     try {
 
@@ -123,23 +111,32 @@ router.post(
 
       if (!withdrawal) {
         return res.status(404).json({
-          message:
-            "Withdrawal not found",
+          message: "Withdrawal not found",
         });
       }
 
-      withdrawal.status =
-        "rejected";
+      const user =
+        await User.findById(
+          withdrawal.userId
+        );
 
-      withdrawal.processedAt =
-        new Date();
+      if (user) {
+
+        user.balance +=
+          Number(withdrawal.amount || 0);
+
+        await user.save();
+      }
+
+      withdrawal.status = "rejected";
+      withdrawal.processedAt = new Date();
 
       await withdrawal.save();
 
       return res.json({
         success: true,
         message:
-          "Withdrawal rejected",
+          "Withdrawal rejected and refunded",
       });
 
     } catch (err) {
@@ -147,13 +144,10 @@ router.post(
       console.log(err);
 
       return res.status(500).json({
-        message:
-          "Server error",
+        message: "Server error",
       });
-
     }
   }
 );
 
-module.exports =
-  router;
+module.exports = router;
