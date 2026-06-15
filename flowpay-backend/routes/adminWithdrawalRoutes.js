@@ -35,7 +35,6 @@ adminOnly,
 async (req, res) => {
 try {
 
-  ```
   const withdrawals =
     await Withdrawal.find()
       .sort({
@@ -124,12 +123,6 @@ return res.json({
     "Withdrawal approved",
 });
 
-  return res.json({
-    success: true,
-    message:
-      "Withdrawal approved",
-  });
-
 } catch (err) {
 
   console.log(err);
@@ -147,60 +140,60 @@ return res.json({
 // =========================
 
 router.post(
-"/admin/withdrawals/:id/complete",
+  "/admin/withdrawals/:id/complete",
 
-auth,
+  auth,
 
-adminOnly,
+  adminOnly,
 
-async (req, res) => {
+  async (req, res) => {
 
-```
-try {
+    try {
 
-  const withdrawal =
-    await Withdrawal.findById(
-      req.params.id
-    );
+      const withdrawal =
+        await Withdrawal.findById(
+          req.params.id
+        );
 
-  if (!withdrawal) {
+      if (!withdrawal) {
 
-    return res.status(404).json({
-      message:
-        "Withdrawal not found",
-    });
+        return res.status(404).json({
+          message:
+            "Withdrawal not found",
+        });
+
+      }
+
+      withdrawal.status =
+        "completed";
+
+      withdrawal.processedAt =
+        new Date();
+
+      withdrawal.processedBy =
+        req.user.id;
+
+      await withdrawal.save();
+
+      return res.json({
+        success: true,
+        message:
+          "Withdrawal completed",
+      });
+
+    } catch (err) {
+
+      console.log(err);
+
+      return res.status(500).json({
+        message:
+          "Server error",
+      });
+
+    }
 
   }
-
-  withdrawal.status =
-    "completed";
-
-  withdrawal.processedAt =
-    new Date();
-
-  withdrawal.processedBy =
-    req.user.id;
-
-  await withdrawal.save();
-
-  return res.json({
-    success: true,
-    message:
-      "Withdrawal completed",
-  });
-
-} catch (err) {
-
-  console.log(err);
-
-  return res.status(500).json({
-    message:
-      "Server error",
-  });
-
-}
-
-});
+);
 
 // =========================
 // REJECT WITHDRAWAL
@@ -208,76 +201,75 @@ try {
 // =========================
 
 router.post(
-"/admin/withdrawals/:id/reject",
+  "/admin/withdrawals/:id/reject",
 
-auth,
+  auth,
 
-adminOnly,
+  adminOnly,
 
-async (req, res) => {
+  async (req, res) => {
 
-```
-try {
+    try {
 
-  const withdrawal =
-    await Withdrawal.findById(
-      req.params.id
-    );
+      const withdrawal =
+        await Withdrawal.findById(
+          req.params.id
+        );
 
-  if (!withdrawal) {
+      if (!withdrawal) {
 
-    return res.status(404).json({
-      message:
-        "Withdrawal not found",
-    });
+        return res.status(404).json({
+          message:
+            "Withdrawal not found",
+        });
+
+      }
+
+      const user =
+        await User.findById(
+          withdrawal.userId
+        );
+
+      if (user) {
+
+        user.balance +=
+          Number(
+            withdrawal.amount || 0
+          );
+
+        await user.save();
+
+      }
+
+      withdrawal.status =
+        "rejected";
+
+      withdrawal.processedAt =
+        new Date();
+
+      withdrawal.processedBy =
+        req.user.id;
+
+      await withdrawal.save();
+
+      return res.json({
+        success: true,
+        message:
+          "Withdrawal rejected and refunded",
+      });
+
+    } catch (err) {
+
+      console.log(err);
+
+      return res.status(500).json({
+        message:
+          "Server error",
+        });
+
+    }
 
   }
+);
 
-  const user =
-    await User.findById(
-      withdrawal.userId
-    );
-
-  if (user) {
-
-    user.balance +=
-      Number(
-        withdrawal.amount || 0
-      );
-
-    await user.save();
-
-  }
-
-  withdrawal.status =
-    "rejected";
-
-  withdrawal.processedAt =
-    new Date();
-
-  withdrawal.processedBy =
-    req.user.id;
-
-  await withdrawal.save();
-
-  return res.json({
-    success: true,
-    message:
-      "Withdrawal rejected and refunded",
-  });
-
-} catch (err) {
-
-  console.log(err);
-
-  return res.status(500).json({
-    message:
-      "Server error",
-  });
-
-}
-
-});
-
-module.exports =
-router;
+  module.exports = router;
