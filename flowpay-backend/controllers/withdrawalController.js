@@ -478,7 +478,7 @@ exports.approveWithdrawal =
     }
 
   };
-
+  
 // =========================
 // REJECT WITHDRAWAL
 // =========================
@@ -492,11 +492,6 @@ exports.rejectWithdrawal =
         "REJECT API CALLED"
       );
 
-      const withdrawal =
-        await Withdrawal.findById(
-          req.params.id
-        );
-        
       const withdrawal =
         await Withdrawal.findById(
           req.params.id
@@ -530,11 +525,11 @@ exports.rejectWithdrawal =
       if (user) {
 
         console.log(
-  "REFUNDING",
-  withdrawal.amount,
-  "TO",
-  user.email
-);
+          "REFUNDING",
+          withdrawal.amount,
+          "TO",
+          user.email
+        );
 
         user.balance +=
           withdrawal.amount;
