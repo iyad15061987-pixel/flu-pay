@@ -520,6 +520,13 @@ exports.rejectWithdrawal =
 
       if (user) {
 
+        console.log(
+  "REFUNDING",
+  withdrawal.amount,
+  "TO",
+  user.email
+);
+
         user.balance +=
           withdrawal.amount;
 
