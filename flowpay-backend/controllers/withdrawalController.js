@@ -487,3 +487,95 @@ exports.approveWithdrawal =
     }
 
   };
+
+  // =========================
+// REJECT WITHDRAWAL
+// =========================
+
+exports.rejectWithdrawal =
+  async (req, res) => {
+
+    try {
+
+      console.log(
+        "REJECT API CALLED"
+      );
+
+      const withdrawal =
+        await Withdrawal.findById(
+          req.params.id
+        );
+
+      if (!withdrawal) {
+
+        return res.status(404).json({
+          message:
+            "Withdrawal not found",
+        });
+
+      }
+
+      if (
+        withdrawal.status ===
+        "rejected"
+      ) {
+
+        return res.json({
+          success: true,
+        });
+
+      }
+
+      const user =
+        await User.findById(
+          withdrawal.userId
+        );
+
+      if (user) {
+
+        console.log(
+          "REFUNDING",
+          withdrawal.amount,
+          "TO",
+          user.email
+        );
+
+        user.balance +=
+          withdrawal.amount;
+
+        await user.save();
+
+      }
+
+      withdrawal.status =
+        "rejected";
+
+      await withdrawal.save();
+
+      await createNotification({
+        email:
+          withdrawal.email,
+
+        title:
+          "Withdrawal Rejected",
+
+        message:
+          `Your withdrawal of $${withdrawal.amount} has been rejected and funds returned`,
+      });
+
+      res.json({
+        success: true,
+      });
+
+    } catch (err) {
+
+      console.error(err);
+
+      res.status(500).json({
+        message:
+          "Server error",
+      });
+
+    }
+
+  };
