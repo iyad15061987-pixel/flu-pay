@@ -94,22 +94,37 @@ exports.register =
       // =========================
       // CREATE USER
       // =========================
-
       await User.create({
-        email,
+  email,
 
-        password:
-          hashed,
+  password:
+    hashed,
 
-        verified:
-          false,
+  verified:
+    true,
 
-        emailOtp:
-          otp,
+  emailOtp:
+    otp,
 
-        emailOtpExpires:
-          otpExpires,
-      });
+  emailOtpExpires:
+    otpExpires,
+});
+
+await User.create({
+  email,
+
+  password:
+    hashed,
+
+  verified:
+    true,
+
+  emailOtp:
+    otp,
+
+  emailOtpExpires:
+    otpExpires,
+});
 
       // =========================
       // SEND EMAIL
@@ -261,17 +276,19 @@ exports.login =
       // =========================
       // CHECK VERIFICATION
       // =========================
+      
+/*
+if (
+  !user.verified
+) {
 
-      if (
-        !user.verified
-      ) {
+  return res.status(403).json({
+    message:
+      "Please verify your email first",
+  });
 
-        return res.status(403).json({
-          message:
-            "Please verify your email first",
-        });
-
-      }
+}
+*/
 
       // =========================
       // 2FA REQUIRED
