@@ -409,6 +409,7 @@ exports.getAllWithdrawals =
     }
 
   };
+
 // =========================
 // APPROVE WITHDRAWAL
 // =========================
@@ -437,6 +438,16 @@ exports.approveWithdrawal =
           withdrawal.userId
         );
 
+        console.log(
+  "APPROVING WITHDRAWAL",
+  withdrawal._id
+);
+
+console.log(
+  "USER FOUND:",
+  user ? user.email : "NO USER"
+);
+
       if (!user) {
 
         return res.status(404).json({
@@ -446,6 +457,11 @@ exports.approveWithdrawal =
 
       }
 
+      console.log(
+  "BALANCE BEFORE:",
+  user.balance
+);
+
       user.balance -=
         withdrawal.amount;
 
@@ -454,6 +470,11 @@ exports.approveWithdrawal =
         withdrawal.amount;
 
       await user.save();
+
+      console.log(
+  "BALANCE AFTER:",
+  user.balance
+);
 
       withdrawal.status =
         "approved";
