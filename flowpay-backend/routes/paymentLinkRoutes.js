@@ -190,7 +190,6 @@ if (
     }
   }
 );
-
 // =========================
 // COMPLETE PAYMENT
 // =========================
@@ -202,28 +201,36 @@ router.post(
     try {
 
       const link =
-        await PaymentLink.findOne({
-          code:
-            req.params.code,
-        });
+        await PaymentLink.findOneAndUpdate(
+          {
+            code:
+              req.params.code,
+
+            status: {
+              $ne: "paid",
+            },
+          },
+          {
+            $set: {
+              status:
+                "paid",
+
+              paidAt:
+                new Date(),
+            },
+          },
+          {
+            new: true,
+          }
+        );
 
       if (!link) {
 
-        return res.status(404).json({
-          message:
-            "Payment link not found",
-        });
-      }
-
-      if (
-        link.status ===
-        "paid"
-      ) {
-
         return res.status(400).json({
           message:
-            "Payment already completed",
+            "Payment already completed or not found",
         });
+
       }
 
       const merchant =
@@ -237,65 +244,58 @@ router.post(
           message:
             "Merchant not found",
         });
+
       }
 
-  merchant.balance +=
-  Number(
-    link.amount
-  );
+      merchant.balance +=
+        Number(
+          link.amount
+        );
 
-await merchant.save();
+      await merchant.save();
 
-link.status =
-  "paid";
+      await Notification.create({
+        email:
+          merchant.email,
 
-link.paidAt =
-  new Date();
+        title:
+          "💰 New Payment Received",
 
-await link.save();
+        message:
+          `Payment received: $${link.amount} - ${link.title}`,
+      });
 
-await Notification.create({
-  email:
-    merchant.email,
+      await Transaction.create({
+        fromEmail:
+          "payment-link",
 
-  title:
-    "💰 New Payment Received",
+        toEmail:
+          merchant.email,
 
-  message:
-    `Payment received: $${link.amount} - ${link.title}`,
-});
+        amount:
+          Number(
+            link.amount
+          ),
 
-await Transaction.create({
-  fromEmail:
-    "payment-link",
+        fee: 0,
 
-  toEmail:
-    merchant.email,
+        netAmount:
+          Number(
+            link.amount
+          ),
 
-  amount:
-    Number(
-      link.amount
-    ),
+        type:
+          "payment_link",
 
-  fee: 0,
+        method:
+          "paypal",
 
-  netAmount:
-    Number(
-      link.amount
-    ),
+        reference:
+          link.code,
 
-  type:
-    "payment_link",
-
-  method:
-    "paypal",
-
-  reference:
-    link.code,
-
-  status:
-    "completed",
-});
+        status:
+          "completed",
+      });
 
       return res.json({
         success: true,
@@ -312,6 +312,7 @@ await Transaction.create({
         message:
           "Server error",
       });
+
     }
   }
 );

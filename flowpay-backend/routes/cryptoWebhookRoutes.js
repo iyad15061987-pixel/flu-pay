@@ -81,6 +81,25 @@ router.post(
       }
 
       // =========================
+// DUPLICATE CHECK
+// =========================
+
+const existingTransaction =
+  await Transaction.findOne({
+    reference:
+      data.payment_id,
+  });
+
+if (existingTransaction) {
+
+  return res.json({
+    message:
+      "Already processed",
+  });
+
+}
+
+      // =========================
       // AMOUNT
       // =========================
 
@@ -131,6 +150,10 @@ router.post(
 
         type:
           "Crypto Deposit",
+
+          reference:
+  data.payment_id,
+  
       });
 
       // =========================
