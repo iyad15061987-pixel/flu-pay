@@ -21,11 +21,6 @@ const User =
     "../models/User"
   );
 
-const User =
-require(
-"../models/User"
-);
-
 // =========================
 // GET ALL WITHDRAWALS
 // =========================
