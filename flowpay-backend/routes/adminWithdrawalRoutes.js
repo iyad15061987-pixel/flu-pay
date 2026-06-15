@@ -86,17 +86,58 @@ try {
     });
 
   }
+const withdrawal =
+  await Withdrawal.findById(
+    req.params.id
+  );
 
-  withdrawal.status =
-    "approved";
+if (!withdrawal) {
 
-  withdrawal.processedAt =
-    new Date();
+  return res.status(404).json({
+    message:
+      "Withdrawal not found",
+  });
 
-  withdrawal.processedBy =
-    req.user.id;
+}
 
-  await withdrawal.save();
+const user =
+  await User.findById(
+    withdrawal.userId
+  );
+
+if (user) {
+
+  user.balance -=
+    Number(
+      withdrawal.amount || 0
+    );
+
+  user.totalWithdrawals =
+    (user.totalWithdrawals || 0) +
+    Number(
+      withdrawal.amount || 0
+    );
+
+  await user.save();
+
+}
+
+withdrawal.status =
+  "approved";
+
+withdrawal.processedAt =
+  new Date();
+
+withdrawal.processedBy =
+  req.user.id;
+
+await withdrawal.save();
+
+return res.json({
+  success: true,
+  message:
+    "Withdrawal approved",
+});
 
   return res.json({
     success: true,
