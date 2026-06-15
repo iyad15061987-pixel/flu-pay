@@ -488,6 +488,15 @@ exports.rejectWithdrawal =
 
     try {
 
+      console.log(
+        "REJECT API CALLED"
+      );
+
+      const withdrawal =
+        await Withdrawal.findById(
+          req.params.id
+        );
+        
       const withdrawal =
         await Withdrawal.findById(
           req.params.id
