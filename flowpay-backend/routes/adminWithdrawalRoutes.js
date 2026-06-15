@@ -71,21 +71,6 @@ adminOnly,
 
 async (req, res) => {
 try {
-
-```
-  const withdrawal =
-    await Withdrawal.findById(
-      req.params.id
-    );
-
-  if (!withdrawal) {
-
-    return res.status(404).json({
-      message:
-        "Withdrawal not found",
-    });
-
-  }
 const withdrawal =
   await Withdrawal.findById(
     req.params.id
