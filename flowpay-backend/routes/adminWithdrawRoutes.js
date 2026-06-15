@@ -12,7 +12,9 @@ const Withdrawal =
 const User =
   require("../models/User");
 
+// =========================
 // GET ALL WITHDRAWALS
+// =========================
 
 router.get(
   "/admin/withdrawals",
@@ -20,24 +22,31 @@ router.get(
   adminOnly,
   async (req, res) => {
     try {
+
       const withdrawals =
         await Withdrawal.find().sort({
           createdAt: -1,
         });
 
-      return res.json(withdrawals);
+      return res.json(
+        withdrawals
+      );
 
     } catch (err) {
+
       console.log(err);
 
       return res.status(500).json({
         message: "Server error",
       });
+
     }
   }
 );
 
-// APPROVE
+// =========================
+// APPROVE WITHDRAWAL
+// =========================
 
 router.post(
   "/admin/withdrawals/:id/approve",
@@ -62,26 +71,37 @@ router.post(
           withdrawal.userId
         );
 
-      if (user) {
-
-        user.balance -=
-          Number(withdrawal.amount || 0);
-
-        user.totalWithdrawals =
-          (user.totalWithdrawals || 0) +
-          Number(withdrawal.amount || 0);
-
-        await user.save();
+      if (!user) {
+        return res.status(404).json({
+          message: "User not found",
+        });
       }
 
-      withdrawal.status = "approved";
-      withdrawal.processedAt = new Date();
+      user.balance -=
+        Number(
+          withdrawal.amount || 0
+        );
+
+      user.totalWithdrawals =
+        (user.totalWithdrawals || 0) +
+        Number(
+          withdrawal.amount || 0
+        );
+
+      await user.save();
+
+      withdrawal.status =
+        "approved";
+
+      withdrawal.processedAt =
+        new Date();
 
       await withdrawal.save();
 
       return res.json({
         success: true,
-        message: "Withdrawal approved",
+        message:
+          "Withdrawal approved",
       });
 
     } catch (err) {
@@ -91,11 +111,14 @@ router.post(
       return res.status(500).json({
         message: "Server error",
       });
+
     }
   }
 );
 
-// REJECT
+// =========================
+// REJECT WITHDRAWAL
+// =========================
 
 router.post(
   "/admin/withdrawals/:id/reject",
@@ -115,28 +138,21 @@ router.post(
         });
       }
 
-      const user =
-        await User.findById(
-          withdrawal.userId
-        );
+      // لا نعيد أي رصيد لأن الرصيد
+      // لم يتم خصمه عند إنشاء الطلب
 
-      if (user) {
+      withdrawal.status =
+        "rejected";
 
-        user.balance +=
-          Number(withdrawal.amount || 0);
-
-        await user.save();
-      }
-
-      withdrawal.status = "rejected";
-      withdrawal.processedAt = new Date();
+      withdrawal.processedAt =
+        new Date();
 
       await withdrawal.save();
 
       return res.json({
         success: true,
         message:
-          "Withdrawal rejected and refunded",
+          "Withdrawal rejected",
       });
 
     } catch (err) {
@@ -146,6 +162,7 @@ router.post(
       return res.status(500).json({
         message: "Server error",
       });
+
     }
   }
 );
