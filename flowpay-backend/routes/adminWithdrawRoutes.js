@@ -106,7 +106,6 @@ router.post(
 // =========================
 // REJECT WITHDRAWAL
 // =========================
-
 router.post(
   "/admin/withdrawals/:id/reject",
 
@@ -138,6 +137,7 @@ router.post(
       await withdrawal.save();
 
       return res.json({
+        success: true,
         message:
           "Withdrawal rejected",
       });
@@ -150,6 +150,7 @@ router.post(
         message:
           "Server error",
       });
+
     }
   }
 );
