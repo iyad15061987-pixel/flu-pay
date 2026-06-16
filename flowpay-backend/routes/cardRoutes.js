@@ -21,6 +21,11 @@ const User =
     "../models/User"
   );
 
+  const Transaction =
+  require(
+    "../models/Transaction"
+  );
+
   const Kyc =
   require(
     "../models/Kyc"
@@ -204,34 +209,80 @@ user.balance -= 10;
 
 await user.save();
 
-const cardHolder =
-  approvedKyc?.fullName
-    ? approvedKyc.fullName.toUpperCase()
-    : user.email
-        .split("@")[0]
-        .toUpperCase();
+try {
 
-await VirtualCard.create({
-  userId:
-    user._id,
+  const cardHolder =
+    approvedKyc?.fullName
+      ? approvedKyc.fullName.toUpperCase()
+      : user.email
+          .split("@")[0]
+          .toUpperCase();
 
-  email:
+          let cardNumber;
+
+do {
+
+  cardNumber =
+    generateCardNumber();
+
+} while (
+  await VirtualCard.findOne({
+    cardNumber,
+  })
+);
+
+  await VirtualCard.create({
+    userId:
+      user._id,
+
+    email:
+      user.email,
+
+    cardHolder,
+
+   cardNumber,
+
+    cvv:
+      generateCVV(),
+
+    expiry:
+      generateExpiry(),
+
+    status:
+      "active",
+  });
+
+  await Transaction.create({
+  fromEmail:
     user.email,
 
-  cardHolder,
+  toEmail:
+    "CARD_SYSTEM",
 
-  cardNumber:
-    generateCardNumber(),
+  amount: 10,
 
-  cvv:
-    generateCVV(),
+  fee: 0,
 
-  expiry:
-    generateExpiry(),
+  netAmount: 10,
+
+  type:
+    "Card Creation Fee",
+
+  reference:
+    "Virtual Card",
 
   status:
-    "active",
+    "completed",
 });
+
+} catch (err) {
+
+  user.balance += 10;
+
+  await user.save();
+
+  throw err;
+}
 
       return res.json({
         success: true,
@@ -402,6 +453,7 @@ router.post(
             "User not found",
         });
       }
+
 const numericAmount =
   Number(amount);
 
