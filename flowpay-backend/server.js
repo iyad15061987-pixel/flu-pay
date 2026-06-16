@@ -264,11 +264,6 @@ const withdrawalRoutes =
     "./routes/depositRoutes"
   );
 
-const adminWithdrawalRoutes =
-  require(
-    "./routes/adminWithdrawalRoutes"
-  );
-
 const twoFactorRoutes =
   require(
     "./routes/twoFactorRoutes"
@@ -670,7 +665,6 @@ app.use("/api", merchantRoutes);
 app.use("/api", merchantAnalyticsRoutes);
 app.use("/api", withdrawalRoutes);
 app.use("/api", depositRoutes);
-app.use("/api", adminWithdrawalRoutes);
 app.use("/api", twoFactorRoutes);
 
 // =========================
