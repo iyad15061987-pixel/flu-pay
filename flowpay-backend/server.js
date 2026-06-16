@@ -264,6 +264,9 @@ const withdrawalRoutes =
     "./routes/depositRoutes"
   );
 
+  const paypalRoutes =
+  require("./routes/paypalRoutes");
+
 const twoFactorRoutes =
   require(
     "./routes/twoFactorRoutes"
@@ -665,6 +668,7 @@ app.use("/api", merchantRoutes);
 app.use("/api", merchantAnalyticsRoutes);
 app.use("/api", withdrawalRoutes);
 app.use("/api", depositRoutes);
+app.use("/api", paypalRoutes);
 app.use("/api", twoFactorRoutes);
 
 // =========================
