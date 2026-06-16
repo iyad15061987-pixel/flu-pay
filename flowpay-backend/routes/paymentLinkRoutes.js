@@ -33,6 +33,11 @@ const Transaction =
     "../models/Transaction"
   );
 
+  const createLedgerEntry =
+  require(
+    "../utils/ledger"
+  );
+
 // =========================
 // CREATE PAYMENT LINK
 // =========================
@@ -190,6 +195,7 @@ if (
     }
   }
 );
+
 // =========================
 // COMPLETE PAYMENT
 // =========================
@@ -246,63 +252,64 @@ router.post(
         });
 
       }
+const beforeBalance =
+  merchant.balance;
 
-      merchant.balance +=
-        Number(
-          link.amount
-        );
+merchant.balance +=
+  Number(
+    link.amount
+  );
 
-      await merchant.save();
+await merchant.save();
 
-      await Notification.create({
-        email:
-          merchant.email,
+link.status =
+  "paid";
 
-        title:
-          "💰 New Payment Received",
+link.paidAt =
+  new Date();
 
-        message:
-          `Payment received: $${link.amount} - ${link.title}`,
-      });
+await link.save();
 
-      await Transaction.create({
-        fromEmail:
-          "payment-link",
+await createLedgerEntry({
+  userId:
+    merchant._id,
 
-        toEmail:
-          merchant.email,
+  email:
+    merchant.email,
 
-        amount:
-          Number(
-            link.amount
-          ),
+  type:
+    "Payment Link",
+amount:
+  Number(
+    link.amount
+  ),
 
-        fee: 0,
+fee: 0,
 
-        netAmount:
-          Number(
-            link.amount
-          ),
+netAmount:
+  Number(
+    link.amount
+  ),
 
-        type:
-          "payment_link",
+type:
+  "payment_link",
 
-        method:
-          "paypal",
+method:
+  "paypal",
 
-        reference:
-          link.code,
+reference:
+  link.code,
 
-        status:
-          "completed",
-      });
+status:
+  "completed",
+});
 
-      return res.json({
-        success: true,
+return res.json({
+  success: true,
 
-        message:
-          "Payment completed",
-      });
+  message:
+    "Payment completed",
+});
 
     } catch (err) {
 
@@ -316,7 +323,6 @@ router.post(
     }
   }
 );
-
 // =========================
 // PAYMENT LINKS ANALYTICS
 // =========================

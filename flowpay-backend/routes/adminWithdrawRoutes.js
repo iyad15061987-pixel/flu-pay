@@ -12,6 +12,11 @@ const Withdrawal =
 const User =
   require("../models/User");
 
+  const createLedgerEntry =
+  require(
+    "../utils/ledger"
+  );
+
 // =========================
 // GET ALL WITHDRAWALS
 // =========================
@@ -76,40 +81,71 @@ router.post(
           message: "User not found",
         });
       }
+const beforeBalance =
+  user.balance;
 
-      user.balance -=
-        Number(
-          withdrawal.amount || 0
-        );
+user.balance -=
+  Number(
+    withdrawal.amount || 0
+  );
 
-      user.totalWithdrawals =
-        (user.totalWithdrawals || 0) +
-        Number(
-          withdrawal.amount || 0
-        );
+user.totalWithdrawals =
+  (user.totalWithdrawals || 0) +
+  Number(
+    withdrawal.amount || 0
+  );
 
-      await user.save();
+await user.save();
 
-      withdrawal.status =
-        "approved";
+await createLedgerEntry({
+  userId:
+    user._id,
 
-      withdrawal.processedAt =
-        new Date();
+  email:
+    user.email,
 
-      await withdrawal.save();
+  type:
+    "Withdrawal Approved",
 
-      return res.json({
-        success: true,
-        message:
-          "Withdrawal approved",
-      });
+  amount:
+    Number(
+      withdrawal.amount || 0
+    ),
+
+  balanceBefore:
+    beforeBalance,
+
+  balanceAfter:
+    user.balance,
+
+  reference:
+    withdrawal._id,
+
+  description:
+    "Withdrawal approved by admin",
+});
+
+withdrawal.status =
+  "approved";
+
+withdrawal.processedAt =
+  new Date();
+
+await withdrawal.save();
+
+return res.json({
+  success: true,
+  message:
+    "Withdrawal approved",
+});
 
     } catch (err) {
 
       console.log(err);
 
       return res.status(500).json({
-        message: "Server error",
+        message:
+          "Server error",
       });
 
     }

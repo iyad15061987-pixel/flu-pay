@@ -21,6 +21,11 @@ const User =
     "../models/User"
   );
 
+  const createLedgerEntry =
+  require(
+    "../utils/ledger"
+  );
+
   const Transaction =
   require(
     "../models/Transaction"
@@ -145,20 +150,9 @@ router.post(
         );
 
       if (!user) {
-
         return res.status(404).json({
           message:
             "User not found",
-        });
-      }
-
-      if (
-        user.balance < 10
-      ) {
-
-        return res.status(400).json({
-          message:
-            "Need $10 to create card",
         });
       }
 
@@ -168,121 +162,144 @@ router.post(
             req.user.id,
         });
 
-      if (
-        existing
-      ) {
-
+      if (existing) {
         return res.status(400).json({
           message:
             "Card already exists",
         });
       }
 
-const approvedKyc =
-  await Kyc.findOne({
-    userId:
-      user._id,
+      const approvedKyc =
+        await Kyc.findOne({
+          userId:
+            user._id,
 
-    status:
-      "approved",
-  });
+          status:
+            "approved",
+        });
 
-if (
-  !approvedKyc
-) {
-  return res.status(403).json({
-    message:
-      "KYC approval required before issuing a card",
-  });
-}
+      if (!approvedKyc) {
+        return res.status(403).json({
+          message:
+            "KYC approval required before issuing a card",
+        });
+      }
 
-if (
-  user.balance < 10
-) {
-  return res.status(400).json({
-    message:
-      "Need $10 to create card",
-  });
-}
+      if (
+        user.balance < 10
+      ) {
+        return res.status(400).json({
+          message:
+            "Need $10 to create card",
+        });
+      }
 
-user.balance -= 10;
+      const beforeBalance =
+        user.balance;
 
-await user.save();
+      user.balance -= 10;
 
-try {
+      await user.save();
 
-  const cardHolder =
-    approvedKyc?.fullName
-      ? approvedKyc.fullName.toUpperCase()
-      : user.email
-          .split("@")[0]
-          .toUpperCase();
+      try {
 
-          let cardNumber;
+        const cardHolder =
+          approvedKyc.fullName
+            ? approvedKyc.fullName.toUpperCase()
+            : user.email
+                .split("@")[0]
+                .toUpperCase();
 
-do {
+        let cardNumber;
 
-  cardNumber =
-    generateCardNumber();
+        do {
 
-} while (
-  await VirtualCard.findOne({
-    cardNumber,
-  })
-);
+          cardNumber =
+            generateCardNumber();
 
-  await VirtualCard.create({
-    userId:
-      user._id,
+        } while (
+          await VirtualCard.findOne({
+            cardNumber,
+          })
+        );
 
-    email:
-      user.email,
+        await VirtualCard.create({
+          userId:
+            user._id,
 
-    cardHolder,
+          email:
+            user.email,
 
-   cardNumber,
+          cardHolder,
 
-    cvv:
-      generateCVV(),
+          cardNumber,
 
-    expiry:
-      generateExpiry(),
+          cvv:
+            generateCVV(),
 
-    status:
-      "active",
-  });
+          expiry:
+            generateExpiry(),
 
-  await Transaction.create({
-  fromEmail:
-    user.email,
+          status:
+            "active",
+        });
 
-  toEmail:
-    "CARD_SYSTEM",
+        await Transaction.create({
+          fromEmail:
+            user.email,
 
-  amount: 10,
+          toEmail:
+            "CARD_SYSTEM",
 
-  fee: 0,
+          amount: 10,
 
-  netAmount: 10,
+          fee: 0,
 
-  type:
-    "Card Creation Fee",
+          netAmount: 10,
 
-  reference:
-    "Virtual Card",
+          type:
+            "Card Creation Fee",
 
-  status:
-    "completed",
-});
+          reference:
+            "Virtual Card",
 
-} catch (err) {
+          status:
+            "completed",
+        });
 
-  user.balance += 10;
+        await createLedgerEntry({
+          userId:
+            user._id,
 
-  await user.save();
+          email:
+            user.email,
 
-  throw err;
-}
+          type:
+            "Card Creation Fee",
+
+          amount: 10,
+
+          balanceBefore:
+            beforeBalance,
+
+          balanceAfter:
+            user.balance,
+
+          reference:
+            "Virtual Card",
+
+          description:
+            "Virtual card issuance fee",
+        });
+
+      } catch (err) {
+
+        user.balance += 10;
+
+        await user.save();
+
+        throw err;
+      }
 
       return res.json({
         success: true,

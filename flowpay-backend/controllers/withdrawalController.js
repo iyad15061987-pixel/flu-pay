@@ -221,7 +221,8 @@ if (
           destination,
 
         status:
-          "completed",
+  "pending",
+  
       });
 
       console.log(
