@@ -33,6 +33,11 @@ const generateInvoicePdf =
 const crypto =
   require("crypto");
 
+  const createLedgerEntry =
+  require(
+    "../utils/ledger"
+  );
+
 // =========================
 // CREATE INVOICE
 // =========================
@@ -277,10 +282,39 @@ router.post(
       // CREDIT BALANCE
       // =========================
 
+      const beforeBalance =
+  merchant.balance;
+
       merchant.balance +=
         invoice.amount;
 
       await merchant.save();
+
+      await createLedgerEntry({
+  userId:
+    merchant._id,
+
+  email:
+    merchant.email,
+
+  type:
+    "Invoice Payment",
+
+  amount:
+    invoice.amount,
+
+  balanceBefore:
+    beforeBalance,
+
+  balanceAfter:
+    merchant.balance,
+
+  reference:
+    invoice._id,
+
+  description:
+    "Merchant invoice paid",
+});
 
       // =========================
       // UPDATE INVOICE

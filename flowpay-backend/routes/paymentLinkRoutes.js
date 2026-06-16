@@ -252,7 +252,8 @@ router.post(
         });
 
       }
-const beforeBalance =
+
+      const beforeBalance =
   merchant.balance;
 
 merchant.balance +=
@@ -279,29 +280,66 @@ await createLedgerEntry({
 
   type:
     "Payment Link",
-amount:
-  Number(
-    link.amount
-  ),
 
-fee: 0,
+  amount:
+    Number(
+      link.amount
+    ),
 
-netAmount:
-  Number(
-    link.amount
-  ),
+  balanceBefore:
+    beforeBalance,
 
-type:
-  "payment_link",
+  balanceAfter:
+    merchant.balance,
 
-method:
-  "paypal",
+  reference:
+    link.code,
 
-reference:
-  link.code,
+  description:
+    `Payment received via ${link.title}`,
+});
 
-status:
-  "completed",
+await Notification.create({
+  email:
+    merchant.email,
+
+  title:
+    "New Payment Received",
+
+  message:
+    `Payment received: $${link.amount} - ${link.title}`,
+});
+
+await Transaction.create({
+  fromEmail:
+    "payment-link",
+
+  toEmail:
+    merchant.email,
+
+  amount:
+    Number(
+      link.amount
+    ),
+
+  fee: 0,
+
+  netAmount:
+    Number(
+      link.amount
+    ),
+
+  type:
+    "payment_link",
+
+  method:
+    "paypal",
+
+  reference:
+    link.code,
+
+  status:
+    "completed",
 });
 
 return res.json({
@@ -323,6 +361,7 @@ return res.json({
     }
   }
 );
+
 // =========================
 // PAYMENT LINKS ANALYTICS
 // =========================
@@ -520,6 +559,40 @@ router.post(
         );
 
       await merchant.save();
+
+      const beforeBalance =
+  merchant.balance +
+  Number(
+    link.amount
+  );
+
+await createLedgerEntry({
+  userId:
+    merchant._id,
+
+  email:
+    merchant.email,
+
+  type:
+    "Refund",
+
+  amount:
+    Number(
+      link.amount
+    ),
+
+  balanceBefore:
+    beforeBalance,
+
+  balanceAfter:
+    merchant.balance,
+
+  reference:
+    link.code,
+
+  description:
+    "Payment link refund",
+});
 
       link.status =
         "refunded";

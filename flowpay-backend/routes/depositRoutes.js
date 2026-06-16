@@ -145,20 +145,29 @@ router.post(
       // BALANCE BEFORE
       // =========================
 
-      const beforeBalance =
-        user.balance;
+      const fee =
+  numericAmount * 0.035;
 
-      // =========================
-      // UPDATE BALANCE
-      // =========================
+const netAmount =
+  numericAmount - fee;
 
-      user.balance +=
-        numericAmount;
+const beforeBalance =
+  user.balance;
 
-      user.totalDeposits +=
-        numericAmount;
+// =========================
+// UPDATE BALANCE
+// =========================
 
-      await user.save();
+user.balance +=
+  netAmount;
+
+user.totalDeposits +=
+  numericAmount;
+
+user.revenue +=
+  fee;
+
+await user.save();
 
       // =========================
       // TRANSACTION
@@ -175,10 +184,9 @@ router.post(
           amount:
             numericAmount,
 
-          fee: 0,
+         fee,
 
-          netAmount:
-            numericAmount,
+netAmount,
 
           type:
             "Deposit",
@@ -206,9 +214,9 @@ await createLedgerEntry({
   type:
     "Deposit",
 
-  amount:
-    numericAmount,
-
+ amount:
+  netAmount,
+  
   balanceBefore:
     beforeBalance,
 

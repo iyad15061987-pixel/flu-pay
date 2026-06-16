@@ -494,11 +494,40 @@ if (
       "Insufficient balance",
   });
 }
+const beforeBalance =
+  user.balance;
 
-      user.balance -=
-        numericAmount;
+user.balance -=
+  numericAmount;
 
-      await user.save();
+await user.save();
+
+await createLedgerEntry({
+  userId:
+    user._id,
+
+  email:
+    user.email,
+
+  type:
+    "Card Purchase",
+
+  amount:
+    numericAmount,
+
+  balanceBefore:
+    beforeBalance,
+
+  balanceAfter:
+    user.balance,
+
+  reference:
+    merchant ||
+    "Card Purchase",
+
+  description:
+    "Virtual card purchase",
+});
 
       const Transaction =
   require(

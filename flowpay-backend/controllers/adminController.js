@@ -16,6 +16,11 @@ const Transaction =
     "../models/Transaction"
   );
 
+  const createLedgerEntry =
+  require(
+    "../utils/ledger"
+  );
+
 const Notification =
   require(
     "../models/Notification"
@@ -193,6 +198,9 @@ exports.approveDeposit =
         request.amount -
         fee;
 
+        const beforeBalance =
+  user.balance;
+  
       user.balance +=
         netAmount;
 
@@ -200,6 +208,32 @@ exports.approveDeposit =
         fee;
 
       await user.save();
+
+      await createLedgerEntry({
+  userId:
+    user._id,
+
+  email:
+    user.email,
+
+  type:
+    "Admin Deposit Approval",
+
+  amount:
+    netAmount,
+
+  balanceBefore:
+    beforeBalance,
+
+  balanceAfter:
+    user.balance,
+
+  reference:
+    request._id,
+
+  description:
+    "Deposit approved by admin",
+});
 
       request.status =
         "Approved";
@@ -252,7 +286,7 @@ exports.approveDeposit =
 
     }
   };
-  
+
 exports.approveWithdraw =
   async (req, res) => {
     try {
@@ -318,6 +352,9 @@ exports.approveWithdraw =
         });
       }
 
+      const beforeBalance =
+  user.balance;
+
       user.balance -=
         total;
 
@@ -325,6 +362,32 @@ exports.approveWithdraw =
         fee;
 
       await user.save();
+
+      await createLedgerEntry({
+  userId:
+    user._id,
+
+  email:
+    user.email,
+
+  type:
+    "Admin Withdraw Approval",
+
+  amount:
+    total,
+
+  balanceBefore:
+    beforeBalance,
+
+  balanceAfter:
+    user.balance,
+
+  reference:
+    request._id,
+
+  description:
+    "Withdrawal approved by admin",
+});
 
       request.status =
         "Approved";
