@@ -142,6 +142,7 @@ exports.getWithdrawRequests =
 exports.approveDeposit =
   async (req, res) => {
     try {
+
       const { requestId } =
         req.body;
 
@@ -157,10 +158,31 @@ exports.approveDeposit =
         });
       }
 
+      // =========================
+      // PREVENT DUPLICATE APPROVAL
+      // =========================
+
+      if (
+        request.status ===
+        "Approved"
+      ) {
+        return res.status(400).json({
+          message:
+            "Deposit already approved",
+        });
+      }
+
       const user =
         await User.findById(
           request.userId
         );
+
+      if (!user) {
+        return res.status(404).json({
+          message:
+            "User not found",
+        });
+      }
 
       const fee =
         calculateExternalFee(
@@ -209,27 +231,32 @@ exports.approveDeposit =
         title:
           "Deposit Approved",
 
-        message: `Your deposit of $${request.amount} was approved`,
+        message:
+          `Your deposit of $${request.amount} was approved`,
       });
 
-      res.json({
+      return res.json({
+        success: true,
         message:
           "Deposit approved",
       });
 
     } catch (err) {
+
       console.log(err);
 
-      res.status(500).json({
+      return res.status(500).json({
         message:
           "Server error",
       });
+
     }
   };
-
+  
 exports.approveWithdraw =
   async (req, res) => {
     try {
+
       const { requestId } =
         req.body;
 
@@ -245,10 +272,31 @@ exports.approveWithdraw =
         });
       }
 
+      // =========================
+      // PREVENT DUPLICATE APPROVAL
+      // =========================
+
+      if (
+        request.status ===
+        "Approved"
+      ) {
+        return res.status(400).json({
+          message:
+            "Withdraw already approved",
+        });
+      }
+
       const user =
         await User.findById(
           request.userId
         );
+
+      if (!user) {
+        return res.status(404).json({
+          message:
+            "User not found",
+        });
+      }
 
       const fee =
         calculateExternalFee(
@@ -256,7 +304,9 @@ exports.approveWithdraw =
         );
 
       const total =
-        request.amount;
+        Number(
+          request.amount
+        );
 
       if (
         user.balance <
@@ -308,20 +358,24 @@ exports.approveWithdraw =
         title:
           "Withdraw Approved",
 
-        message: `Your withdraw of $${request.amount} was approved`,
+        message:
+          `Your withdraw of $${request.amount} was approved`,
       });
 
-      res.json({
+      return res.json({
+        success: true,
         message:
           "Withdraw approved",
       });
 
     } catch (err) {
+
       console.log(err);
 
-      res.status(500).json({
+      return res.status(500).json({
         message:
           "Server error",
       });
+
     }
   };
