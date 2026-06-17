@@ -1,74 +1,47 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import API_URL from "@/lib/api";
 
-export default function PayPalSuccessPage() {
-
-  const searchParams =
-    useSearchParams();
+function SuccessContent() {
+  const searchParams = useSearchParams();
 
   useEffect(() => {
+    const capture = async () => {
+      const token =
+        localStorage.getItem("token");
 
-    const capture =
-      async () => {
+      const orderId =
+        searchParams.get("token");
 
-        const token =
-          localStorage.getItem(
-            "token"
-          );
+      if (!orderId) return;
 
-        const orderId =
-          searchParams.get(
-            "token"
-          );
-
-        if (!orderId) {
-          return;
-        }
-
-        try {
-
-          const res =
-            await fetch(
-              `${API_URL}/paypal/capture-order`,
-              {
-                method: "POST",
-
-                headers: {
-                  "Content-Type":
-                    "application/json",
-
-                  Authorization:
-                    `Bearer ${token}`,
-                },
-
-                body: JSON.stringify({
-                  orderId,
-                }),
-              }
-            );
-
-          const data =
-            await res.json();
-
-          console.log(data);
-
-        } catch (err) {
-
-          console.log(err);
-
-        }
-
-      };
+      try {
+        await fetch(
+          `${API_URL}/paypal/capture-order`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+              Authorization:
+                `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              orderId,
+            }),
+          }
+        );
+      } catch (err) {
+        console.log(err);
+      }
+    };
 
     capture();
-
   }, [searchParams]);
 
   return (
-
     <div
       style={{
         display: "flex",
@@ -80,7 +53,19 @@ export default function PayPalSuccessPage() {
     >
       Payment completed successfully...
     </div>
-
   );
+}
 
+export default function PayPalSuccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <div>
+          Loading...
+        </div>
+      }
+    >
+      <SuccessContent />
+    </Suspense>
+  );
 }
