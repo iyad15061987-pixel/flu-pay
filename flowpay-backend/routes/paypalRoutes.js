@@ -96,22 +96,39 @@ if (
             : "https://api-m.sandbox.paypal.com/v2/checkout/orders",
 
           {
-            intent:
-              "CAPTURE",
+  intent:
+    "CAPTURE",
 
-            purchase_units: [
-              {
-                amount: {
-                  currency_code:
-                    "USD",
+  purchase_units: [
+    {
+      amount: {
+        currency_code:
+          "USD",
 
-                  value:
-                    Number(amount)
-                      .toFixed(2),
-                },
-              },
-            ],
-          },
+        value:
+          Number(amount)
+            .toFixed(2),
+      },
+    },
+  ],
+
+  application_context: {
+    brand_name:
+      "FlowPay",
+
+    landing_page:
+      "LOGIN",
+
+    user_action:
+      "PAY_NOW",
+
+    return_url:
+      "https://flu-pay-beta.vercel.app/paypal-success",
+
+    cancel_url:
+      "https://flu-pay-beta.vercel.app/deposit",
+  },
+},
 
           {
             headers: {
@@ -143,6 +160,7 @@ if (
   status:
     "Pending",
 });
+
 const approveUrl =
   response.data.links.find(
     (l) =>
