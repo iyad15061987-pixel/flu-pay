@@ -2,63 +2,64 @@ export default function AboutPage() {
   return (
     <div
       style={{
-        maxWidth: 1000,
-        margin: "auto",
-        padding: 40,
+        maxWidth: "1000px",
+        margin: "40px auto",
+        padding: "50px",
+        background: "#ffffff",
+        color: "#111827",
+        borderRadius: "16px",
+        lineHeight: "1.8",
+        boxShadow:
+          "0 2px 12px rgba(0,0,0,0.08)",
       }}
     >
       <h1>About FlowPay</h1>
 
-      <br />
-
-      <p>
-        FlowPay is a digital wallet and payment
-        management platform operated by Global Mercy Foundation.
+      <p style={{ color: "#6b7280", marginBottom: "30px" }}>
+        Last Updated: June 2026
       </p>
 
-      <br />
+      <h2>Our Mission</h2>
 
       <p>
-        The platform is designed to facilitate
-        digital payments, payment links,
-        financial access, and related services.
+        FlowPay was created to provide secure,
+        transparent, and accessible financial
+        technology services for individuals,
+        businesses, and organizations worldwide.
       </p>
 
-      <br />
+      <h2>What We Offer</h2>
+
+      <ul>
+        <li>Digital Wallet Services</li>
+        <li>Account Funding and Withdrawals</li>
+        <li>Virtual Cards</li>
+        <li>Payment Links</li>
+        <li>Peer-to-Peer Transfers</li>
+        <li>Compliance and Security Controls</li>
+      </ul>
+
+      <h2>Security and Compliance</h2>
 
       <p>
-        FlowPay is not a bank and does not claim
-        to provide licensed banking services.
+        FlowPay utilizes KYC, AML, fraud
+        prevention, transaction monitoring,
+        and risk management procedures to
+        maintain a secure platform.
       </p>
 
-      <br />
-
-      <h2>
-        Organization
-      </h2>
+      <h2>Our Commitment</h2>
 
       <p>
-        Global Mercy Foundation
+        We are committed to innovation,
+        transparency, customer protection,
+        and continuous platform improvement.
       </p>
 
-      <br />
+      <hr style={{ margin: "40px 0" }} />
 
-      <h2>
-        Website
-      </h2>
-
-      <p>
-        g-m-foundation.com
-      </p>
-
-      <br />
-
-      <h2>
-        Contact
-      </h2>
-
-      <p>
-        support@g-m-foundation.com
+      <p style={{ color: "#6b7280" }}>
+        Operated by Global Mercy Foundation.
       </p>
     </div>
   );
