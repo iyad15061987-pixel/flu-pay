@@ -12,6 +12,9 @@ const Withdrawal =
 const User =
   require("../models/User");
 
+  const Transaction =
+  require("../models/Transaction");
+  
   const createLedgerEntry =
   require(
     "../utils/ledger"
@@ -132,6 +135,28 @@ withdrawal.processedAt =
   new Date();
 
 await withdrawal.save();
+
+await Transaction.findOneAndUpdate(
+  {
+    fromEmail:
+      user.email,
+
+    type:
+      "Withdrawal",
+
+    status:
+      "pending",
+  },
+  {
+    status:
+      "approved",
+  },
+  {
+    sort: {
+      createdAt: -1,
+    },
+  }
+);
 
 return res.json({
   success: true,
