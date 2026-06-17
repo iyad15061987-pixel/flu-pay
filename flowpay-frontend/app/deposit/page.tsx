@@ -53,81 +53,75 @@ export default function DepositPage() {
   const createRequest =
     async () => {
 
-      try {
+     try {
 
-        const token =
-          localStorage.getItem(
-            "token"
-          );
+  const token =
+    localStorage.getItem(
+      "token"
+    );
 
-        const userId =
-          localStorage.getItem(
-            "userId"
-          );
+  const res =
+    await fetch(
+      `${API_URL}/paypal/create-order`,
+      {
+        method: "POST",
 
-        const email =
-          localStorage.getItem(
-            "email"
-          );
+        headers: {
+          "Content-Type":
+            "application/json",
 
-        const res =
-         await fetch(
- `${API_URL}/deposits`,
-            {
-              method: "POST",
+          Authorization:
+            `Bearer ${token}`,
+        },
 
-              headers: {
-                "Content-Type":
-                  "application/json",
-
-                Authorization:
-                  `Bearer ${token}`,
-              },
-
-              body: JSON.stringify({
-                userId,
-                email,
-                amount,
-                method,
-              }),
-            }
-          );
-
-        const data =
-          await res.json();
-
-        console.log(
-          "DEPOSIT RESPONSE:",
-          data
-        );
-
-        if (!res.ok) {
-
-          alert(
-            data.message ||
-            "Request failed"
-          );
-
-          return;
-
-        }
-
-        alert(
-          data.message ||
-          "Deposit request submitted successfully"
-        );
-
-        setAmount("");
-
-      } catch (err) {
-
-        console.log(err);
-
-        alert(
-          "Connection error"
-        );
-
+        body: JSON.stringify({
+          amount:
+            Number(amount),
+        }),
       }
+    );
+
+  const data =
+    await res.json();
+
+  console.log(
+    "PAYPAL RESPONSE:",
+    data
+  );
+
+  if (!res.ok) {
+
+    alert(
+      data.message ||
+      "PayPal error"
+    );
+
+    return;
+  }
+
+  if (
+    data.approveUrl
+  ) {
+
+    window.location.href =
+      data.approveUrl;
+
+    return;
+  }
+
+  alert(
+    "Approve URL not found"
+  );
+
+} catch (err) {
+
+  console.log(err);
+
+  alert(
+    "Connection error"
+  );
+
+}
 
     };
 
