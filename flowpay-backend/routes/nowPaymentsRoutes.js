@@ -22,6 +22,14 @@ router.post(
 
   async (req, res) => {
 
+    console.log(
+  "CRYPTO PAYMENT REQUEST RECEIVED"
+);
+
+console.log(
+  req.body
+);
+
     try {
 
       const {
@@ -88,11 +96,20 @@ router.post(
   "NOW API KEY EXISTS:",
   !!process.env.NOWPAYMENTS_API_KEY
 );
+console.log(
+  "NOW API KEY EXISTS:",
+  !!process.env.NOWPAYMENTS_API_KEY
+);
 
-      console.log(
-        "NOWPAYMENTS ERROR:",
-        err.response?.data || err.message
-      );
+console.log(
+  "FULL ERROR:",
+  err
+);
+
+console.log(
+  "NOWPAYMENTS ERROR:",
+  err.response?.data || err.message
+);
 
       return res.status(500).json({
         message:
