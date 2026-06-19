@@ -84,6 +84,11 @@ router.post(
 
     } catch (err) {
 
+        console.log(
+  "NOW API KEY EXISTS:",
+  !!process.env.NOWPAYMENTS_API_KEY
+);
+
       console.log(
         "NOWPAYMENTS ERROR:",
         err.response?.data || err.message
