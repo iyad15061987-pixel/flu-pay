@@ -92,7 +92,17 @@ if (
 
   const data =
     await res.json();
-    
+
+    console.log(
+  "STATUS:",
+  res.status
+);
+
+console.log(
+  "RESPONSE:",
+  data
+);
+
 console.log(
   "STATUS:",
   res.status
@@ -105,12 +115,11 @@ console.log(
 
   console.log(data);
 
-  if (!res.ok) {
+if (!res.ok) {
 
-    alert(
-      data.message ||
-      "Crypto payment failed"
-    );
+  alert(
+    data.message
+  );
 
     return;
   }
