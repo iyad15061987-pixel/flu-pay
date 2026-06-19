@@ -49,82 +49,139 @@ export default function DepositPage() {
   const netAmount =
     Number(amount || 0) -
     fee;
+const createRequest =
+  async () => {
 
-  const createRequest =
-    async () => {
+    try {
 
-     try {
+      const token =
+        localStorage.getItem(
+          "token"
+        );
 
-  const token =
-    localStorage.getItem(
-      "token"
-    );
+      // =========================
+      // CRYPTO DEPOSIT
+      // =========================
 
-  const res =
-    await fetch(
-      `${API_URL}/paypal/create-order`,
-      {
-        method: "POST",
+      if (
+        method === "Crypto"
+      ) {
 
-        headers: {
-          "Content-Type":
-            "application/json",
+        const email =
+          localStorage.getItem(
+            "email"
+          );
 
-          Authorization:
-            `Bearer ${token}`,
-        },
+        const userId =
+          localStorage.getItem(
+            "userId"
+          );
 
-        body: JSON.stringify({
-          amount:
-            Number(amount),
-        }),
+        const res =
+          await fetch(
+            `${API_URL}/create-deposit-request`,
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                Authorization:
+                  `Bearer ${token}`,
+              },
+
+              body: JSON.stringify({
+                userId,
+                email,
+
+                amount:
+                  Number(amount),
+
+                method:
+                  "crypto",
+
+                reference:
+                  "Crypto Deposit",
+              }),
+            }
+          );
+
+        const data =
+          await res.json();
+
+        alert(
+          data.message ||
+          "Crypto deposit request submitted"
+        );
+
+        return;
       }
-    );
 
-  const data =
-    await res.json();
+      // =========================
+      // PAYPAL
+      // =========================
 
-  console.log(
-    "PAYPAL RESPONSE:",
-    data
-  );
+      const res =
+        await fetch(
+          `${API_URL}/paypal/create-order`,
+          {
+            method: "POST",
 
-  if (!res.ok) {
+            headers: {
+              "Content-Type":
+                "application/json",
 
-    alert(
-      data.message ||
-      "PayPal error"
-    );
+              Authorization:
+                `Bearer ${token}`,
+            },
 
-    return;
-  }
+            body: JSON.stringify({
+              amount:
+                Number(amount),
+            }),
+          }
+        );
 
-  if (
-    data.approveUrl
-  ) {
+      const data =
+        await res.json();
 
-    window.location.href =
-      data.approveUrl;
+      if (!res.ok) {
 
-    return;
-  }
+        alert(
+          data.message ||
+          "PayPal error"
+        );
 
-  alert(
-    "Approve URL not found"
-  );
+        return;
+      }
 
-} catch (err) {
+      if (
+        data.approveUrl
+      ) {
 
-  console.log(err);
+        window.location.href =
+          data.approveUrl;
 
-  alert(
-    "Connection error"
-  );
+        return;
+      }
 
-}
+      alert(
+        "Approve URL not found"
+      );
 
-    };
+    } catch (err) {
 
+      console.log(err);
+
+      alert(
+        "Connection error"
+      );
+
+    }
+
+  };
+  
   return (
 
     <div

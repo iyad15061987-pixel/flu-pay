@@ -891,54 +891,92 @@ setInvoices(
             marginBottom: 20,
           }}
         >
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    gap: 30,
+    flexWrap: "wrap",
+  }}
+>
+  <div>
 
-          <div>
+    <h1>
+      🚀 Merchant Dashboard
+    </h1>
 
-            <h1>
-              🚀 Merchant Dashboard
-            </h1>
+    <br />
 
-            <br />
+    <p>
+      Logged in as:{" "}
+      <strong>
+        {email}
+      </strong>
+    </p>
+  </div>
 
-            <p>
-              Logged in as:
-              {" "}
-              <strong>
-                {email}
-              </strong>
-            </p>
+  <div
+    style={{
+      background:
+        "rgba(16,185,129,0.12)",
+      border:
+        "1px solid #10b981",
+      borderRadius: 20,
+      padding: "18px 28px",
+      minWidth: 260,
+      boxShadow:
+        "0 0 20px rgba(16,185,129,0.25)",
+    }}
+  >
+    <div
+      style={{
+        color: "#9ca3af",
+        fontSize: 14,
+        marginBottom: 8,
+      }}
+    >
+💰 Available Balance
+    </div>
 
-          </div>
+    <div
+      style={{
+        color: "#10b981",
+        fontSize: 32,
+        fontWeight: "bold",
+      }}
+    >
+      $
+      {Number(
+  balance || 0
+).toLocaleString(
+  undefined,
+  {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }
+)}
+    </div>
+  </div>
+</div>
 
-          <button
-            onClick={() => {
-
-              localStorage.clear();
-
-              window.location.href =
-                "/login";
-
-            }}
-
-            style={{
-              padding:
-                "10px 20px",
-              background:
-                "#dc2626",
-              color:
-                "white",
-              border:
-                "none",
-              borderRadius:
-                10,
-              cursor:
-                "pointer",
-              fontWeight:
-                "bold",
-            }}
-          >
-            Logout
-          </button>
+<button
+  onClick={() => {
+    localStorage.clear();
+    window.location.href =
+      "/login";
+  }}
+  style={{
+    padding: "10px 20px",
+    background: "#dc2626",
+    color: "white",
+    border: "none",
+    borderRadius: 10,
+    cursor: "pointer",
+    fontWeight: "bold",
+  }}
+>
+  Logout
+</button>
 
         </div>
 
