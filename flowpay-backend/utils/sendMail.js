@@ -1,11 +1,15 @@
 const { Resend } =
   require("resend");
 
-const resend =
-  new Resend(
-    process.env
-      .RESEND_API_KEY
+let resend = null;
+
+if (
+  process.env.RESEND_API_KEY
+) {
+  resend = new Resend(
+    process.env.RESEND_API_KEY
   );
+}
 
 const sendMail =
   async ({
@@ -13,23 +17,26 @@ const sendMail =
     subject,
     text,
   }) => {
+
     try {
 
-      console.log(
-  "EMAIL_FROM:",
-  process.env.EMAIL_FROM
-);
+      // إذا لم يوجد مفتاح بريد
+      if (!resend) {
 
-console.log(
-  "RESEND KEY EXISTS:",
-  !!process.env.RESEND_API_KEY
-);
+        console.log(
+          "RESEND DISABLED - EMAIL SKIPPED"
+        );
+
+        return {
+          success: true,
+          skipped: true,
+        };
+      }
 
       const response =
         await resend.emails.send({
           from:
-            process.env
-              .EMAIL_FROM,
+            process.env.EMAIL_FROM,
 
           to,
 
@@ -38,27 +45,31 @@ console.log(
           html: `
             <div style="font-family: Arial; padding:20px;">
               <h2>FlowPay</h2>
-
               <p>${text}</p>
             </div>
           `,
         });
 
       console.log(
-  "RESEND RESPONSE:",
-  JSON.stringify(response, null, 2)
-);
+        "RESEND RESPONSE:",
+        JSON.stringify(
+          response,
+          null,
+          2
+        )
+      );
 
       return response;
 
     } catch (err) {
+
       console.log(
-        "❌ Email error:"
+        "Email error:"
       );
 
       console.log(err);
 
-      throw err;
+      return null;
     }
   };
 
