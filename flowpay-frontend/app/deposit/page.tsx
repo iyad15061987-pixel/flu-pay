@@ -92,6 +92,16 @@ if (
 
   const data =
     await res.json();
+    
+console.log(
+  "STATUS:",
+  res.status
+);
+
+console.log(
+  "RESPONSE:",
+  data
+);
 
   console.log(data);
 
