@@ -528,12 +528,30 @@ app.use(
 
 app.use(
   cors({
-    origin: "*",
+    origin: [
+      "http://localhost:3000",
+      "https://flu-pay.vercel.app",
+      "https://www.flowpay.com"
+    ],
 
-    credentials:
-      true,
+    methods: [
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE",
+      "OPTIONS"
+    ],
+
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization"
+    ],
+
+    credentials: true,
   })
 );
+
+app.options("*", cors());
 
 // =========================
 // BODY PARSER
