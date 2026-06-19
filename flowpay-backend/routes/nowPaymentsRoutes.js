@@ -23,6 +23,11 @@ router.post(
   async (req, res) => {
 
     console.log(
+  "AUTH HEADER:",
+  req.headers.authorization
+);
+
+    console.log(
   "CRYPTO PAYMENT REQUEST RECEIVED"
 );
 
