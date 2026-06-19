@@ -20,16 +20,14 @@ const sendMail =
 
     try {
 
-      // إذا لم يوجد مفتاح بريد
       if (!resend) {
 
         console.log(
-          "RESEND DISABLED - EMAIL SKIPPED"
+          "RESEND DISABLED"
         );
 
         return {
           success: true,
-          skipped: true,
         };
       }
 
@@ -43,21 +41,12 @@ const sendMail =
           subject,
 
           html: `
-            <div style="font-family: Arial; padding:20px;">
+            <div style="font-family:Arial;padding:20px;">
               <h2>FlowPay</h2>
               <p>${text}</p>
             </div>
           `,
         });
-
-      console.log(
-        "RESEND RESPONSE:",
-        JSON.stringify(
-          response,
-          null,
-          2
-        )
-      );
 
       return response;
 
