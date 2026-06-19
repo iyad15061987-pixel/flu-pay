@@ -58,65 +58,71 @@ const createRequest =
         localStorage.getItem(
           "token"
         );
+// =========================
+// CRYPTO PAYMENT
+// =========================
 
-      // =========================
-      // CRYPTO DEPOSIT
-      // =========================
+if (
+  method === "Crypto"
+) {
 
-      if (
-        method === "Crypto"
-      ) {
+  const res =
+    await fetch(
+      `${API_URL}/crypto/create-payment`,
+      {
+        method: "POST",
 
-        const email =
-          localStorage.getItem(
-            "email"
-          );
+        headers: {
+          "Content-Type":
+            "application/json",
 
-        const userId =
-          localStorage.getItem(
-            "userId"
-          );
+          Authorization:
+            `Bearer ${token}`,
+        },
 
-        const res =
-          await fetch(
-            `${API_URL}/create-deposit-request`,
-            {
-              method: "POST",
+        body: JSON.stringify({
+          amount:
+            Number(amount),
 
-              headers: {
-                "Content-Type":
-                  "application/json",
-
-                Authorization:
-                  `Bearer ${token}`,
-              },
-
-              body: JSON.stringify({
-                userId,
-                email,
-
-                amount:
-                  Number(amount),
-
-                method:
-                  "crypto",
-
-                reference:
-                  "Crypto Deposit",
-              }),
-            }
-          );
-
-        const data =
-          await res.json();
-
-        alert(
-          data.message ||
-          "Crypto deposit request submitted"
-        );
-
-        return;
+          payCurrency:
+            "usdttrc20",
+        }),
       }
+    );
+
+  const data =
+    await res.json();
+
+  console.log(data);
+
+  if (!res.ok) {
+
+    alert(
+      data.message ||
+      "Crypto payment failed"
+    );
+
+    return;
+  }
+
+  if (
+    data.payment?.invoice_url
+  ) {
+
+    window.open(
+      data.payment.invoice_url,
+      "_blank"
+    );
+
+    return;
+  }
+
+  alert(
+    "Invoice URL not found"
+  );
+
+  return;
+}
 
       // =========================
       // PAYPAL
