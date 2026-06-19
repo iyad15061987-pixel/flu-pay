@@ -282,6 +282,11 @@ const notificationRoutes =
     "./routes/adminUserRoutes"
   );
 
+  const nowPaymentsRoutes =
+  require(
+    "./routes/nowPaymentsRoutes"
+  );
+
 // =========================
 // APP
 // =========================
@@ -289,6 +294,11 @@ const notificationRoutes =
 const app =
   express();
 
+  app.use(
+  "/api",
+  nowPaymentsRoutes
+);
+  
 // =========================
 // TRUST PROXY
 // =========================

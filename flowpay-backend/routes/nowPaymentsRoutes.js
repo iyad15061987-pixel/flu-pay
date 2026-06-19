@@ -1,0 +1,103 @@
+const express = require("express");
+const axios = require("axios");
+
+const router = express.Router();
+
+const { auth } = require(
+  "../middleware/auth"
+);
+
+const User = require(
+  "../models/User"
+);
+
+// =========================
+// CREATE CRYPTO PAYMENT
+// =========================
+
+router.post(
+  "/crypto/create-payment",
+
+  auth,
+
+  async (req, res) => {
+
+    try {
+
+      const {
+        amount,
+        payCurrency,
+      } = req.body;
+
+      const user =
+        await User.findById(
+          req.user.id
+        );
+
+      if (!user) {
+
+        return res.status(404).json({
+          message:
+            "User not found",
+        });
+
+      }
+
+      const response =
+        await axios.post(
+          "https://api.nowpayments.io/v1/payment",
+
+          {
+            price_amount:
+              Number(amount),
+
+            price_currency:
+              "usd",
+
+            pay_currency:
+              payCurrency || "usdttrc20",
+
+            order_id:
+              user.email,
+
+            order_description:
+              `FlowPay Deposit - ${user.email}`,
+          },
+
+          {
+            headers: {
+              "x-api-key":
+                process.env.NOWPAYMENTS_API_KEY,
+
+              "Content-Type":
+                "application/json",
+            },
+          }
+        );
+
+      return res.json({
+        success: true,
+
+        payment:
+          response.data,
+      });
+
+    } catch (err) {
+
+      console.log(
+        "NOWPAYMENTS ERROR:",
+        err.response?.data || err.message
+      );
+
+      return res.status(500).json({
+        message:
+          "Failed to create payment",
+      });
+
+    }
+
+  }
+);
+
+module.exports =
+  router;
