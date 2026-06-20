@@ -11,24 +11,37 @@ const auth =
     try {
 
       let token =
-  req.headers.authorization?.split(
-    " "
-  )[1];
-
-if (!token) {
-
-  token =
-    req.query.token;
-}
+        req.headers.authorization?.split(
+          " "
+        )[1];
 
       if (!token) {
+
+        token =
+          req.query.token;
+      }
+
+      if (!token) {
+
+        console.log(
+          "NO TOKEN RECEIVED"
+        );
 
         return res.status(401).json({
           message:
             "Unauthorized",
         });
-
       }
+
+      console.log(
+        "TOKEN RECEIVED:",
+        token
+      );
+
+      console.log(
+        "JWT_SECRET:",
+        process.env.JWT_SECRET
+      );
 
       const decoded =
         jwt.verify(
@@ -36,12 +49,27 @@ if (!token) {
           process.env.JWT_SECRET
         );
 
+      console.log(
+        "TOKEN VERIFIED:",
+        decoded
+      );
+
       req.user =
         decoded;
 
       next();
 
     } catch (err) {
+
+      console.log(
+        "JWT VERIFY ERROR:",
+        err.message
+      );
+
+      console.log(
+        "JWT_SECRET:",
+        process.env.JWT_SECRET
+      );
 
       return res.status(401).json({
         message:
