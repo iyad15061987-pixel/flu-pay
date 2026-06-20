@@ -125,20 +125,22 @@ if (!res.ok) {
   }
 
   if (
-    data.payment?.invoice_url
-  ) {
-
-    window.open(
-      data.payment.invoice_url,
-      "_blank"
-    );
-
-    return;
-  }
+  data.payment?.pay_address
+) {
 
   alert(
-    "Invoice URL not found"
+    `Send ${data.payment.pay_amount} ${data.payment.pay_currency}
+to:
+
+${data.payment.pay_address}`
   );
+
+  return;
+}
+
+alert(
+  "Payment address not found"
+);
 
   return;
 }
