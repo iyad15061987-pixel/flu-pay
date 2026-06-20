@@ -87,13 +87,19 @@ console.log(
             },
           }
         );
+console.log(
+  "NOW RESPONSE:",
+  JSON.stringify(
+    response.data,
+    null,
+    2
+  )
+);
 
-      return res.json({
-        success: true,
-
-        payment:
-          response.data,
-      });
+return res.json({
+  success: true,
+  payment: response.data,
+});
 
     } catch (err) {
 
