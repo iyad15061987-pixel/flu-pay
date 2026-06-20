@@ -139,6 +139,33 @@ router.post(
         )
       );
 
+      await CryptoPayment.create({
+
+  userId:
+    user._id,
+
+  email:
+    user.email,
+
+  paymentId:
+    String(
+      response.data.payment_id
+    ),
+
+  address:
+    response.data.pay_address,
+
+  amount:
+    response.data.price_amount,
+
+  currency:
+    response.data.pay_currency,
+
+  status:
+    response.data.payment_status,
+
+});
+
       return res.json({
         success: true,
         payment: response.data,
