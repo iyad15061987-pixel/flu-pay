@@ -55,38 +55,42 @@ console.log(
         });
 
       }
+const response =
+  await axios.post(
+    "https://api.nowpayments.io/v1/payment",
 
-      const response =
-        await axios.post(
-          "https://api.nowpayments.io/v1/payment",
+    {
+      price_amount:
+        Number(amount),
 
-          {
-            price_amount:
-              Number(amount),
+      price_currency:
+        "usd",
 
-            price_currency:
-              "usd",
+      pay_currency:
+        payCurrency ||
+        "usdttrc20",
 
-            pay_currency:
-              payCurrency || "usdttrc20",
+      order_id:
+        user.email,
 
-            order_id:
-              user.email,
+      order_description:
+        `FlowPay Deposit - ${user.email}`,
 
-            order_description:
-              `FlowPay Deposit - ${user.email}`,
-          },
+      ipn_callback_url:
+        "https://flu-pay.onrender.com/api/crypto-webhook",
+    },
 
-          {
-            headers: {
-              "x-api-key":
-                process.env.NOWPAYMENTS_API_KEY,
+    {
+      headers: {
+        "x-api-key":
+          process.env.NOWPAYMENTS_API_KEY,
 
-              "Content-Type":
-                "application/json",
-            },
-          }
-        );
+        "Content-Type":
+          "application/json",
+      },
+    }
+  );
+  
 console.log(
   "NOW RESPONSE:",
   JSON.stringify(
