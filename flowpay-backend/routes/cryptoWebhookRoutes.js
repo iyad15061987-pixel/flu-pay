@@ -19,6 +19,11 @@ const Notification =
     "../models/Notification"
   );
 
+  const CryptoPayment =
+  require(
+    "../models/CryptoPayment"
+  );
+
 const createLedgerEntry =
   require(
     "../utils/ledger"
@@ -109,13 +114,38 @@ if (
       // USER EMAIL
       // =========================
 
-      const email =
-        data.order_id;
+      const payment =
+  await CryptoPayment.findOne({
 
-      const user =
-        await User.findOne({
-          email,
-        });
+    paymentId:
+      String(
+        data.payment_id
+      ),
+
+  });
+
+if (!payment) {
+
+  return res.status(404).json({
+    message:
+      "Payment not found",
+  });
+
+}
+
+const user =
+  await User.findById(
+    payment.userId
+  );
+
+if (!user) {
+
+  return res.status(404).json({
+    message:
+      "User not found",
+  });
+
+}
 
       if (!user) {
         return res.status(404).json({
@@ -143,6 +173,16 @@ if (existingTransaction) {
 
 }
 
+if (
+  payment.credited
+) {
+
+  return res.json({
+    message:
+      "Already credited",
+  });
+
+}
       // =========================
       // AMOUNT
       // =========================
@@ -175,6 +215,14 @@ if (existingTransaction) {
 
       await user.save();
 
+      payment.credited =
+  true;
+
+payment.status =
+  data.payment_status;
+
+await payment.save();
+
       // =========================
       // TRANSACTION
       // =========================
@@ -183,8 +231,8 @@ if (existingTransaction) {
         fromEmail:
           "Blockchain",
 
-        toEmail:
-          email,
+       toEmail:
+  user.email,
 
         amount,
 

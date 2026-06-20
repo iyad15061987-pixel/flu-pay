@@ -11,6 +11,10 @@ const User = require(
   "../models/User"
 );
 
+const CryptoPayment = require(
+  "../models/CryptoPayment"
+);
+
 // =========================
 // CREATE CRYPTO PAYMENT
 // =========================
@@ -23,17 +27,17 @@ router.post(
   async (req, res) => {
 
     console.log(
-  "AUTH HEADER:",
-  req.headers.authorization
-);
+      "AUTH HEADER:",
+      req.headers.authorization
+    );
 
     console.log(
-  "CRYPTO PAYMENT REQUEST RECEIVED"
-);
+      "CRYPTO PAYMENT REQUEST RECEIVED"
+    );
 
-console.log(
-  req.body
-);
+    console.log(
+      req.body
+    );
 
     try {
 
@@ -55,76 +59,109 @@ console.log(
         });
 
       }
-const response =
-  await axios.post(
-    "https://api.nowpayments.io/v1/payment",
 
-    {
-      price_amount:
-        Number(amount),
+      const response =
+        await axios.post(
+          "https://api.nowpayments.io/v1/payment",
 
-      price_currency:
-        "usd",
+          {
+            price_amount:
+              Number(amount),
 
-      pay_currency:
-        payCurrency ||
-        "usdttrc20",
+            price_currency:
+              "usd",
 
-      order_id:
-        user.email,
+            pay_currency:
+              payCurrency ||
+              "usdttrc20",
 
-      order_description:
-        `FlowPay Deposit - ${user.email}`,
+            order_id:
+              user.email,
 
-      ipn_callback_url:
-        "https://flu-pay.onrender.com/api/crypto-webhook",
-    },
+            order_description:
+              `FlowPay Deposit - ${user.email}`,
 
-    {
-      headers: {
-        "x-api-key":
-          process.env.NOWPAYMENTS_API_KEY,
+            ipn_callback_url:
+              "https://flu-pay.onrender.com/api/crypto-webhook",
+          },
 
-        "Content-Type":
-          "application/json",
-      },
-    }
-  );
-  
-console.log(
-  "NOW RESPONSE:",
-  JSON.stringify(
-    response.data,
-    null,
-    2
-  )
-);
+          {
+            headers: {
+              "x-api-key":
+                process.env
+                  .NOWPAYMENTS_API_KEY,
 
-return res.json({
-  success: true,
-  payment: response.data,
-});
+              "Content-Type":
+                "application/json",
+            },
+          }
+        );
+
+      // =========================
+      // SAVE PAYMENT
+      // =========================
+
+      await CryptoPayment.create({
+
+        userId:
+          String(user._id),
+
+        email:
+          user.email,
+
+        paymentId:
+          String(
+            response.data.payment_id
+          ),
+
+        address:
+          response.data.pay_address,
+
+        amount:
+          response.data.price_amount,
+
+        currency:
+          response.data.pay_currency,
+
+        status:
+          response.data.payment_status,
+
+        credited:
+          false,
+      });
+
+      console.log(
+        "NOW RESPONSE:",
+        JSON.stringify(
+          response.data,
+          null,
+          2
+        )
+      );
+
+      return res.json({
+        success: true,
+        payment: response.data,
+      });
 
     } catch (err) {
 
-        console.log(
-  "NOW API KEY EXISTS:",
-  !!process.env.NOWPAYMENTS_API_KEY
-);
-console.log(
-  "NOW API KEY EXISTS:",
-  !!process.env.NOWPAYMENTS_API_KEY
-);
+      console.log(
+        "NOW API KEY EXISTS:",
+        !!process.env
+          .NOWPAYMENTS_API_KEY
+      );
 
-console.log(
-  "FULL ERROR:",
-  err
-);
+      console.log(
+        "FULL ERROR:",
+        err
+      );
 
-console.log(
-  "NOWPAYMENTS ERROR:",
-  err.response?.data || err.message
-);
+      console.log(
+        "NOWPAYMENTS ERROR:",
+        err.response?.data ||
+        err.message
+      );
 
       return res.status(500).json({
         message:
