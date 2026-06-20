@@ -11,6 +11,8 @@ const {
   verify2FASetup,
   verify2FALogin,
   disable2FA,
+  verifyEmail,
+  resendVerificationCode,
 } = require(
   "../controllers/authController"
 );
@@ -85,6 +87,24 @@ router.post(
   auth,
 
   disable2FA
+);
+
+// =========================
+// VERIFY EMAIL
+// =========================
+
+router.post(
+  "/verify-email",
+  verifyEmail
+);
+
+// =========================
+// RESEND OTP
+// =========================
+
+router.post(
+  "/resend-verification",
+  resendVerificationCode
 );
 
 module.exports =

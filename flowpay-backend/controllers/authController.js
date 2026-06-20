@@ -94,6 +94,7 @@ exports.register =
       // =========================
       // CREATE USER
       // =========================
+
       await User.create({
   email,
 
@@ -101,7 +102,7 @@ exports.register =
     hashed,
 
   verified:
-    true,
+    false,
 
   emailOtp:
     otp,
@@ -261,7 +262,6 @@ exports.login =
       // CHECK VERIFICATION
       // =========================
 
-/*
 if (
   !user.verified
 ) {
@@ -272,7 +272,6 @@ if (
   });
 
 }
-*/
 
       // =========================
       // 2FA REQUIRED
@@ -727,6 +726,159 @@ exports.regenerateBackupCodes =
       return res.json({
         backupCodes:
           user.twoFactorBackupCodes,
+      });
+
+    } catch (err) {
+
+      console.log(err);
+
+      return res.status(500).json({
+        message:
+          "Server error",
+      });
+
+    }
+
+  };
+  
+  // =========================
+// VERIFY EMAIL
+// =========================
+
+exports.verifyEmail =
+  async (req, res) => {
+
+    try {
+
+      const {
+        email,
+        otp,
+      } = req.body;
+
+      const user =
+        await User.findOne({
+          email,
+        });
+
+      if (!user) {
+
+        return res.status(404).json({
+          message:
+            "User not found",
+        });
+
+      }
+
+      if (
+        user.emailOtp !== otp
+      ) {
+
+        return res.status(400).json({
+          message:
+            "Invalid code",
+        });
+
+      }
+
+      if (
+        user.emailOtpExpires <
+        new Date()
+      ) {
+
+        return res.status(400).json({
+          message:
+            "Code expired",
+        });
+
+      }
+
+      user.verified =
+        true;
+
+      user.emailOtp =
+        null;
+
+      user.emailOtpExpires =
+        null;
+
+      await user.save();
+
+      return res.json({
+        success: true,
+        message:
+          "Email verified successfully",
+      });
+
+    } catch (err) {
+
+      console.log(err);
+
+      return res.status(500).json({
+        message:
+          "Server error",
+      });
+
+    }
+
+  };
+
+  // =========================
+// RESEND EMAIL OTP
+// =========================
+
+exports.resendVerificationCode =
+  async (req, res) => {
+
+    try {
+
+      const {
+        email,
+      } = req.body;
+
+      const user =
+        await User.findOne({
+          email,
+        });
+
+      if (!user) {
+
+        return res.status(404).json({
+          message:
+            "User not found",
+        });
+
+      }
+
+      const otp =
+        generateOtp();
+
+      user.emailOtp =
+        otp;
+
+      user.emailOtpExpires =
+        new Date(
+          Date.now() +
+          10 *
+          60 *
+          1000
+        );
+
+      await user.save();
+
+      await sendMail({
+        to: email,
+
+        subject:
+          "FlowPay Verification Code",
+
+        text:
+          `Your verification code is: ${otp}`,
+      });
+
+      return res.json({
+        success: true,
+        message:
+          "Verification code sent",
       });
 
     } catch (err) {
