@@ -30,6 +30,9 @@ const {
   "../utils/fees"
   );
 
+  const crypto =
+  require("crypto");
+
 // =========================
 // NOWPAYMENTS WEBHOOK
 // =========================
@@ -41,6 +44,47 @@ router.post(
     try {
       const data =
         req.body;
+
+        const signature =
+  req.headers[
+    "x-nowpayments-sig"
+  ];
+
+if (!signature) {
+
+  return res.status(401).json({
+    message:
+      "Missing signature",
+  });
+
+}
+
+const hmac =
+  crypto
+    .createHmac(
+      "sha512",
+      process.env
+        .NOWPAYMENTS_IPN_SECRET
+    )
+    .update(
+      JSON.stringify(data)
+    )
+    .digest("hex");
+
+if (
+  hmac !== signature
+) {
+
+  console.log(
+    "INVALID WEBHOOK SIGNATURE"
+  );
+
+  return res.status(401).json({
+    message:
+      "Invalid signature",
+  });
+
+}
 
       console.log(
         "Webhook received:",
