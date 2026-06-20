@@ -68,9 +68,16 @@ export default function RegisterPage() {
 
         if (res.ok) {
 
-          window.location.href =
-            "/login";
-        }
+  alert(
+    "Account created successfully"
+  );
+
+  window.location.href =
+    `/verify-email?email=${encodeURIComponent(
+      email
+    )}`;
+
+}
 
       } catch (err) {
 
