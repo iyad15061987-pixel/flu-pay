@@ -293,11 +293,6 @@ const notificationRoutes =
 
 const app =
   express();
-
-  app.use(
-  "/api",
-  nowPaymentsRoutes
-);
   
 // =========================
 // TRUST PROXY
@@ -653,6 +648,12 @@ app.use("/api", kycAdminRoutes);
 app.use("/api", ledgerRoutes);
 app.use("/api", currencyRoutes);
 app.use("/api", cryptoRoutes);
+
+app.use(
+  "/api",
+  nowPaymentsRoutes
+);
+
 app.use("/api", cryptoWebhookRoutes);
 app.use("/api", cryptoWithdrawRoutes);
 app.use("/api", fraudRoutes);
