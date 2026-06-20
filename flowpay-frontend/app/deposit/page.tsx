@@ -23,6 +23,14 @@ export default function DepositPage() {
   const [method, setMethod] =
     useState("PayPal");
 
+    const [cryptoPayment, setCryptoPayment] =
+  useState<{
+    address: string;
+    amount: number;
+    currency: string;
+    paymentId: string;
+  } | null>(null);
+
   useEffect(() => {
 
     setMounted(true);
@@ -58,6 +66,23 @@ const createRequest =
         localStorage.getItem(
           "token"
         );
+
+        // =========================
+// MINIMUM CRYPTO AMOUNT
+// =========================
+
+        if (
+  method === "Crypto" &&
+  Number(amount) < 50
+) {
+
+  alert(
+    "Minimum crypto deposit is $50"
+  );
+
+  return;
+}
+
 // =========================
 // CRYPTO PAYMENT
 // =========================
@@ -124,16 +149,23 @@ if (!res.ok) {
     return;
   }
 
-  if (
+ if (
   data.payment?.pay_address
 ) {
 
-  alert(
-    `Send ${data.payment.pay_amount} ${data.payment.pay_currency}
-to:
+  setCryptoPayment({
+    address:
+      data.payment.pay_address,
 
-${data.payment.pay_address}`
-  );
+    amount:
+      data.payment.pay_amount,
+
+    currency:
+      data.payment.pay_currency,
+
+    paymentId:
+      data.payment.payment_id,
+  });
 
   return;
 }
@@ -240,6 +272,74 @@ alert(
               : "white",
         }}
       >
+
+{
+  cryptoPayment && (
+
+    <div
+      style={{
+        marginTop: 20,
+        padding: 20,
+        borderRadius: 12,
+        background: "#111827",
+        color: "white",
+      }}
+    >
+
+      <h3>
+        Crypto Payment
+      </h3>
+
+      <p>
+        Amount:
+        {" "}
+        {
+          cryptoPayment.amount
+        }
+        {" "}
+        {
+          cryptoPayment.currency
+        }
+      </p>
+
+      <p>
+        Address:
+      </p>
+
+      <textarea
+        readOnly
+        value={
+          cryptoPayment.address
+        }
+        style={{
+          width: "100%",
+          minHeight: 80,
+        }}
+      />
+
+      <br />
+      <br />
+
+      <button
+        onClick={() => {
+
+          navigator.clipboard.writeText(
+            cryptoPayment.address
+          );
+
+          alert(
+            "Address copied"
+          );
+
+        }}
+      >
+        Copy Address
+      </button>
+
+    </div>
+
+  )
+}
 
         <h1>
           🏦 Deposit Request
