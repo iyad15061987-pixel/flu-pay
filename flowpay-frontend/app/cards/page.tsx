@@ -55,6 +55,16 @@ export default function CardsPage() {
   const [loading, setLoading] =
     useState(false);
 
+    const [
+  showCardNumber,
+  setShowCardNumber
+] = useState(false);
+
+const [
+  showCVV,
+  setShowCVV,
+] = useState(false);
+
   useEffect(() => {
     const savedTheme =
       localStorage.getItem(
@@ -204,6 +214,26 @@ setCards(data);
       }
     };
 
+    const formatCardNumber =
+  (number: string) => {
+
+    return number.replace(
+      /(\d{4})(?=\d)/g,
+      "$1 "
+    );
+
+  };
+
+  const maskCardNumber =
+  (number: string) => {
+
+    return (
+      "**** **** **** " +
+      number.slice(-4)
+    );
+
+  };
+
   return (
     <div
       style={{
@@ -269,145 +299,323 @@ setCards(data);
 
         {cards.map(
           (card) => (
-            <div
-              key={card._id}
-              style={{
-                background:
-                  "linear-gradient(135deg,#2563eb,#1e3a8a)",
+           <div
+  key={card._id}
+  style={{
+    background:
+      "linear-gradient(135deg,#021024,#052659,#0b666a,#1cb698)",
 
-                padding: 30,
+    padding: 25,
 
-                borderRadius: 20,
+    borderRadius: 28,
 
-                marginBottom: 25,
+    marginBottom: 30,
 
-                maxWidth: 550,
+    maxWidth: 500,
+width: "100%",
 
-                color: "white",
-              }}
-            >
-              <h2>
-                FlowPay
-                Virtual Card
-              </h2>
+    color: "white",
 
-              <br />
+    boxShadow:
+      "0 20px 40px rgba(0,0,0,.45)",
 
-              <h1
-                style={{
-                  letterSpacing: 3,
-                }}
-              >
-                {
-                  card.cardNumber
-                }
-              </h1>
+    position: "relative",
+
+    overflow: "hidden",
+  }}
+>
+
+  <div
+    style={{
+      position: "absolute",
+      right: -50,
+      top: 20,
+      fontSize: 220,
+      opacity: 0.05,
+      fontWeight: "bold",
+    }}
+  >
+    F
+  </div>
+
+  <div
+    style={{
+      display: "flex",
+      justifyContent:
+        "space-between",
+      alignItems:
+        "center",
+    }}
+  >
+
+    <h2
+      style={{
+        color: "#22c55e",
+        fontSize: 36,
+        margin: 0,
+      }}
+    >
+      FlowPay
+    </h2>
+
+    <div
+      style={{
+        fontSize: 40,
+      }}
+    >
+      ))) 
+    </div>
+
+  </div>
+
+  <br />
+
+  <div
+    style={{
+      width: 55,
+      height: 40,
+
+      borderRadius: 10,
+
+      background:
+        "linear-gradient(135deg,#d1d5db,#f9fafb)",
+    }}
+  />
+
+  <br />
+  <br />
+
+  <div
+  style={{
+    fontSize: 28,
+
+    letterSpacing: 5,
+
+    fontWeight: "bold",
+  }}
+>
+{
+  showCardNumber
+    ? formatCardNumber(
+        card.cardNumber
+      )
+    : maskCardNumber(
+        card.cardNumber
+      )
+}
+</div>
+
+<div
+  style={{
+    marginTop: 12,
+  }}
+>
+
+  <button
+    onClick={() =>
+      setShowCardNumber(
+        !showCardNumber
+      )
+    }
+    style={{
+      padding:
+        "8px 16px",
+
+      border: "none",
+
+      borderRadius: 10,
+
+      background:
+        "#ffffff20",
+
+      color: "white",
+
+      cursor: "pointer",
+    }}
+  >
+    {
+      showCardNumber
+        ? "Hide Number"
+        : "Show Number"
+    }
+  </button>
+
+</div>
 
 <br />
 
-<p
+  <div
+    style={{
+      display: "flex",
+      justifyContent:
+        "space-between",
+      alignItems:
+        "flex-end",
+    }}
+  >
+
+    <div>
+
+      <div
+        style={{
+          fontSize: 12,
+          opacity: 0.7,
+        }}
+      >
+        CARD HOLDER
+      </div>
+
+      <div
+        style={{
+          fontSize: 20,
+          letterSpacing: 2,
+          fontWeight: "bold",
+        }}
+      >
+        {
+          card.cardHolder
+        }
+      </div>
+
+    </div>
+
+    <div>
+
+  <div
+    style={{
+      fontSize: 12,
+      opacity: 0.7,
+    }}
+  >
+    VALID THRU
+  </div>
+
+  <div
+    style={{
+      fontSize: 24,
+      fontWeight: "bold",
+    }}
+  >
+    {card.expiry}
+  </div>
+
+</div>
+
+<div>
+
+  <div
+    style={{
+      fontSize: 12,
+      opacity: 0.7,
+      marginBottom: 5,
+    }}
+  >
+    CVV
+  </div>
+
+  <div
+    style={{
+      fontSize: 24,
+      fontWeight: "bold",
+      textAlign: "center",
+    }}
+  >
+    {
+      showCVV
+        ? card.cvv
+        : "***"
+    }
+  </div>
+
+  <button
+    onClick={() =>
+      setShowCVV(
+        !showCVV
+      )
+    }
+    style={{
+      marginTop: 8,
+      padding:
+        "5px 10px",
+      border: "none",
+      borderRadius: 8,
+      cursor: "pointer",
+      fontSize: 12,
+    }}
+  >
+    {
+      showCVV
+        ? "Hide"
+        : "Show"
+    }
+  </button>
+
+</div>
+
+<div
   style={{
-    fontSize: 18,
+    fontSize: 38,
     fontWeight: "bold",
-    letterSpacing: 2,
   }}
 >
-  {card.cardHolder}
-</p>
+  VISA
+</div>
 
-              <br />
+  </div>
 
-              <div
-                style={{
-                  display: "flex",
+  <br />
 
-                  justifyContent:
-                    "space-between",
-                }}
-              >
-                <div>
-                  <small>
-                    Expiry
-                  </small>
+  <div
+    style={{
+      display: "flex",
+      gap: 15,
+    }}
+  >
 
-                  <br />
+    <button
+      onClick={() =>
+        freezeCard(
+          card._id
+        )
+      }
+      style={{
+        padding:
+          "12px 20px",
 
-                  {
-                    card.expiry
-                  }
-                </div>
+        border: "none",
 
-                <div>
-                  <small>
-                    CVV
-                  </small>
+        borderRadius: 12,
 
-                  <br />
+        cursor: "pointer",
+      }}
+    >
+      Freeze
+    </button>
 
-                  {
-                    card.cvv
-                  }
-                </div>
+    <button
+      onClick={() =>
+        loadTransactions(
+          card._id
+        )
+      }
+      style={{
+        padding:
+          "12px 20px",
 
-                <div>
-                  <small>
-                    Status
-                  </small>
+        border: "none",
 
-                  <br />
+        borderRadius: 12,
 
-                  {
-                    card.status
-                  }
-                </div>
-              </div>
+        cursor: "pointer",
+      }}
+    >
+      Transactions
+    </button>
 
-              <br />
+  </div>
 
-              <button
-                onClick={() =>
-                  freezeCard(
-                    card._id
-                  )
-                }
-                style={{
-                  padding:
-                    "10px 20px",
+</div>
 
-                  border: "none",
-
-                  borderRadius: 10,
-
-                  marginRight: 10,
-
-                  cursor:
-                    "pointer",
-                }}
-              >
-                Freeze
-              </button>
-
-              <button
-                onClick={() =>
-                  loadTransactions(
-                    card._id
-                  )
-                }
-                style={{
-                  padding:
-                    "10px 20px",
-
-                  border: "none",
-
-                  borderRadius: 10,
-
-                  cursor:
-                    "pointer",
-                }}
-              >
-                Transactions
-              </button>
-            </div>
           )
         )}
 
