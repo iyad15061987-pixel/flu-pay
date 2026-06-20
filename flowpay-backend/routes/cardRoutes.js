@@ -156,18 +156,22 @@ router.post(
         });
       }
 
-      const existing =
-        await VirtualCard.findOne({
-          userId:
-            req.user.id,
-        });
+      const cardsCount =
+  await VirtualCard.countDocuments({
+    userId:
+      req.user.id,
+  });
 
-      if (existing) {
-        return res.status(400).json({
-          message:
-            "Card already exists",
-        });
-      }
+if (
+  cardsCount >= 5
+) {
+
+  return res.status(400).json({
+    message:
+      "Maximum 5 cards allowed",
+  });
+
+}
 
       const approvedKyc =
         await Kyc.findOne({
