@@ -9,6 +9,8 @@ import Sidebar from "../components/Sidebar";
 
 import API_URL from "@/lib/api";
 
+import { QRCodeCanvas } from "qrcode.react";
+
 export default function DepositPage() {
 
   const [mounted, setMounted] =
@@ -273,7 +275,7 @@ alert(
         }}
       >
 
-{
+  {
   cryptoPayment && (
 
     <div
@@ -287,64 +289,72 @@ alert(
     >
 
       <h3>
-        Crypto Payment
-      </h3>
+  Crypto Payment
+</h3>
 
-      <p>
-        Amount:
-        {" "}
-        {
-          cryptoPayment.amount
-        }
-        {" "}
-        {
-          cryptoPayment.currency
-        }
-      </p>
+<p>
+  Amount:
+  {" "}
+  {cryptoPayment.amount}
+  {" "}
+  {cryptoPayment.currency}
+</p>
 
-      <p>
-        Address:
-      </p>
+<div
+  style={{
+    background: "white",
+    padding: 15,
+    display: "inline-block",
+    borderRadius: 10,
+    marginBottom: 20,
+  }}
+>
+  <QRCodeCanvas
+    value={cryptoPayment.address}
+    size={220}
+  />
+</div>
 
-      <textarea
-        readOnly
-        value={
-          cryptoPayment.address
-        }
-        style={{
-          width: "100%",
-          minHeight: 80,
-        }}
-      />
+<p>
+  Address:
+</p>
 
-      <br />
-      <br />
+<textarea
+  readOnly
+  value={cryptoPayment.address}
+  style={{
+    width: "100%",
+    minHeight: 80,
+  }}
+/>
 
-      <button
-        onClick={() => {
+<br />
+<br />
 
-          navigator.clipboard.writeText(
-            cryptoPayment.address
-          );
+<button
+  onClick={() => {
 
-          alert(
-            "Address copied"
-          );
+    navigator.clipboard.writeText(
+      cryptoPayment.address
+    );
 
-        }}
-      >
-        Copy Address
-      </button>
+    alert(
+      "Address copied"
+    );
 
-    </div>
+  }}
+>
+  Copy Address
+</button>
 
-  )
+</div>
+
+)
 }
 
-        <h1>
-          🏦 Deposit Request
-        </h1>
-
+<h1>
+  🏦 Deposit Request
+</h1>
         <br />
 
         <div
