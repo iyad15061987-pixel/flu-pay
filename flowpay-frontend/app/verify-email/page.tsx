@@ -1,12 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { useRouter } from "next/navigation";
+import {
+  Suspense,
+  useState,
+} from "react";
+
+import {
+  useSearchParams,
+  useRouter,
+} from "next/navigation";
 
 import API_URL from "@/lib/api";
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
 
   const router =
     useRouter();
@@ -222,6 +228,26 @@ export default function VerifyEmailPage() {
       </div>
 
     </div>
+
+  );
+
+}
+
+export default function VerifyEmailPage() {
+
+  return (
+
+    <Suspense
+      fallback={
+        <div>
+          Loading...
+        </div>
+      }
+    >
+
+      <VerifyEmailContent />
+
+    </Suspense>
 
   );
 
