@@ -54,6 +54,12 @@ router.post(
   auth,
 
   async (req, res) => {
+
+    console.log("========== PAYPAL ROUTE ==========");
+console.log("BODY:", req.body);
+console.log("USER:", req.user);
+console.log("HEADERS:", req.headers.authorization);
+
     try {
 
       const {
