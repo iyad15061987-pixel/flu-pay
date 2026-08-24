@@ -1,43 +1,43 @@
 const LedgerEntry =
-  require(
-    "../models/LedgerEntry"
-  );
+  require("../models/LedgerEntry");
+
+// =========================
+// CREATE LEDGER ENTRY
+// =========================
 
 const createLedgerEntry =
   async ({
     userId,
-
     email,
-
     type,
-
     amount,
-
     balanceBefore,
-
     balanceAfter,
-
     reference,
-
     description,
+    session,
   }) => {
-    await LedgerEntry.create({
-      userId,
 
-      email,
+    const entries =
+      await LedgerEntry.create(
+        [
+          {
+            userId,
+            email,
+            type,
+            amount,
+            balanceBefore,
+            balanceAfter,
+            reference,
+            description,
+          },
+        ],
+        {
+          session,
+        }
+      );
 
-      type,
-
-      amount,
-
-      balanceBefore,
-
-      balanceAfter,
-
-      reference,
-
-      description,
-    });
+    return entries[0];
   };
 
 module.exports =

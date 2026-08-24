@@ -10,6 +10,14 @@ const userSchema =
         unique: true,
       },
 
+      customerId: {
+  type: String,
+
+  unique: true,
+
+  sparse: true,
+},
+
       password:
         String,
 
@@ -25,11 +33,69 @@ const userSchema =
         default: 0,
       },
 
+      treasuryBalance: {
+  type: Number,
+
+  default: 0,
+},
+
       role: {
         type: String,
 
         default:
           "user",
+      },
+
+      accountType: {
+  type: String,
+
+  enum: [
+    "user",
+    "business",
+    "admin",
+    "treasury",
+  ],
+
+  default:
+    "user",
+},
+      accountType: {
+        type: String,
+
+        enum: [
+          "user",
+          "admin",
+          "treasury",
+          "system",
+        ],
+
+        default:
+          "user",
+      },
+
+      customerId: {
+        type: String,
+
+        unique: true,
+
+        sparse: true,
+
+        default:
+          null,
+      },
+
+      accountStatus: {
+        type: String,
+
+        enum: [
+          "active",
+          "pending",
+          "suspended",
+          "closed",
+        ],
+
+        default:
+          "active",
       },
 
       frozen: {
@@ -65,7 +131,8 @@ const userSchema =
       riskScore: {
         type: Number,
 
-        default: 0,
+        default:
+          0,
       },
 
       riskLevel: {
@@ -92,15 +159,17 @@ const userSchema =
       dailyUsed: {
         type: Number,
 
-        default: 0,
+        default:
+          0,
       },
 
       monthlyUsed: {
         type: Number,
 
-        default: 0,
+        default:
+          0,
       },
-
+      
       // =========================
       // 2FA
       // =========================
@@ -214,18 +283,17 @@ const userSchema =
       // TREASURY
       // =========================
 
-      totalDeposits: {
-        type: Number,
+     totalDeposits: {
+  type: Number,
 
-        default: 0,
-      },
+  default: 0,
+},
 
-      totalWithdrawals: {
-        type: Number,
+totalWithdrawals: {
+  type: Number,
 
-        default: 0,
-      },
-
+  default: 0,
+},
       totalTransfersSent: {
         type: Number,
 
@@ -241,6 +309,19 @@ const userSchema =
       // =========================
       // STATUS
       // =========================
+
+      accountStatus: {
+  type: String,
+
+  enum: [
+    "active",
+    "suspended",
+    "closed",
+  ],
+
+  default:
+    "active",
+},
 
       active: {
         type: Boolean,

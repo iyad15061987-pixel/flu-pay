@@ -59,7 +59,6 @@ const updateRates =
   require(
     "./utils/exchange"
   );
-
 // =========================
 // ROUTES
 // =========================
@@ -82,6 +81,11 @@ const transactionRoutes =
 const adminRoutes =
   require(
     "./routes/adminRoutes"
+  );
+
+const walletRoutes =
+  require(
+    "./routes/walletRoutes"
   );
 
 const analyticsRoutes =
@@ -639,6 +643,7 @@ app.use(
 
 app.use("/api", transactionRoutes);
 app.use("/api", adminRoutes);
+app.use("/api", walletRoutes);
 app.use("/api", analyticsRoutes);
 app.use("/api", profileRoutes);
 app.use("/api", freezeRoutes);

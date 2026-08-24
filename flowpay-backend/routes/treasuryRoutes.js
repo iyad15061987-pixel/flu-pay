@@ -16,6 +16,11 @@ const User =
     "../models/User"
   );
 
+const AccountingEntry =
+  require(
+    "../models/AccountingEntry"
+  );
+
 // =========================
 // TREASURY OVERVIEW
 // =========================
@@ -30,35 +35,112 @@ router.get(
   async (req, res) => {
     try {
 
-      const users =
-        await User.find();
+      // =========================
+      // TREASURY ACCOUNT
+      // =========================
 
-      let totalBalances = 0;
+      const treasury =
+        await User.findOne({
+          accountType:
+            "treasury",
+        }).select(
+          "email balance revenue accountType"
+        );
 
-      let totalRevenue = 0;
+      if (!treasury) {
+        return res.status(404).json({
+          message:
+            "Treasury account not found",
+        });
+      }
 
-      users.forEach(
-        (user) => {
-          totalBalances +=
-            user.balance || 0;
+      // =========================
+      // PLATFORM REVENUE
+      // =========================
 
-          totalRevenue +=
-            user.revenue || 0;
-        }
-      );
+      const revenueResult =
+        await AccountingEntry.aggregate([
+          {
+            $match: {
+              account:
+                "platform_revenue",
+
+              type:
+                "credit",
+            },
+          },
+
+          {
+            $group: {
+              _id:
+                null,
+
+              totalRevenue: {
+                $sum:
+                  "$amount",
+              },
+
+              totalFees: {
+                $sum:
+                  "$amount",
+              },
+
+              totalTransactions: {
+                $sum:
+                  1,
+              },
+            },
+          },
+        ]);
+
+      const accounting =
+        revenueResult[0] || {
+          totalRevenue:
+            0,
+
+          totalFees:
+            0,
+
+          totalTransactions:
+            0,
+        };
+
+      // =========================
+      // RESPONSE
+      // =========================
 
       return res.json({
-        totalUsers:
-          users.length,
 
-        totalBalances,
+        treasury: {
+          email:
+            treasury.email,
 
-        totalRevenue,
+          balance:
+            treasury.balance || 0,
+
+          revenue:
+            treasury.revenue || 0,
+        },
+
+        totalRevenue:
+          accounting.totalRevenue || 0,
+
+        totalFees:
+          accounting.totalFees || 0,
+
+        totalTransactions:
+          accounting.totalTransactions || 0,
+
+        status:
+          "active",
       });
 
     } catch (err) {
 
-      console.log(err);
+      console.log(
+        "TREASURY OVERVIEW ERROR:",
+        err
+      );
 
       return res.status(500).json({
         message:
@@ -82,17 +164,51 @@ router.get(
   async (req, res) => {
     try {
 
+      const treasury =
+        await User.findOne({
+          accountType:
+            "treasury",
+        }).select(
+          "email balance revenue accountType accountStatus"
+        );
+
+      if (!treasury) {
+        return res.status(404).json({
+          status:
+            "error",
+
+          treasury:
+            "not_found",
+        });
+      }
+
       return res.json({
+
         status:
           "healthy",
 
         treasury:
           "active",
+
+        account:
+          treasury.email,
+
+        balance:
+          treasury.balance || 0,
+
+        revenue:
+          treasury.revenue || 0,
+
+        accountStatus:
+          treasury.accountStatus,
       });
 
     } catch (err) {
 
-      console.log(err);
+      console.log(
+        "TREASURY HEALTH ERROR:",
+        err
+      );
 
       return res.status(500).json({
         message:

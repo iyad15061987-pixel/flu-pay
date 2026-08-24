@@ -199,29 +199,45 @@ if (
 
       const netAmount =
         amount - fee;
+const before =
+  user.balance;
 
-      const before =
-        user.balance;
+// =========================
+// TREASURY
+// =========================
 
-      // =========================
-      // UPDATE BALANCE
-      // =========================
+const treasury =
+  await User.findOne({
+    accountType:
+      "treasury",
+  });
 
-      user.balance +=
-        netAmount;
+if (!treasury) {
+  throw new Error(
+    "Treasury account not found"
+  );
+}
 
-      user.revenue +=
-        fee;
+const treasuryBefore =
+  treasury.balance;
 
-      await user.save();
+// =========================
+// UPDATE BALANCES
+// =========================
 
-      payment.credited =
-  true;
+user.balance +=
+  netAmount;
 
-payment.status =
-  data.payment_status;
+treasury.balance +=
+  fee;
 
-await payment.save();
+treasury.revenue =
+  (treasury.revenue || 0) +
+  fee;
+
+await user.save();
+
+await treasury.save();
 
       // =========================
       // TRANSACTION
@@ -251,13 +267,12 @@ await payment.save();
       // =========================
       // LEDGER
       // =========================
+await createLedgerEntry({
+  userId:
+    user._id,
 
-      await createLedgerEntry({
-        userId:
-          user._id,
-
-        email:
-          user.email,
+  email:
+    user.email,
 
         type:
           "Crypto Deposit",

@@ -288,25 +288,51 @@ router.post(
         Number(
           request.amount
         ) - fee;
+const beforeBalance =
+  user.balance;
 
-      const beforeBalance =
-        user.balance;
+// =========================
+// TREASURY
+// =========================
 
-      user.balance +=
-        netAmount;
+const treasury =
+  await User.findOne({
+    accountType:
+      "treasury",
+  });
 
-      user.revenue =
-        (user.revenue || 0) +
-        fee;
+if (!treasury) {
+  throw new Error(
+    "Treasury account not found"
+  );
+}
 
-      user.totalDeposits =
-        (user.totalDeposits || 0) +
-        Number(
-          request.amount
-        );
+const treasuryBefore =
+  treasury.balance;
 
-      await user.save();
+// =========================
+// UPDATE BALANCES
+// =========================
 
+user.balance +=
+  netAmount;
+
+user.totalDeposits =
+  (user.totalDeposits || 0) +
+  Number(
+    request.amount
+  );
+
+treasury.balance +=
+  fee;
+
+treasury.revenue =
+  (treasury.revenue || 0) +
+  fee;
+
+await user.save();
+
+await treasury.save();
       request.status =
         "Approved";
 
@@ -338,16 +364,15 @@ router.post(
         method:
           "paypal",
       });
+await createLedgerEntry({
+  userId:
+    user._id,
 
-      await createLedgerEntry({
-        userId:
-          user._id,
+  email:
+    user.email,
 
-        email:
-          user.email,
-
-        type:
-          "Deposit",
+  type:
+    "Deposit",
 
         amount:
           netAmount,

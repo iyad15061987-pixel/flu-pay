@@ -76,6 +76,11 @@ const createLedgerEntry =
   require(
     "../utils/ledger"
   );
+const {
+  createAccountingEntries
+} = require(
+  "../utils/accounting"
+);
 
 // =========================
 // TRANSFER
@@ -433,6 +438,21 @@ if (
 
       const receiverBefore =
         receiver.balance;
+        
+const treasury =
+  await User.findOne({
+    accountType:
+      "treasury",
+  }).session(session);
+
+if (!treasury) {
+  throw new Error(
+    "Treasury account not found"
+  );
+}
+
+const treasuryBefore =
+  treasury.balance;
 
       // =========================
       // UPDATE BALANCES
@@ -454,6 +474,12 @@ sender.totalTransfersSent =
 receiver.balance +=
   netAmount;
 
+  treasury.balance +=
+  fee;
+
+treasury.revenue +=
+  fee;
+
 receiver.totalTransfersReceived =
   (receiver.totalTransfersReceived || 0) +
   netAmount;
@@ -465,6 +491,10 @@ receiver.totalTransfersReceived =
       await receiver.save({
         session,
       });
+
+      await treasury.save({
+  session,
+});
 
       // =========================
       // TRANSACTION RECORD
@@ -493,92 +523,127 @@ receiver.totalTransfersReceived =
             session,
           }
         );
+// =========================
+// LEDGER ENTRIES
+// =========================
 
-      // =========================
-      // LEDGER ENTRIES
-      // =========================
+await createLedgerEntry({
 
-      await createLedgerEntry({
-        userId:
-          sender._id,
+  userId:
+    sender._id,
 
-        email:
-          sender.email,
+  email:
+    sender.email,
 
-        type:
-          "Transfer Sent",
+  type:
+    "Transfer Sent",
 
-        amount:
-          numericAmount,
+  amount:
+    numericAmount,
 
-        balanceBefore:
-          senderBefore,
+  balanceBefore:
+    senderBefore,
 
-        balanceAfter:
-          sender.balance,
+  balanceAfter:
+    sender.balance,
 
-        reference:
-          receiver.email,
+  reference:
+    receiver.email,
 
-        description:
-          "Internal transfer sent",
-      });
+  description:
+    "Internal transfer sent",
 
-      await createLedgerEntry({
-        userId:
-          receiver._id,
+  session,
 
-        email:
-          receiver.email,
+});
 
-        type:
-          "Transfer Received",
+await createLedgerEntry({
 
-        amount:
-          netAmount,
+  userId:
+    receiver._id,
 
-        balanceBefore:
-          receiverBefore,
+  email:
+    receiver.email,
 
-        balanceAfter:
-          receiver.balance,
+  type:
+    "Transfer Received",
 
-        reference:
-          sender.email,
+  amount:
+    netAmount,
 
-        description:
-          "Internal transfer received",
-      });
+  balanceBefore:
+    receiverBefore,
 
-      // =========================
-      // PLATFORM REVENUE
-      // =========================
+  balanceAfter:
+    receiver.balance,
 
-      await createLedgerEntry({
-        userId:
-          null,
+  reference:
+    sender.email,
 
-        email:
-          "SYSTEM",
+  description:
+    "Internal transfer received",
 
-        type:
-          "Platform Fee Revenue",
+  session,
 
-        amount:
-          fee,
+});
 
-        balanceBefore:
-          0,
+// =========================
+// PLATFORM REVENUE
+// =========================
 
-        balanceAfter:
-          0,
+await createLedgerEntry({
 
-        reference:
-          sender.email,
+  userId:
+    treasury._id,
 
-        description:
-          "Internal transfer fee revenue",
-      });
+  email:
+    treasury.email,
+
+  type:
+    "Platform Fee Revenue",
+
+  amount:
+    fee,
+
+  balanceBefore:
+    0,
+
+  balanceAfter:
+    0,
+
+  reference:
+    sender.email,
+
+  description:
+    "Internal transfer fee revenue",
+
+  session,
+
+});
+
+// =========================
+// ACCOUNTING ENTRIES
+// =========================
+
+await createAccountingEntries({
+
+  transactionId:
+    transaction[0]._id,
+
+  sender,
+
+  receiver,
+
+  amount:
+    numericAmount,
+
+  fee,
+
+  netAmount,
+
+  session,
+
+});
 
       // =========================
       // COMMIT

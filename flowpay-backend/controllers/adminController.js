@@ -196,18 +196,45 @@ exports.approveDeposit =
 
       const netAmount =
         request.amount -
-        fee;
-
-        const beforeBalance =
+        fee;const beforeBalance =
   user.balance;
-  
-      user.balance +=
-        netAmount;
 
-      user.revenue +=
-        fee;
+// =========================
+// TREASURY
+// =========================
 
-      await user.save();
+const treasury =
+  await User.findOne({
+    accountType:
+      "treasury",
+  });
+
+if (!treasury) {
+  throw new Error(
+    "Treasury account not found"
+  );
+}
+
+const treasuryBefore =
+  treasury.balance;
+
+// =========================
+// UPDATE BALANCES
+// =========================
+
+user.balance +=
+  netAmount;
+
+treasury.balance +=
+  fee;
+
+treasury.revenue =
+  (treasury.revenue || 0) +
+  fee;
+
+await user.save();
+
+await treasury.save();
 
       await createLedgerEntry({
   userId:
@@ -351,18 +378,45 @@ exports.approveWithdraw =
             "Insufficient balance",
         });
       }
-
-      const beforeBalance =
+const beforeBalance =
   user.balance;
 
-      user.balance -=
-        total;
+// =========================
+// TREASURY
+// =========================
 
-      user.revenue +=
-        fee;
+const treasury =
+  await User.findOne({
+    accountType:
+      "treasury",
+  });
 
-      await user.save();
+if (!treasury) {
+  throw new Error(
+    "Treasury account not found"
+  );
+}
 
+const treasuryBefore =
+  treasury.balance;
+
+// =========================
+// UPDATE BALANCES
+// =========================
+
+user.balance -=
+  total;
+
+treasury.balance +=
+  fee;
+
+treasury.revenue =
+  (treasury.revenue || 0) +
+  fee;
+
+await user.save();
+
+await treasury.save();
       await createLedgerEntry({
   userId:
     user._id,
