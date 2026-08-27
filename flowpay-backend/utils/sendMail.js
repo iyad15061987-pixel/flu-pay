@@ -31,6 +31,12 @@ const sendMail =
         };
       }
 
+      console.log("SENDING EMAIL:", {
+  from: process.env.EMAIL_FROM,
+  to,
+  subject,
+});
+
       const response =
         await resend.emails.send({
           from:
@@ -48,6 +54,8 @@ const sendMail =
           `,
         });
 
+        console.log("RESEND RESPONSE:", response);
+        
       return response;
 
     } catch (err) {
