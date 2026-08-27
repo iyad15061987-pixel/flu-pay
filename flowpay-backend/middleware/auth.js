@@ -33,15 +33,7 @@ const auth =
         });
       }
 
-      console.log(
-        "TOKEN RECEIVED:",
-        token
-      );
 
-      console.log(
-        "JWT_SECRET:",
-        process.env.JWT_SECRET
-      );
 
       const decoded =
         jwt.verify(
@@ -66,10 +58,6 @@ const auth =
         err.message
       );
 
-      console.log(
-        "JWT_SECRET:",
-        process.env.JWT_SECRET
-      );
 
       return res.status(401).json({
         message:

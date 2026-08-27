@@ -114,18 +114,22 @@ if (
         });
 
       }
+const availableBalance =
+  user.balance -
+  (user.reservedBalance || 0);
 
-      if (
-        user.balance <
-        numericAmount
-      ) {
 
-        return res.status(400).json({
-          message:
-            "Insufficient balance",
-        });
+if (
+  availableBalance <
+  numericAmount
+) {
 
-      }
+  return res.status(400).json({
+    message:
+      "Insufficient available balance",
+  });
+
+}
 
       const fee =
         numericAmount *
@@ -150,6 +154,12 @@ if (
 
       const beforeBalance =
         user.balance;
+
+user.reservedBalance =
+  (user.reservedBalance || 0) +
+  numericAmount;
+
+await user.save();
 
       // =========================
       // WITHDRAWAL RECORD
@@ -462,15 +472,67 @@ console.log(
   "BALANCE BEFORE:",
   user.balance
 );
+// منع الموافقة المكررة
+if (
+  withdrawal.status !== "pending"
+) {
 
-      user.balance -=
-        withdrawal.amount;
+  return res.status(400).json({
+    message:
+      "Withdrawal already processed",
+  });
 
-      user.totalWithdrawals =
-        (user.totalWithdrawals || 0) +
-        withdrawal.amount;
+}
 
-      await user.save();
+
+// خصم الرصيد النهائي
+user.balance -=
+  withdrawal.amount;
+
+
+// تحرير المبلغ المحجوز
+user.reservedBalance =
+  Math.max(
+    0,
+    (user.reservedBalance || 0) -
+    withdrawal.amount
+  );
+
+
+user.totalWithdrawals =
+  (user.totalWithdrawals || 0) +
+  withdrawal.amount;
+
+
+await user.save();
+
+await createLedgerEntry({
+
+  userId:
+    user._id,
+
+  email:
+    user.email,
+
+  type:
+    "Withdrawal Completed",
+
+  amount:
+    withdrawal.amount,
+
+  balanceBefore:
+    user.balance + withdrawal.amount,
+
+  balanceAfter:
+    user.balance,
+
+  reference:
+    String(withdrawal._id),
+
+  description:
+    "Withdrawal approved and funds released",
+
+});
 
       console.log(
   "BALANCE AFTER:",

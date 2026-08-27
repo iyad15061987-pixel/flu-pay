@@ -36,6 +36,11 @@ const userSchema =
         default: 0,
       },
 
+reservedBalance: {
+  type: Number,
+  default: 0,
+}, 
+
       revenue: {
         type: Number,
         default: 0,
