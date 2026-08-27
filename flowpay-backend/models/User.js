@@ -19,13 +19,11 @@ const userSchema =
       password: {
         type: String,
       },
-
-      customerId: {
-        type: String,
-        unique: true,
-        sparse: true,
-        default: null,
-      },
+customerId: {
+  type: String,
+  unique: true,
+  sparse: true,
+},
 
       // =========================
       // WALLET
