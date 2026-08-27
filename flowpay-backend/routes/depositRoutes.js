@@ -1,27 +1,44 @@
-const express = require("express");
+const express =
+  require("express");
 
-const router = express.Router();
+const router =
+  express.Router();
 
 const {
   auth,
   adminOnly,
 } = require("../middleware/auth");
 
-const emit = require("../socket/emitter");
+const emit =
+  require("../socket/emitter");
 
-const EVENTS = require("../socket/events");
+const EVENTS =
+  require("../socket/events");
 
-const User = require("../models/User");
+const User =
+  require("../models/User");
 
-const Transaction = require("../models/Transaction");
+const Transaction =
+  require("../models/Transaction");
 
-const createLedgerEntry = require("../utils/ledger");
+const createLedgerEntry =
+  require("../utils/ledger");
 
-const createNotification = require("../utils/createNotification");
+const createNotification =
+  require("../utils/createNotification");
 
-const riskEngine = require("../utils/riskEngine");
+const riskEngine =
+  require("../utils/riskEngine");
 
-const amlEngine = require("../utils/amlEngine");
+const amlEngine =
+  require("../utils/amlEngine");
+
+const {
+  calculateFee,
+  getFeeRate,
+} =
+  require("../utils/fees");
+
 
 // ======================================================
 // CREATE DEPOSIT
@@ -29,7 +46,9 @@ const amlEngine = require("../utils/amlEngine");
 
 router.post(
   "/deposits",
+
   auth,
+
   async (req, res) => {
 
     try {
@@ -40,58 +59,154 @@ router.post(
         reference,
       } = req.body;
 
+
       // ==================================================
       // USER
       // ==================================================
 
-      const user = await User.findById(
-        req.user.id
-      );
+      const user =
+        await User.findById(
+          req.user.id
+        );
+
 
       if (!user) {
 
         return res.status(404).json({
-          message: "User not found",
+          message:
+            "User not found",
         });
 
       }
+
 
       // ==================================================
       // ACCOUNT STATUS
       // ==================================================
 
-      if (user.frozen) {
+      if (
+        user.frozen
+      ) {
 
         return res.status(403).json({
-          message: "Account frozen",
+          message:
+            "Account frozen",
         });
 
       }
 
-      if (!user.active) {
+
+      if (
+        !user.active
+      ) {
 
         return res.status(403).json({
-          message: "Account inactive",
+          message:
+            "Account inactive",
         });
 
       }
+
 
       // ==================================================
       // VALIDATION
       // ==================================================
 
-      const numericAmount = Number(amount);
+      const numericAmount =
+        Number(amount);
+
 
       if (
-        !Number.isFinite(numericAmount) ||
+        !Number.isFinite(
+          numericAmount
+        ) ||
         numericAmount <= 0
       ) {
 
         return res.status(400).json({
-          message: "Invalid amount",
+          message:
+            "Invalid amount",
         });
 
       }
+
+
+      // ==================================================
+      // METHOD
+      // ==================================================
+
+      const normalizedMethod =
+        String(
+          method ||
+          "manual"
+        )
+          .toLowerCase()
+          .trim();
+
+
+      // ==================================================
+      // FEE TYPE
+      // ==================================================
+
+      let feeType =
+        "external";
+
+
+      if (
+        normalizedMethod ===
+        "crypto"
+      ) {
+
+        feeType =
+          "crypto";
+
+      }
+
+      else if (
+        normalizedMethod ===
+        "paypal"
+      ) {
+
+        feeType =
+          "paypal";
+
+      }
+
+      else if (
+        normalizedMethod ===
+        "bank" ||
+        normalizedMethod ===
+        "bank_transfer" ||
+        normalizedMethod ===
+        "bank transfer"
+      ) {
+
+        feeType =
+          "bank";
+
+      }
+
+      else if (
+        normalizedMethod ===
+        "stripe"
+      ) {
+
+        feeType =
+          "stripe";
+
+      }
+
+      else {
+
+        // Preserve previous behavior:
+        // unknown/manual deposits use
+        // the 3.5% external fee.
+
+        feeType =
+          "external";
+
+      }
+
 
       // ==================================================
       // AML CHECK
@@ -99,74 +214,139 @@ router.post(
 
       await amlEngine({
         user,
-        amount: numericAmount,
+        amount:
+          numericAmount,
       });
+
 
       // ==================================================
       // RISK ENGINE
       // ==================================================
 
-      const risk = await riskEngine({
-        user,
-        amount: numericAmount,
-      });
+      const risk =
+        await riskEngine({
+          user,
+          amount:
+            numericAmount,
+        });
+
 
       // ==================================================
       // FEE
       // ==================================================
 
       const fee =
-        numericAmount * 0.035;
+        calculateFee(
+          numericAmount,
+          feeType
+        );
+
+
+      // ==================================================
+      // FEE RATE
+      // ==================================================
+
+      const feeRate =
+        getFeeRate(
+          feeType
+        );
+
+
+      // ==================================================
+      // NET AMOUNT
+      // ==================================================
 
       const netAmount =
-        numericAmount - fee;
+        numericAmount -
+        fee;
+
+
+      if (
+        netAmount < 0
+      ) {
+
+        return res.status(400).json({
+          message:
+            "Deposit amount is too small for the applicable fee",
+        });
+
+      }
+
 
       // ==================================================
       // BALANCE BEFORE
       // ==================================================
-const beforeBalance =
-  user.balance;
 
-// ==================================================
-// TREASURY
-// ==================================================
+      const beforeBalance =
+        Number(
+          user.balance || 0
+        );
 
-const treasury =
-  await User.findOne({
-    accountType:
-      "treasury",
-  });
 
-if (!treasury) {
-  throw new Error(
-    "Treasury account not found"
-  );
-}
+      // ==================================================
+      // TREASURY
+      // ==================================================
 
-const treasuryBefore =
-  treasury.balance;
+      const treasury =
+        await User.findOne({
+          accountType:
+            "treasury",
+        });
 
-// ==================================================
-// UPDATE BALANCES
-// ==================================================
 
-user.balance +=
-  netAmount;
+      if (!treasury) {
 
-user.totalDeposits =
-  (user.totalDeposits || 0) +
-  numericAmount;
+        throw new Error(
+          "Treasury account not found"
+        );
 
-treasury.balance +=
-  fee;
+      }
 
-treasury.revenue =
-  (treasury.revenue || 0) +
-  fee;
 
-await user.save();
+      const treasuryBefore =
+        Number(
+          treasury.balance || 0
+        );
 
-await treasury.save();
+
+      // ==================================================
+      // UPDATE USER BALANCE
+      // ==================================================
+
+      user.balance =
+        beforeBalance +
+        netAmount;
+
+
+      user.totalDeposits =
+        (
+          user.totalDeposits ||
+          0
+        ) +
+        numericAmount;
+
+
+      // ==================================================
+      // UPDATE TREASURY
+      // ==================================================
+
+      treasury.balance =
+        treasuryBefore +
+        fee;
+
+
+      treasury.revenue =
+        (
+          treasury.revenue ||
+          0
+        ) +
+        fee;
+
+
+      await user.save();
+
+      await treasury.save();
+
 
       // ==================================================
       // TRANSACTION
@@ -184,9 +364,18 @@ await treasury.save();
           amount:
             numericAmount,
 
-          fee,
+          fee:
 
-          netAmount,
+            fee,
+
+          netAmount:
+            netAmount,
+
+          feeType:
+            feeType,
+
+          feeRate:
+            feeRate,
 
           type:
             "Deposit",
@@ -196,17 +385,17 @@ await treasury.save();
             "Wallet funding",
 
           method:
-            method ||
-            "manual",
+            normalizedMethod,
 
           status:
             "completed",
 
         });
 
+
       // ==================================================
       // LEDGER
-      // ==================================================
+      // ======================================================
 
       await createLedgerEntry({
 
@@ -233,9 +422,10 @@ await treasury.save();
           "Wallet Funding",
 
         description:
-          "Wallet deposit completed",
+          `Wallet deposit completed via ${normalizedMethod}`,
 
       });
+
 
       // ==================================================
       // NOTIFICATION
@@ -250,9 +440,10 @@ await treasury.save();
           "Deposit Completed",
 
         message:
-          `Your wallet was funded with $${numericAmount}`,
+          `Your wallet was funded with $${numericAmount}. Fee: $${fee.toFixed(4)}. Net amount: $${netAmount.toFixed(4)}`,
 
       });
+
 
       // ==================================================
       // REALTIME WALLET UPDATE
@@ -260,6 +451,7 @@ await treasury.save();
 
       emit(
         EVENTS.WALLET_UPDATE,
+
         {
           email:
             user.email,
@@ -269,14 +461,17 @@ await treasury.save();
         }
       );
 
+
       // ==================================================
       // NEW TRANSACTION EVENT
       // ==================================================
 
       emit(
         EVENTS.NEW_TRANSACTION,
+
         transaction
       );
+
 
       // ==================================================
       // DEPOSIT EVENT
@@ -284,6 +479,7 @@ await treasury.save();
 
       emit(
         "deposit_created",
+
         {
           email:
             user.email,
@@ -291,9 +487,20 @@ await treasury.save();
           amount:
             numericAmount,
 
+          fee:
+            fee,
+
+          feeType:
+            feeType,
+
+          feeRate:
+            feeRate,
+
+          netAmount:
+            netAmount,
+
           method:
-            method ||
-            "manual",
+            normalizedMethod,
 
           risk:
             risk.level,
@@ -302,6 +509,7 @@ await treasury.save();
             new Date(),
         }
       );
+
 
       // ==================================================
       // HIGH RISK ALERT
@@ -314,6 +522,7 @@ await treasury.save();
 
         emit(
           EVENTS.FRAUD_ALERT,
+
           {
             type:
               "HIGH_RISK_DEPOSIT",
@@ -334,6 +543,7 @@ await treasury.save();
 
       }
 
+
       // ==================================================
       // RESPONSE
       // ==================================================
@@ -349,9 +559,17 @@ await treasury.save();
         amount:
           numericAmount,
 
-        fee,
+        fee:
+          fee,
 
-        netAmount,
+        feeType:
+          feeType,
+
+        feeRate:
+          feeRate,
+
+        netAmount:
+          netAmount,
 
         balance:
           user.balance,
@@ -360,12 +578,16 @@ await treasury.save();
 
       });
 
-    } catch (err) {
+
+    }
+
+    catch (err) {
 
       console.error(
         "DEPOSIT ERROR:",
         err
       );
+
 
       return res.status(500).json({
 
@@ -381,6 +603,7 @@ await treasury.save();
 
   }
 );
+
 
 // ======================================================
 // ADMIN DEPOSITS
@@ -399,30 +622,43 @@ router.get(
 
       const deposits =
         await Transaction.find({
+
           type:
             "Deposit",
+
         }).sort({
+
           createdAt:
             -1,
+
         });
+
 
       return res.json(
         deposits
       );
 
-    } catch (err) {
+    }
 
-      console.error(err);
+    catch (err) {
+
+      console.error(
+        err
+      );
+
 
       return res.status(500).json({
+
         message:
           "Server error",
+
       });
 
     }
 
   }
 );
+
 
 // ======================================================
 // USER DEPOSITS
@@ -442,14 +678,18 @@ router.get(
           req.user.id
         );
 
+
       if (!user) {
 
         return res.status(404).json({
+
           message:
             "User not found",
+
         });
 
       }
+
 
       const deposits =
         await Transaction.find({
@@ -467,23 +707,32 @@ router.get(
 
         });
 
+
       return res.json(
         deposits
       );
 
-    } catch (err) {
+    }
 
-      console.error(err);
+    catch (err) {
+
+      console.error(
+        err
+      );
+
 
       return res.status(500).json({
+
         message:
           "Server error",
+
       });
 
     }
 
   }
 );
+
 
 module.exports =
   router;

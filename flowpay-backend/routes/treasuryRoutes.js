@@ -1,25 +1,17 @@
-const express =
-  require("express");
 
-const router =
-  express.Router();
+const express = require("express");
+
+const router = express.Router();
 
 const {
   auth,
   adminOnly,
-} = require(
-  "../middleware/auth"
-);
+} = require("../middleware/auth");
 
-const User =
-  require(
-    "../models/User"
-  );
+const User = require("../models/User");
 
 const AccountingEntry =
-  require(
-    "../models/AccountingEntry"
-  );
+  require("../models/AccountingEntry");
 
 // =========================
 // TREASURY OVERVIEW
@@ -34,23 +26,20 @@ router.get(
 
   async (req, res) => {
     try {
-
       // =========================
       // TREASURY ACCOUNT
       // =========================
 
       const treasury =
         await User.findOne({
-          accountType:
-            "treasury",
+          accountType: "treasury",
         }).select(
-          "email balance revenue accountType"
+          "email balance revenue accountType accountStatus"
         );
 
       if (!treasury) {
         return res.status(404).json({
-          message:
-            "Treasury account not found",
+          message: "Treasury account not found",
         });
       }
 
@@ -62,32 +51,25 @@ router.get(
         await AccountingEntry.aggregate([
           {
             $match: {
-              account:
-                "platform_revenue",
-
-              type:
-                "credit",
+              account: "platform_revenue",
+              type: "credit",
             },
           },
 
           {
             $group: {
-              _id:
-                null,
+              _id: null,
 
               totalRevenue: {
-                $sum:
-                  "$amount",
+                $sum: "$amount",
               },
 
               totalFees: {
-                $sum:
-                  "$amount",
+                $sum: "$amount",
               },
 
               totalTransactions: {
-                $sum:
-                  1,
+                $sum: 1,
               },
             },
           },
@@ -95,14 +77,9 @@ router.get(
 
       const accounting =
         revenueResult[0] || {
-          totalRevenue:
-            0,
-
-          totalFees:
-            0,
-
-          totalTransactions:
-            0,
+          totalRevenue: 0,
+          totalFees: 0,
+          totalTransactions: 0,
         };
 
       // =========================
@@ -110,41 +87,45 @@ router.get(
       // =========================
 
       return res.json({
-
         treasury: {
-          email:
-            treasury.email,
+          email: treasury.email,
 
           balance:
-            treasury.balance || 0,
+            Number(treasury.balance || 0),
 
           revenue:
-            treasury.revenue || 0,
+            Number(treasury.revenue || 0),
+
+          accountStatus:
+            treasury.accountStatus || "active",
         },
 
         totalRevenue:
-          accounting.totalRevenue || 0,
+          Number(
+            accounting.totalRevenue || 0
+          ),
 
         totalFees:
-          accounting.totalFees || 0,
+          Number(
+            accounting.totalFees || 0
+          ),
 
         totalTransactions:
-          accounting.totalTransactions || 0,
+          Number(
+            accounting.totalTransactions || 0
+          ),
 
         status:
-          "active",
+          treasury.accountStatus || "active",
       });
-
     } catch (err) {
-
       console.log(
         "TREASURY OVERVIEW ERROR:",
         err
       );
 
       return res.status(500).json({
-        message:
-          "Server error",
+        message: "Server error",
       });
     }
   }
@@ -163,60 +144,154 @@ router.get(
 
   async (req, res) => {
     try {
+      // =========================
+      // GET TREASURY
+      // =========================
 
       const treasury =
         await User.findOne({
-          accountType:
-            "treasury",
+          accountType: "treasury",
         }).select(
           "email balance revenue accountType accountStatus"
         );
 
       if (!treasury) {
         return res.status(404).json({
-          status:
-            "error",
-
-          treasury:
-            "not_found",
+          status: "error",
+          treasury: "not_found",
         });
       }
 
+      // =========================
+      // TREASURY RESERVES
+      // =========================
+
+      const reserves =
+        Number(treasury.balance || 0);
+
+      // =========================
+      // TOTAL USER LIABILITIES
+      //
+      // Exclude treasury account because
+      // treasury funds are reserves, not
+      // customer liabilities.
+      // =========================
+
+      const liabilityResult =
+        await User.aggregate([
+          {
+            $match: {
+              accountType: {
+                $ne: "treasury",
+              },
+            },
+          },
+
+          {
+            $group: {
+              _id: null,
+
+              total:
+                {
+                  $sum:
+                    {
+                      $toDouble:
+                        {
+                          $ifNull: [
+                            "$balance",
+                            0,
+                          ],
+                        },
+                    },
+                },
+            },
+          },
+        ]);
+
+      const liabilities =
+        Number(
+          liabilityResult[0]?.total || 0
+        );
+
+      // =========================
+      // COVERAGE RATIO
+      // =========================
+
+      const coverageRatio =
+        liabilities > 0
+          ? (reserves / liabilities) * 100
+          : 100;
+
+      // =========================
+      // TREASURY STATUS
+      // =========================
+      //
+      // 100% or more = healthy
+      // Below 100% = critical
+      //
+
+      let status = "critical";
+
+      if (coverageRatio >= 100) {
+        status = "healthy";
+      }
+
+      // =========================
+      // ACCOUNT STATUS
+      // =========================
+
+      const accountStatus =
+        treasury.accountStatus ||
+        "active";
+
+      // =========================
+      // FINAL RESPONSE
+      // =========================
+
       return res.json({
+        status,
 
-        status:
-          "healthy",
-
-        treasury:
-          "active",
+        treasury: "active",
 
         account:
           treasury.email,
 
         balance:
-          treasury.balance || 0,
+          reserves,
 
         revenue:
-          treasury.revenue || 0,
+          Number(
+            treasury.revenue || 0
+          ),
 
-        accountStatus:
-          treasury.accountStatus,
+        accountStatus,
+
+        liabilities,
+
+        reserves,
+
+        coverageRatio:
+          Number(
+            coverageRatio.toFixed(4)
+          ),
       });
-
     } catch (err) {
-
       console.log(
         "TREASURY HEALTH ERROR:",
         err
       );
 
       return res.status(500).json({
-        message:
-          "Server error",
+        status: "error",
+        message: "Server error",
       });
     }
   }
 );
 
-module.exports =
-  router;
+// =========================
+// EXPORT ROUTER
+// =========================
+
+module.exports = router;
+

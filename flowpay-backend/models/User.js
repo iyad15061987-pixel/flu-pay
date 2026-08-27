@@ -4,84 +4,69 @@ const mongoose =
 const userSchema =
   new mongoose.Schema(
     {
+      // =========================
+      // BASIC USER INFORMATION
+      // =========================
+
       email: {
         type: String,
-
         unique: true,
+        required: true,
+        trim: true,
+        lowercase: true,
+      },
+
+      password: {
+        type: String,
       },
 
       customerId: {
-  type: String,
+        type: String,
+        unique: true,
+        sparse: true,
+        default: null,
+      },
 
-  unique: true,
-
-  sparse: true,
-},
-
-      password:
-        String,
+      // =========================
+      // WALLET
+      // =========================
 
       balance: {
         type: Number,
-
         default: 0,
       },
 
       revenue: {
         type: Number,
-
         default: 0,
       },
 
       treasuryBalance: {
-  type: Number,
+        type: Number,
+        default: 0,
+      },
 
-  default: 0,
-},
+      // =========================
+      // ACCOUNT / ROLE
+      // =========================
 
       role: {
         type: String,
-
-        default:
-          "user",
+        default: "user",
       },
 
-      accountType: {
-  type: String,
-
-  enum: [
-    "user",
-    "business",
-    "admin",
-    "treasury",
-  ],
-
-  default:
-    "user",
-},
       accountType: {
         type: String,
 
         enum: [
           "user",
+          "business",
           "admin",
           "treasury",
           "system",
         ],
 
-        default:
-          "user",
-      },
-
-      customerId: {
-        type: String,
-
-        unique: true,
-
-        sparse: true,
-
-        default:
-          null,
+        default: "user",
       },
 
       accountStatus: {
@@ -94,105 +79,105 @@ const userSchema =
           "closed",
         ],
 
-        default:
-          "active",
+        default: "active",
+      },
+
+      active: {
+        type: Boolean,
+        default: true,
       },
 
       frozen: {
         type: Boolean,
-
-        default:
-          false,
+        default: false,
       },
+
+      // =========================
+      // CURRENCY
+      // =========================
 
       currency: {
         type: String,
-
-        default:
-          "USD",
+        default: "USD",
       },
 
-      fcmToken:
-        String,
+      // =========================
+      // VERIFICATION
+      // =========================
 
       verified: {
         type: Boolean,
-
-        default:
-          false,
+        default: false,
       },
 
-      emailOtp:
-        String,
+      emailOtp: {
+        type: String,
+      },
 
-      emailOtpExpires:
-        Date,
+      emailOtpExpires: {
+        type: Date,
+      },
+
+      // =========================
+      // RISK / AML
+      // =========================
 
       riskScore: {
         type: Number,
-
-        default:
-          0,
+        default: 0,
       },
 
       riskLevel: {
         type: String,
-
-        default:
-          "low",
+        default: "low",
       },
+
+      amlFlagged: {
+        type: Boolean,
+        default: false,
+      },
+
+      // =========================
+      // LIMITS
+      // =========================
 
       dailyLimit: {
         type: Number,
-
-        default:
-          1000,
+        default: 1000,
       },
 
       monthlyLimit: {
         type: Number,
-
-        default:
-          10000,
+        default: 10000,
       },
 
       dailyUsed: {
         type: Number,
-
-        default:
-          0,
+        default: 0,
       },
 
       monthlyUsed: {
         type: Number,
-
-        default:
-          0,
+        default: 0,
       },
-      
+
       // =========================
       // 2FA
       // =========================
 
       twoFactorEnabled: {
         type: Boolean,
-
-        default:
-          false,
+        default: false,
       },
 
       twoFactorSecret: {
         type: String,
-
-        default:
-          null,
+        default: null,
       },
 
       twoFactorTempSecret: {
         type: String,
-
-        default:
-          null,
+        default: null,
       },
 
       twoFactorBackupCodes: [
@@ -207,29 +192,22 @@ const userSchema =
 
       lastLoginAt: {
         type: Date,
-
-        default:
-          null,
+        default: null,
       },
 
       lastLoginIp: {
         type: String,
-
-        default:
-          null,
+        default: null,
       },
 
       failedLoginAttempts: {
         type: Number,
-
         default: 0,
       },
 
       lockUntil: {
         type: Date,
-
-        default:
-          null,
+        default: null,
       },
 
       // =========================
@@ -238,27 +216,20 @@ const userSchema =
 
       deviceFingerprint: {
         type: String,
+        default: null,
+      },
 
-        default:
-          null,
+      fcmToken: {
+        type: String,
       },
 
       // =========================
-      // COMPLIANCE
+      // KYC / COMPLIANCE
       // =========================
 
       kycStatus: {
         type: String,
-
-        default:
-          "pending",
-      },
-
-      amlFlagged: {
-        type: Boolean,
-
-        default:
-          false,
+        default: "pending",
       },
 
       // =========================
@@ -267,67 +238,36 @@ const userSchema =
 
       withdrawalLocked: {
         type: Boolean,
-
-        default:
-          false,
+        default: false,
       },
 
       transferLocked: {
         type: Boolean,
-
-        default:
-          false,
+        default: false,
       },
 
       // =========================
-      // TREASURY
+      // TREASURY / FINANCIAL STATS
       // =========================
 
-     totalDeposits: {
-  type: Number,
+      totalDeposits: {
+        type: Number,
+        default: 0,
+      },
 
-  default: 0,
-},
+      totalWithdrawals: {
+        type: Number,
+        default: 0,
+      },
 
-totalWithdrawals: {
-  type: Number,
-
-  default: 0,
-},
       totalTransfersSent: {
         type: Number,
-
         default: 0,
       },
 
       totalTransfersReceived: {
         type: Number,
-
         default: 0,
-      },
-
-      // =========================
-      // STATUS
-      // =========================
-
-      accountStatus: {
-  type: String,
-
-  enum: [
-    "active",
-    "suspended",
-    "closed",
-  ],
-
-  default:
-    "active",
-},
-
-      active: {
-        type: Boolean,
-
-        default:
-          true,
       },
     },
 
@@ -335,6 +275,11 @@ totalWithdrawals: {
       timestamps: true,
     }
   );
+
+
+// =========================
+// MODEL
+// =========================
 
 module.exports =
   mongoose.model(

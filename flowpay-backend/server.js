@@ -271,6 +271,9 @@ const withdrawalRoutes =
   const paypalRoutes =
   require("./routes/paypalRoutes");
 
+  const stripeRoutes =
+  require("./routes/stripeRoutes");
+
 const twoFactorRoutes =
   require(
     "./routes/twoFactorRoutes"
@@ -550,6 +553,17 @@ app.use(
   })
 );
 
+// ==================================================
+// STRIPE WEBHOOK RAW BODY
+// ==================================================
+
+app.use(
+  "/api/stripe/webhook",
+  express.raw({
+    type: "application/json",
+  })
+);
+
 // =========================
 // BODY PARSER
 // =========================
@@ -634,6 +648,10 @@ mongoose
 
 app.use("/api", authRoutes);
 app.use("/api", transferRoutes);
+app.use(
+  "/api",
+  accountingRoutes
+);
 app.use("/api", notificationRoutes);
 
 app.use(
@@ -701,6 +719,7 @@ app.use("/api", merchantAnalyticsRoutes);
 app.use("/api", withdrawalRoutes);
 app.use("/api", depositRoutes);
 app.use("/api", paypalRoutes);
+app.use("/api", stripeRoutes);
 app.use("/api", twoFactorRoutes);
 
 // =========================

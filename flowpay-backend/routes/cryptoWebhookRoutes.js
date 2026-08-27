@@ -19,7 +19,7 @@ const Notification =
     "../models/Notification"
   );
 
-  const CryptoPayment =
+const CryptoPayment =
   require(
     "../models/CryptoPayment"
   );
@@ -30,13 +30,14 @@ const createLedgerEntry =
   );
 
 const {
-  calculateExternalFee,
+  calculateCryptoFee,
 } = require(
   "../utils/fees"
-  );
+);
 
-  const crypto =
+const crypto =
   require("crypto");
+
 
 // =========================
 // NOWPAYMENTS WEBHOOK
@@ -46,55 +47,88 @@ router.post(
   "/crypto-webhook",
 
   async (req, res) => {
+
     try {
+
       const data =
         req.body;
 
-        const signature =
-  req.headers[
-    "x-nowpayments-sig"
-  ];
 
-if (!signature) {
+      // =========================
+      // WEBHOOK SIGNATURE
+      // =========================
 
-  return res.status(401).json({
-    message:
-      "Missing signature",
-  });
+      const signature =
+        req.headers[
+          "x-nowpayments-sig"
+        ];
 
-}
 
-const hmac =
-  crypto
-    .createHmac(
-      "sha512",
-      process.env
-        .NOWPAYMENTS_IPN_SECRET
-    )
-    .update(
-      JSON.stringify(data)
-    )
-    .digest("hex");
+      if (!signature) {
 
-if (
-  hmac !== signature
-) {
+        return res.status(401).json({
+          message:
+            "Missing signature",
+        });
 
-  console.log(
-    "INVALID WEBHOOK SIGNATURE"
-  );
+      }
 
-  return res.status(401).json({
-    message:
-      "Invalid signature",
-  });
 
-}
+      const secret =
+        process.env
+          .NOWPAYMENTS_IPN_SECRET;
+
+
+      if (!secret) {
+
+        console.error(
+          "NOWPAYMENTS_IPN_SECRET is missing"
+        );
+
+        return res.status(500).json({
+          message:
+            "Webhook configuration error",
+        });
+
+      }
+
+
+      const hmac =
+        crypto
+          .createHmac(
+            "sha512",
+            secret
+          )
+          .update(
+            JSON.stringify(data)
+          )
+          .digest("hex");
+
+
+      if (
+        !crypto.timingSafeEqual(
+          Buffer.from(hmac),
+          Buffer.from(signature)
+        )
+      ) {
+
+        console.log(
+          "INVALID WEBHOOK SIGNATURE"
+        );
+
+        return res.status(401).json({
+          message:
+            "Invalid signature",
+        });
+
+      }
+
 
       console.log(
-        "Webhook received:",
+        "Crypto webhook received:",
         data
       );
+
 
       // =========================
       // SUCCESS ONLY
@@ -104,85 +138,124 @@ if (
         data.payment_status !==
         "finished"
       ) {
+
         return res.json({
           message:
             "Ignored",
         });
+
       }
 
+
       // =========================
-      // USER EMAIL
+      // PAYMENT
       // =========================
 
       const payment =
-  await CryptoPayment.findOne({
+        await CryptoPayment.findOne({
 
-    paymentId:
-      String(
-        data.payment_id
-      ),
+          paymentId:
+            String(
+              data.payment_id
+            ),
 
-  });
+        });
 
-if (!payment) {
 
-  return res.status(404).json({
-    message:
-      "Payment not found",
-  });
+      if (!payment) {
 
-}
+        return res.status(404).json({
+          message:
+            "Payment not found",
+        });
 
-const user =
-  await User.findById(
-    payment.userId
+      }
+
+// =========================
+// UPDATE PAYMENT STATUS
+// =========================
+
+payment.status =
+  data.payment_status;
+
+payment.paymentStatus =
+  data.payment_status;
+
+
+payment.cryptoReceived =
+  Number(
+    data.actually_paid || 0
   );
 
-if (!user) {
 
-  return res.status(404).json({
-    message:
-      "User not found",
-  });
+payment.transactionHash =
+  data.payin_hash ||
+  data.txid ||
+  null;
 
-}
+
+payment.confirmations =
+  Number(
+    data.confirmations || 0
+  );
+
+      // =========================
+      // USER
+      // =========================
+
+      const user =
+        await User.findById(
+          payment.userId
+        );
+
 
       if (!user) {
+
         return res.status(404).json({
           message:
             "User not found",
         });
+
       }
 
+
       // =========================
-// DUPLICATE CHECK
-// =========================
+      // DUPLICATE CHECK
+      // =========================
 
-const existingTransaction =
-  await Transaction.findOne({
-    reference:
-      data.payment_id,
-  });
+      const existingTransaction =
+        await Transaction.findOne({
 
-if (existingTransaction) {
+          reference:
+            String(
+              data.payment_id
+            ),
 
-  return res.json({
-    message:
-      "Already processed",
-  });
+        });
 
-}
 
-if (
-  payment.credited
-) {
+      if (existingTransaction) {
 
-  return res.json({
-    message:
-      "Already credited",
-  });
+        return res.json({
+          message:
+            "Already processed",
+        });
 
-}
+      }
+
+
+      if (
+        payment.credited
+      ) {
+
+        return res.json({
+          message:
+            "Already credited",
+        });
+
+      }
+
+
       // =========================
       // AMOUNT
       // =========================
@@ -192,87 +265,194 @@ if (
           data.price_amount
         );
 
+payment.priceAmount =
+  amount;
+
+      if (
+        !Number.isFinite(amount) ||
+        amount <= 0
+      ) {
+
+        return res.status(400).json({
+          message:
+            "Invalid crypto payment amount",
+        });
+
+      }
+
+
+      // =========================
+      // CRYPTO FEE
+      // =========================
+      //
+      // Crypto:
+      // 1%
+      // Minimum fee = $1
+      //
+      // $50  -> $1
+      // $100 -> $1
+      // $200 -> $2
+      // $1000 -> $10
+      //
+      // =========================
+
       const fee =
-        calculateExternalFee(
+        calculateCryptoFee(
           amount
         );
 
+
       const netAmount =
-        amount - fee;
-const before =
-  user.balance;
+        amount -
+        fee;
 
-// =========================
-// TREASURY
-// =========================
 
-const treasury =
-  await User.findOne({
-    accountType:
-      "treasury",
-  });
+      if (
+        netAmount <= 0
+      ) {
 
-if (!treasury) {
-  throw new Error(
-    "Treasury account not found"
-  );
-}
+        return res.status(400).json({
+          message:
+            "Amount is too small after crypto fee",
+        });
 
-const treasuryBefore =
-  treasury.balance;
+      }
 
-// =========================
-// UPDATE BALANCES
-// =========================
 
-user.balance +=
-  netAmount;
+      // =========================
+      // BALANCE BEFORE
+      // =========================
 
-treasury.balance +=
-  fee;
+      const before =
+        Number(
+          user.balance || 0
+        );
 
-treasury.revenue =
-  (treasury.revenue || 0) +
-  fee;
 
-await user.save();
+      // =========================
+      // TREASURY
+      // =========================
 
-await treasury.save();
+      const treasury =
+        await User.findOne({
+          accountType:
+            "treasury",
+        });
+
+
+      if (!treasury) {
+
+        throw new Error(
+          "Treasury account not found"
+        );
+
+      }
+
+
+      // =========================
+      // UPDATE BALANCES
+      // =========================
+
+      user.balance =
+        before +
+        netAmount;
+
+
+      user.totalDeposits =
+        (user.totalDeposits || 0) +
+        amount;
+
+
+      treasury.balance =
+        (treasury.balance || 0) +
+        fee;
+
+
+      treasury.revenue =
+        (treasury.revenue || 0) +
+        fee;
+
+
+      await user.save();
+
+      await treasury.save();
+
 
       // =========================
       // TRANSACTION
       // =========================
 
-      await Transaction.create({
-        fromEmail:
-          "Blockchain",
+      const transaction =
+        await Transaction.create({
 
-       toEmail:
-  user.email,
+          fromEmail:
+            "Blockchain",
 
-        amount,
+          toEmail:
+            user.email,
 
-        fee,
+          amount:
 
-        netAmount,
+            amount,
 
-        type:
-          "Crypto Deposit",
+          fee:
+
+            fee,
+
+          netAmount:
+
+            netAmount,
+
+          type:
+
+            "Crypto Deposit",
+
+          method:
+
+            "crypto",
 
           reference:
-  data.payment_id,
-  
-      });
+
+            String(
+              data.payment_id
+            ),
+
+          status:
+
+            "completed",
+
+        });
+
+
+      // =========================
+      // MARK PAYMENT CREDITED
+      // =========================
+
+     payment.credited =
+  true;
+
+payment.creditedAt =
+  new Date();
+
+payment.status =
+  "finished";
+
+payment.paymentStatus =
+  "finished";
+
+await payment.save();
 
       // =========================
       // LEDGER
       // =========================
-await createLedgerEntry({
-  userId:
-    user._id,
 
-  email:
-    user.email,
+      await createLedgerEntry({
+
+        userId:
+          user._id,
+
+        email:
+          user.email,
 
         type:
           "Crypto Deposit",
@@ -287,57 +467,120 @@ await createLedgerEntry({
           user.balance,
 
         reference:
-          data.payment_id,
+          String(
+            data.payment_id
+          ),
 
         description:
-          "Automatic blockchain deposit",
+          `Automatic blockchain deposit - ${fee.toFixed(4)} USD crypto fee`,
+
       });
+
 
       // =========================
       // NOTIFICATION
       // =========================
 
       await Notification.create({
+
         email:
           user.email,
 
         title:
           "Crypto Deposit",
 
-        message: `Your crypto deposit of $${amount} has been credited.`,
+        message:
+          `Your crypto deposit of $${amount.toFixed(2)} was credited. Crypto fee: $${fee.toFixed(2)}. Net amount: $${netAmount.toFixed(2)}.`,
+
       });
 
+
       // =========================
-      // LIVE UPDATE
+      // LIVE WALLET UPDATE
       // =========================
 
       if (
         global.io
       ) {
+
         global.io.emit(
           "wallet_update",
           {
+
             email:
               user.email,
+
+            balance:
+              user.balance,
+
           }
         );
+
+
+        global.io.emit(
+          "new_transaction",
+          transaction
+        );
+
       }
 
-      res.json({
+
+      // =========================
+      // RESPONSE
+      // =========================
+
+      return res.json({
+
+        success:
+          true,
+
         message:
-          "Deposit credited",
+          "Crypto deposit credited",
+
+        amount:
+          amount,
+
+        fee:
+          fee,
+
+        netAmount:
+          netAmount,
+
+        balance:
+          user.balance,
+
+        transactionId:
+          transaction._id,
+
       });
+
 
     } catch (err) {
-      console.log(err);
 
-      res.status(500).json({
+      console.error(
+        "CRYPTO WEBHOOK ERROR:",
+        err
+      );
+
+      return res.status(500).json({
+
         message:
           "Webhook error",
+
+        error:
+          err.message,
+
       });
+
     }
+
   }
 );
+
+
+// =========================
+// EXPORT
+// =========================
 
 module.exports =
   router;

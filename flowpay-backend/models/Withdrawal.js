@@ -4,54 +4,99 @@ const mongoose =
 const withdrawalSchema =
   new mongoose.Schema(
     {
-      // =========================
+      // ==================================================
       // USER
-      // =========================
+      // ==================================================
 
       userId: {
         type:
-          mongoose.Schema.Types
-            .ObjectId,
+          mongoose.Schema.Types.ObjectId,
 
         ref: "User",
+
+        required: true,
       },
 
-      email:
-        String,
+      email: {
+        type: String,
 
-      // =========================
-      // AMOUNTS
-      // =========================
+        required: true,
+
+      },
+
+
+      // ==================================================
+      // FLOWPAY USD AMOUNT
+      // ==================================================
 
       amount: {
         type: Number,
 
-        required:
-          true,
+        required: true,
+
+        min: 0,
       },
 
       fee: {
         type: Number,
 
         default: 0,
+
+        min: 0,
       },
 
       netAmount: {
         type: Number,
 
         default: 0,
+
+        min: 0,
       },
 
       currency: {
         type: String,
 
-        default:
-          "USD",
+        default: "USD",
+
+        uppercase: true,
       },
 
-      // =========================
+
+      // ==================================================
+      // CRYPTO PAYOUT
+      //
+      // FlowPay amount remains USD.
+      // payoutAmount is the actual crypto amount.
+      // ==================================================
+
+      payoutCurrency: {
+        type: String,
+
+        default: null,
+
+        uppercase: true,
+      },
+
+      payoutAmount: {
+        type: Number,
+
+        default: null,
+
+        min: 0,
+      },
+
+      exchangeRate: {
+        type: Number,
+
+        default: null,
+
+        min: 0,
+      },
+
+
+      // ==================================================
       // WITHDRAW METHOD
-      // =========================
+      // ==================================================
 
       method: {
         type: String,
@@ -62,26 +107,28 @@ const withdrawalSchema =
           "crypto",
         ],
 
-        default:
-          "paypal",
+        default: "paypal",
       },
 
       destination: {
         type: String,
 
-        required:
-          true,
+        required: true,
+
+        trim: true,
       },
 
-      // =========================
+
+      // ==================================================
       // STATUS
-      // =========================
+      // ==================================================
 
       status: {
         type: String,
 
         enum: [
           "pending",
+          "awaiting_2fa",
           "processing",
           "approved",
           "rejected",
@@ -89,138 +136,206 @@ const withdrawalSchema =
           "cancelled",
         ],
 
-        default:
-          "pending",
+        default: "pending",
       },
 
-      // =========================
-      // SECURITY
-      // =========================
+
+      // ==================================================
+      // NOWPAYMENTS
+      // ==================================================
+
+      nowPaymentsBatchId: {
+        type: String,
+
+        default: null,
+      },
+
+      nowPaymentsWithdrawalId: {
+        type: String,
+
+        default: null,
+      },
+
+      nowPaymentsStatus: {
+        type: String,
+
+        default: null,
+      },
+
+// ==================================================
+// NOWPAYMENTS PAYOUT SECURITY
+// ==================================================
+
+payoutAttempted: {
+  type: Boolean,
+
+  default: false,
+},
+
+
+payoutAttemptCount: {
+  type: Number,
+
+  default: 0,
+
+  min: 0,
+},
+
+
+lastPayoutAttemptAt: {
+  type: Date,
+
+  default: null,
+},
+
+
+payoutError: {
+  type: String,
+
+  default: null,
+},
+
+      // ==================================================
+      // SECURITY / RISK
+      // ==================================================
 
       riskLevel: {
         type: String,
 
-        default:
-          "low",
+        default: "low",
       },
 
       amlFlagged: {
         type: Boolean,
 
-        default:
-          false,
+        default: false,
       },
 
       fraudFlagged: {
         type: Boolean,
 
-        default:
-          false,
+        default: false,
       },
 
       requiresManualReview: {
         type: Boolean,
 
-        default:
-          false,
+        default: false,
       },
 
-      // =========================
+
+      // ==================================================
       // PROCESSING
-      // =========================
+      // ==================================================
 
       processedBy: {
         type:
-          mongoose.Schema.Types
-            .ObjectId,
+          mongoose.Schema.Types.ObjectId,
 
         ref: "User",
 
-        default:
-          null,
+        default: null,
       },
 
-      processedAt:
-        Date,
+      processedAt: {
+        type: Date,
+
+        default: null,
+      },
 
       rejectionReason: {
         type: String,
 
-        default:
-          null,
+        default: null,
       },
 
       adminNotes: {
         type: String,
 
-        default:
-          null,
+        default: null,
       },
 
-      // =========================
+
+      // ==================================================
       // TREASURY
-      // =========================
+      // ==================================================
 
       treasuryReference: {
         type: String,
 
-        default:
-          null,
+        default: null,
       },
 
       externalTransactionId: {
         type: String,
 
-        default:
-          null,
+        default: null,
       },
 
-      // =========================
+
+      // ==================================================
       // REALTIME TRACKING
-      // =========================
+      // ==================================================
 
       ipAddress: {
         type: String,
 
-        default:
-          null,
+        default: null,
       },
 
       deviceFingerprint: {
         type: String,
 
-        default:
-          null,
+        default: null,
       },
 
-      // =========================
+
+      // ==================================================
       // WEBHOOKS
-      // =========================
+      // ==================================================
 
       webhookDelivered: {
         type: Boolean,
 
-        default:
-          false,
+        default: false,
       },
 
-      // =========================
+
+      // ==================================================
+      // REFUND PROTECTION
+      // ==================================================
+
+      fundsRefunded: {
+        type: Boolean,
+
+        default: false,
+      },
+
+      refundedAt: {
+        type: Date,
+
+        default: null,
+      },
+
+
+      // ==================================================
       // AUDIT
-      // =========================
+      // ==================================================
 
       auditTrail: [
         {
-          action:
-            String,
+          action: {
+            type: String,
+          },
 
-          performedBy:
-            String,
+          performedBy: {
+            type: String,
+          },
 
           timestamp: {
             type: Date,
 
-            default:
-              Date.now,
+            default: Date.now,
           },
         },
       ],
@@ -230,6 +345,30 @@ const withdrawalSchema =
       timestamps: true,
     }
   );
+
+
+// ======================================================
+// INDEXES
+// ======================================================
+
+withdrawalSchema.index({
+  userId: 1,
+  createdAt: -1,
+});
+
+withdrawalSchema.index({
+  method: 1,
+  status: 1,
+});
+
+withdrawalSchema.index({
+  nowPaymentsWithdrawalId: 1,
+});
+
+
+// ======================================================
+// MODEL
+// ======================================================
 
 module.exports =
   mongoose.model(

@@ -71,9 +71,9 @@ router.post(
             price_currency:
               "usd",
 
-            pay_currency:
-              payCurrency ||
-              "usdttrc20",
+           pay_currency:
+  payCurrency ||
+  "trx",
 
             order_id:
               user.email,
@@ -101,45 +101,7 @@ router.post(
       // SAVE PAYMENT
       // =========================
 
-      await CryptoPayment.create({
-
-        userId:
-          String(user._id),
-
-        email:
-          user.email,
-
-        paymentId:
-          String(
-            response.data.payment_id
-          ),
-
-        address:
-          response.data.pay_address,
-
-        amount:
-          response.data.price_amount,
-
-        currency:
-          response.data.pay_currency,
-
-        status:
-          response.data.payment_status,
-
-        credited:
-          false,
-      });
-
-      console.log(
-        "NOW RESPONSE:",
-        JSON.stringify(
-          response.data,
-          null,
-          2
-        )
-      );
-
-      await CryptoPayment.create({
+   await CryptoPayment.create({
 
   userId:
     user._id,
@@ -155,17 +117,50 @@ router.post(
   address:
     response.data.pay_address,
 
-  amount:
-    response.data.price_amount,
-
   currency:
     response.data.pay_currency,
+
+
+  network:
+    response.data.network ||
+    "trx",
+
+
+  priceAmount:
+    Number(
+      response.data.price_amount
+    ),
+
+
+  cryptoAmount:
+    Number(
+      response.data.pay_amount || 0
+    ),
+
+
+  paymentStatus:
+    response.data.payment_status,
+
 
   status:
     response.data.payment_status,
 
+
+  credited:
+    false,
+
 });
 
+      console.log(
+        "NOW RESPONSE:",
+        JSON.stringify(
+          response.data,
+          null,
+          2
+        )
+      );
+
+     
       return res.json({
         success: true,
         payment: response.data,
@@ -190,10 +185,16 @@ router.post(
         err.message
       );
 
-      return res.status(500).json({
-        message:
-          "Failed to create payment",
-      });
+     return res.status(500).json({
+
+  message:
+    "Failed to create payment",
+
+  error:
+    err.response?.data ||
+    err.message,
+
+});
 
     }
 

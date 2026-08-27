@@ -28,6 +28,9 @@ const riskEngine =
     "../utils/riskEngine"
   );
 
+  const createAuditLog =
+ require("../utils/audit");
+
 const mongoose =
   require("mongoose");
 
@@ -35,6 +38,8 @@ const analyzeBehavior =
   require(
     "../utils/behavioralEngine"
   );
+
+  const AuditLog = require("../models/AuditLog");
 
 const logActivity =
   require(
@@ -500,29 +505,39 @@ receiver.totalTransfersReceived =
       // TRANSACTION RECORD
       // =========================
 
-      const transaction =
-        await Transaction.create(
-          [
-            {
-              fromEmail,
+     const transaction =
+  await Transaction.create(
+    [
+      {
+        fromEmail,
 
-              toEmail,
+        toEmail,
 
-              amount:
-                numericAmount,
+        amount:
+          numericAmount,
 
-              fee,
+        fee,
 
-              netAmount,
+        netAmount,
 
-              type:
-                "Transfer",
-            },
-          ],
-          {
-            session,
-          }
-        );
+        type:
+          "Transfer",
+
+        method:
+          "internal",
+
+        status:
+          "completed",
+
+        reference:
+          `${fromEmail}-${toEmail}-${Date.now()}`,
+      },
+    ],
+    {
+      session,
+    }
+  );
+
 // =========================
 // LEDGER ENTRIES
 // =========================
@@ -590,7 +605,6 @@ await createLedgerEntry({
 // =========================
 // PLATFORM REVENUE
 // =========================
-
 await createLedgerEntry({
 
   userId:
@@ -606,10 +620,10 @@ await createLedgerEntry({
     fee,
 
   balanceBefore:
-    0,
+    treasuryBefore,
 
   balanceAfter:
-    0,
+    treasury.balance,
 
   reference:
     sender.email,
@@ -788,22 +802,83 @@ await createAccountingEntries({
         );
 
       }
+// =========================
+// AUDIT LOG
+// =========================
 
-      // =========================
-      // RESPONSE
-      // =========================
+await createAuditLog({
 
-      res.json({
-        message:
-          "Transfer completed successfully",
+  userId:
+    req.user.id,
 
-        transactionId:
-          transaction[0]._id,
+  email:
+    req.user.email,
 
-        fee,
+  action:
+    "TRANSFER",
 
-        netAmount,
-      });
+  description:
+    `Sent ${amount} USD to ${toEmail}`,
+
+  ip:
+    req.ip,
+
+  metadata:{
+    transactionId:
+      transaction[0]._id,
+
+    amount,
+
+    receiver:
+      toEmail,
+
+    fee,
+
+    netAmount,
+  }
+
+});
+
+
+// =========================
+// RESPONSE
+// =========================
+
+await AuditLog.create({
+
+  userId: req.user.id,
+
+  email: req.user.email,
+
+  action: "TRANSFER",
+
+  description:
+    `Sent ${amount} USD to ${toEmail}`,
+
+  status:
+    "success",
+
+  ip:
+    req.ip,
+
+  userAgent:
+    req.headers["user-agent"]
+
+});
+
+res.json({
+
+  message:
+    "Transfer completed successfully",
+
+  transactionId:
+    transaction[0]._id,
+
+  fee,
+
+  netAmount,
+
+});
 
     } catch (err) {
 

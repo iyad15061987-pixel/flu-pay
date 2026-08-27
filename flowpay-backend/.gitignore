@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.*
+
+# Logs
+*.log
+
+# Backup files
+*.backup.js
+*.backup.tsx
+
+# Build files
+tsconfig.tsbuildinfo
+
+# Temporary scripts
+checkLedger.js
+
+# OS files
+.DS_Store
+Thumbs.db
