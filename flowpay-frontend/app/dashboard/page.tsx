@@ -539,7 +539,6 @@ setInvoices(
       }
 
     };
-
   // =========================
   // CREATE DEPOSIT
   // =========================
@@ -554,11 +553,110 @@ setInvoices(
             "token"
           );
 
+        if (!token) {
+
+          alert(
+            "Please login again."
+          );
+
+          window.location.href =
+            "/login";
+
+          return;
+        }
+
+        const numericAmount =
+          Number(
+            depositAmount
+          );
+
+        if (
+          !Number.isFinite(
+            numericAmount
+          ) ||
+          numericAmount <= 0
+        ) {
+
+          alert(
+            "Please enter a valid deposit amount."
+          );
+
+          return;
+        }
+
+        // =========================
+        // PAYPAL
+        // =========================
+
+        if (
+          depositMethod
+            .toLowerCase() ===
+          "paypal"
+        ) {
+
+          const res =
+            await fetch(
+              `${API_URL}/paypal/create-order`,
+              {
+                method:
+                  "POST",
+
+                headers: {
+                  "Content-Type":
+                    "application/json",
+
+                  Authorization:
+                    `Bearer ${token}`,
+                },
+
+                body:
+                  JSON.stringify({
+                    amount:
+                      numericAmount,
+                  }),
+              }
+            );
+
+          const data =
+            await res.json();
+
+          if (!res.ok) {
+
+            alert(
+              data.message ||
+              "PayPal error"
+            );
+
+            return;
+          }
+
+          if (
+            data.approveUrl
+          ) {
+
+            window.location.href =
+              data.approveUrl;
+
+            return;
+          }
+
+          alert(
+            "PayPal approval URL was not returned."
+          );
+
+          return;
+        }
+
+        // =========================
+        // BANK / CRYPTO
+        // =========================
+
         const res =
           await fetch(
             `${API_URL}/deposits`,
             {
-              method: "POST",
+              method:
+                "POST",
 
               headers: {
                 "Content-Type":
@@ -568,24 +666,36 @@ setInvoices(
                   `Bearer ${token}`,
               },
 
-              body: JSON.stringify({
-                amount:
-                  depositAmount,
+              body:
+                JSON.stringify({
+                  amount:
+                    numericAmount,
 
-                method:
-                  depositMethod,
+                  method:
+                    depositMethod,
 
-                reference:
-                  "Wallet Funding",
-              }),
+                  reference:
+                    "Wallet Funding",
+                }),
             }
           );
 
         const data =
           await res.json();
 
+        if (!res.ok) {
+
+          alert(
+            data.message ||
+            "Deposit failed"
+          );
+
+          return;
+        }
+
         alert(
-          data.message
+          data.message ||
+          "Deposit created successfully"
         );
 
         setDepositAmount("");
@@ -598,12 +708,19 @@ setInvoices(
 
       } catch (err) {
 
-        console.log(err);
+        console.error(
+          "Deposit error:",
+          err
+        );
+
+        alert(
+          "Connection error"
+        );
 
       }
 
     };
-
+    
   // =========================
   // CREATE WITHDRAWAL
   // =========================
