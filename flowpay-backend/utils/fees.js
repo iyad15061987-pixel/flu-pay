@@ -2,9 +2,19 @@
 // FLOWPAY FEES
 // ======================================================
 
-// Internal transfer
+// ======================================================
+// INTERNAL TRANSFER
+// ======================================================
+
 const calculateInternalFee = (amount) => {
   const numericAmount = Number(amount) || 0;
+
+  if (
+    !Number.isFinite(numericAmount) ||
+    numericAmount <= 0
+  ) {
+    return 0;
+  }
 
   return numericAmount * 0.0001;
 };
@@ -18,6 +28,13 @@ const calculateInternalFee = (amount) => {
 const calculateExternalFee = (amount) => {
   const numericAmount = Number(amount) || 0;
 
+  if (
+    !Number.isFinite(numericAmount) ||
+    numericAmount <= 0
+  ) {
+    return 0;
+  }
+
   return numericAmount * 0.035;
 };
 
@@ -29,9 +46,6 @@ const calculateExternalFee = (amount) => {
 //
 // CRYPTO_FEE_RATE=0.01
 // CRYPTO_MIN_FEE=0.10
-//
-// Example:
-// $10 -> $0.10 fee -> $9.90 net
 // ======================================================
 
 const calculateCryptoFee = (amount) => {
@@ -77,10 +91,52 @@ const calculateCryptoFee = (amount) => {
 
 
 // ======================================================
+// GENERIC FEE CALCULATOR
+// ======================================================
+
+const calculateFee = (
+  amount,
+  method
+) => {
+
+  const normalized =
+    String(method || "")
+      .toLowerCase()
+      .trim();
+
+  if (
+    normalized === "crypto" ||
+    normalized === "cryptocurrency" ||
+    normalized === "blockchain" ||
+    normalized === "nowpayments"
+  ) {
+    return calculateCryptoFee(
+      amount
+    );
+  }
+
+  if (
+    normalized === "internal" ||
+    normalized === "transfer"
+  ) {
+    return calculateInternalFee(
+      amount
+    );
+  }
+
+  // PayPal / Bank / Stripe / external / manual
+  return calculateExternalFee(
+    amount
+  );
+};
+
+
+// ======================================================
 // FEE RATE
 // ======================================================
 
 const getFeeRate = (method) => {
+
   const normalized =
     String(method || "")
       .toLowerCase()
@@ -122,6 +178,7 @@ const getFeeRate = (method) => {
 // ======================================================
 
 module.exports = {
+  calculateFee,
   calculateInternalFee,
   calculateExternalFee,
   calculateCryptoFee,
