@@ -99,12 +99,12 @@ export default function DepositPage() {
     method === "Crypto"
       ? Math.max(
           1,
-          numericAmount * 0.01
+          Math.round(numericAmount * 0.01 * 100) / 100
         )
-      : numericAmount * 0.035;
+      : Math.round(numericAmount * 0.035 * 100) / 100;
 
   const netAmount =
-    numericAmount - fee;
+    Math.round((numericAmount - fee) * 100) / 100;
 
 const createRequest =
   async () => {
@@ -226,7 +226,7 @@ alert(
   return;
 }
           // =========================
-      // BANK / CARD — STRIPE
+      // BANK / CARD â€” STRIPE
       // =========================
 
       if (method === "Bank") {
@@ -664,7 +664,9 @@ alert(
     External deposits fee:
     <strong>
       {" "}
-      3.5%
+      {method === "Crypto"
+        ? "1% (minimum $1)"
+        : "3.5%"}
     </strong>
   </p>
 
