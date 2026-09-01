@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import API_URL from "@/lib/api";
@@ -117,6 +117,70 @@ export default function AdminDepositsPage() {
 
     };
 
+  const reject =
+    async (id: string) => {
+
+      try {
+
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        const reason =
+          window.prompt(
+            "Enter rejection reason:"
+          );
+
+        if (reason === null) {
+          return;
+        }
+
+        const res =
+          await fetch(
+            `${API_URL}/reject-deposit`,
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                Authorization:
+                  `Bearer ${token}`,
+              },
+
+              body: JSON.stringify({
+                requestId: id,
+                reason:
+                  reason.trim() ||
+                  "Deposit rejected by admin",
+              }),
+            }
+          );
+
+        const data =
+          await res.json();
+
+        alert(
+          data.message ||
+          "Deposit rejected"
+        );
+
+        loadRequests();
+
+      } catch (err) {
+
+        console.log(err);
+
+        alert(
+          "Reject failed"
+        );
+
+      }
+
+    };
+
   useEffect(() => {
 
     loadRequests();
@@ -140,7 +204,7 @@ export default function AdminDepositsPage() {
           marginBottom: 25,
         }}
       >
-        💰 Deposit Requests
+        ًں’° Deposit Requests
       </h1>
 
       {loading && (
@@ -225,41 +289,48 @@ export default function AdminDepositsPage() {
 
             <br />
 
-            {item.status ===
-              "Pending" && (
-
-              <button
-                onClick={() =>
-                  approve(
-                    item._id
-                  )
-                }
+            {item.status === "Pending" && (
+              <div
                 style={{
-                  background:
-                    "#16a34a",
-
-                  color:
-                    "white",
-
-                  border:
-                    "none",
-
-                  padding:
-                    "10px 20px",
-
-                  borderRadius:
-                    10,
-
-                  cursor:
-                    "pointer",
-
-                  fontWeight:
-                    "bold",
+                  display: "flex",
+                  gap: 10,
+                  flexWrap: "wrap",
                 }}
               >
-                ✅ Approve
-              </button>
+                <button
+                  onClick={() =>
+                    approve(item._id)
+                  }
+                  style={{
+                    background: "#16a34a",
+                    color: "white",
+                    border: "none",
+                    padding: "10px 20px",
+                    borderRadius: 10,
+                    cursor: "pointer",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Approve
+                </button>
 
+                <button
+                  onClick={() =>
+                    reject(item._id)
+                  }
+                  style={{
+                    background: "#dc2626",
+                    color: "white",
+                    border: "none",
+                    padding: "10px 20px",
+                    borderRadius: 10,
+                    cursor: "pointer",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Reject
+                </button>
+              </div>
             )}
 
           </div>

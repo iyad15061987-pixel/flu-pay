@@ -1,4 +1,4 @@
-const mongoose =
+﻿const mongoose =
   require("mongoose");
 
 const transactionSchema =
@@ -29,6 +29,11 @@ const transactionSchema =
       },
 
       fee: {
+        type: Number,
+        default: 0,
+      },
+
+      stripeFee: {
         type: Number,
         default: 0,
       },

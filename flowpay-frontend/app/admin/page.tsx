@@ -3,6 +3,7 @@
 import {
   useEffect,
   useState,
+  useCallback,
 } from "react";
 
 import Sidebar from "../components/Sidebar";
@@ -23,6 +24,7 @@ import {
   Bar,
 } from "recharts";
 
+
 export default function AdminPage() {
 
   const [mounted, setMounted] =
@@ -40,8 +42,14 @@ export default function AdminPage() {
   const [analytics, setAnalytics] =
     useState<any>(null);
 
-    const [users, setUsers] =
-  useState<any[]>([]);
+  const [accounting, setAccounting] =
+    useState<any>(null);
+
+  const [treasuryHealth, setTreasuryHealth] =
+    useState<any>(null);
+
+  const [users, setUsers] =
+    useState<any[]>([]);
 
   const [search, setSearch] =
     useState("");
@@ -54,69 +62,398 @@ export default function AdminPage() {
     setSocketConnected,
   ] = useState(false);
 
+
   // =========================
   // CHART DATA
   // =========================
 
-  const chartData = [
-    {
-      name: "Mon",
-      volume: 12000,
-      users: 20,
-    },
+  const chartData =
+    analytics?.weeklyVolume?.map(
+      (item: any) => {
 
-    {
-      name: "Tue",
-      volume: 18000,
-      users: 35,
-    },
+        const user =
+          analytics?.userGrowth?.find(
+            (u: any) =>
+              u._id === item._id
+          );
 
-    {
-      name: "Wed",
-      volume: 24000,
-      users: 50,
-    },
+        return {
 
-    {
-      name: "Thu",
-      volume: 16000,
-      users: 28,
-    },
+          name: item._id,
 
-    {
-      name: "Fri",
-      volume: 42000,
-      users: 65,
-    },
+          volume: Number(
+            item.volume || 0
+          ),
 
-    {
-      name: "Sat",
-      volume: 38000,
-      users: 55,
-    },
+          transactions: Number(
+            item.transactions || 0
+          ),
 
-    {
-      name: "Sun",
-      volume: 52000,
-      users: 80,
-    },
-  ];
+          users: Number(
+            user?.users || 0
+          ),
+
+        };
+
+      }
+    ) || [];
+
 
   // =========================
-  // EFFECT
+  // LOAD ANALYTICS
+  // =========================
+
+  const loadAnalytics =
+    useCallback(async () => {
+
+      try {
+
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        if (!token) {
+          return;
+        }
+
+        const res =
+          await fetch(
+            `${API_URL}/admin/analytics`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        if (!res.ok) {
+          console.log(
+            "Analytics request failed:",
+            res.status
+          );
+          return;
+        }
+
+        const data =
+          await res.json();
+
+        setAnalytics(data);
+
+      } catch (err) {
+
+        console.log(
+          "Analytics error",
+          err
+        );
+
+      }
+
+    }, []);
+
+
+  // =========================
+  // LOAD ACCOUNTING
+  // =========================
+
+  const loadAccounting =
+    useCallback(async () => {
+
+      try {
+
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        if (!token) {
+          return;
+        }
+
+        const res =
+          await fetch(
+            `${API_URL}/accounting/dashboard`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        if (!res.ok) {
+          console.log(
+            "Accounting request failed:",
+            res.status
+          );
+          return;
+        }
+
+        const data =
+          await res.json();
+
+        setAccounting(data);
+
+      } catch (err) {
+
+        console.log(
+          "Accounting error",
+          err
+        );
+
+      }
+
+    }, []);
+
+
+  // =========================
+  // LOAD TREASURY HEALTH
+  // =========================
+
+  const loadTreasuryHealth =
+    useCallback(async () => {
+
+      try {
+
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        if (!token) {
+          return;
+        }
+
+        const res =
+          await fetch(
+            `${API_URL}/treasury/health`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        if (!res.ok) {
+          console.log(
+            "Treasury health request failed:",
+            res.status
+          );
+          return;
+        }
+
+        const data =
+          await res.json();
+
+        setTreasuryHealth(data);
+
+      } catch (err) {
+
+        console.log(
+          "Treasury health error",
+          err
+        );
+
+      }
+
+    }, []);
+
+
+  // =========================
+  // LOAD USERS
+  // =========================
+
+  const loadUsers =
+    useCallback(async () => {
+
+      try {
+
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        if (!token) {
+          return;
+        }
+
+        const res =
+          await fetch(
+            `${API_URL}/admin/users`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        if (!res.ok) {
+          console.log(
+            "Users request failed:",
+            res.status
+          );
+          return;
+        }
+
+        const data =
+          await res.json();
+
+        setUsers(
+          Array.isArray(data)
+            ? data
+            : []
+        );
+
+      } catch (err) {
+
+        console.log(
+          "Users error",
+          err
+        );
+
+      }
+
+    }, []);
+
+
+  // =========================
+  // LOAD TRANSACTIONS
+  // =========================
+
+  const loadTransactions =
+    useCallback(async () => {
+
+      try {
+
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        if (!token) {
+          return;
+        }
+
+        const res =
+          await fetch(
+            `${API_URL}/admin/transactions`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        if (!res.ok) {
+          console.log(
+            "Transactions request failed:",
+            res.status
+          );
+          return;
+        }
+
+        const data =
+          await res.json();
+
+        setTransactions(
+          Array.isArray(data)
+            ? data
+            : []
+        );
+
+      } catch (err) {
+
+        console.log(
+          "Transactions error",
+          err
+        );
+
+      } finally {
+
+        setLoading(false);
+
+      }
+
+    }, []);
+
+
+  // =========================
+  // LOAD FRAUD ALERTS
+  // =========================
+
+  const loadFraudAlerts =
+    useCallback(async () => {
+
+      try {
+
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        if (!token) {
+          return;
+        }
+
+        const res =
+          await fetch(
+            `${API_URL}/admin/fraud-alerts`,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        if (!res.ok) {
+          console.log(
+            "Fraud request failed:",
+            res.status
+          );
+          return;
+        }
+
+        const data =
+          await res.json();
+
+        setFraudAlerts(
+          Array.isArray(data)
+            ? data
+            : []
+        );
+
+      } catch (err) {
+
+        console.log(
+          "Fraud error",
+          err
+        );
+
+      }
+
+    }, []);
+
+
+  // =========================
+  // INITIAL LOAD + SOCKET
   // =========================
 
   useEffect(() => {
 
     setMounted(true);
 
-    const savedTheme =
+    const saved =
       localStorage.getItem(
         "theme"
       );
 
-    if (savedTheme) {
-      setTheme(savedTheme);
+    if (saved) {
+      setTheme(saved);
     }
 
     const token =
@@ -135,11 +472,10 @@ export default function AdminPage() {
         "/login";
 
       return;
+
     }
 
-    if (
-      role !== "admin"
-    ) {
+    if (role !== "admin") {
 
       alert(
         "Admin access only"
@@ -149,19 +485,21 @@ export default function AdminPage() {
         "/dashboard";
 
       return;
+
     }
 
-   loadTransactions();
+    loadAnalytics();
 
-loadFraudAlerts();
+    loadAccounting();
 
-loadAnalytics();
+    loadUsers();
 
-loadUsers();
+    loadTransactions();
 
-    // =========================
-    // SOCKET.IO
-    // =========================
+    loadTreasuryHealth();
+
+    loadFraudAlerts();
+
 
     const socket =
       io(
@@ -171,344 +509,218 @@ loadUsers();
         )
       );
 
+
     socket.on(
       "connect",
-
       () => {
 
         console.log(
-          "✅ Socket connected"
+          "Socket connected"
         );
 
-        setSocketConnected(
-          true
-        );
+        setSocketConnected(true);
+
       }
     );
+
 
     socket.on(
       "disconnect",
-
       () => {
 
-        console.log(
-          "❌ Socket disconnected"
-        );
+        setSocketConnected(false);
 
-        setSocketConnected(
-          false
-        );
       }
     );
 
-    // =========================
-    // LIVE TRANSACTIONS
-    // =========================
 
     socket.on(
       "new_transaction",
-
-      (tx) => {
+      (tx: any) => {
 
         setTransactions(
-          (prev) => [
+          prev => [
             tx,
-            ...prev,
+            ...prev
           ]
         );
 
         loadAnalytics();
+
+        loadAccounting();
+
+        loadTreasuryHealth();
+
       }
     );
 
-    // =========================
-    // LIVE FRAUD ALERTS
-    // =========================
 
     socket.on(
       "fraud_alert",
-
-      (alert) => {
+      (alert: any) => {
 
         setFraudAlerts(
-          (prev) => [
+          prev => [
             alert,
-            ...prev,
+            ...prev
           ]
         );
+
       }
     );
 
-    // =========================
-    // CLEANUP
-    // =========================
 
     return () => {
+
       socket.disconnect();
+
     };
 
-  }, []);
+  }, [
+    loadAnalytics,
+    loadAccounting,
+    loadUsers,
+    loadTransactions,
+    loadTreasuryHealth,
+    loadFraudAlerts
+  ]);
+
 
   // =========================
-  // LOAD ANALYTICS
-  // =========================
-
-  const loadAnalytics =
-    async () => {
-      try {
-
-        const token =
-          localStorage.getItem(
-            "token"
-          );
-
-        const res =
-          await fetch(
-            `${API_URL}/admin/analytics`,
-            {
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            }
-          );
-
-        const data =
-          await res.json();
-
-        setAnalytics(
-          data
-        );
-
-      } catch (err) {
-
-        console.log(err);
-      }
-    };
-
-    // =========================
-// LOAD USERS
-// =========================
-
-const loadUsers =
-  async () => {
-
-    try {
-
-      const token =
-        localStorage.getItem(
-          "token"
-        );
-
-      const res =
-        await fetch(
-          `${API_URL}/admin/users`,
-          {
-            headers: {
-              Authorization:
-                `Bearer ${token}`,
-            },
-          }
-        );
-
-      const data =
-        await res.json();
-
-      setUsers(
-        Array.isArray(data)
-          ? data
-          : []
-      );
-
-    } catch (err) {
-
-      console.log(err);
-
-    }
-
-  };
-
-  // =========================
-  // LOAD TRANSACTIONS
-  // =========================
-
-  const loadTransactions =
-    async () => {
-      try {
-
-        const token =
-          localStorage.getItem(
-            "token"
-          );
-
-        const res =
-          await fetch(
-            `${API_URL}/admin/transactions`,
-            {
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            }
-          );
-
-        const data =
-          await res.json();
-
-        setTransactions(
-          data
-        );
-
-      } catch (err) {
-
-        console.log(err);
-
-      } finally {
-
-        setLoading(false);
-      }
-    };
-
-  // =========================
-  // LOAD FRAUD ALERTS
-  // =========================
-
-  const loadFraudAlerts =
-    async () => {
-      try {
-
-        const token =
-          localStorage.getItem(
-            "token"
-          );
-
-        const res =
-          await fetch(
-            `${API_URL}/admin/fraud-alerts`,
-            {
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            }
-          );
-
-        const data =
-          await res.json();
-
-        setFraudAlerts(
-          data
-        );
-
-      } catch (err) {
-
-        console.log(err);
-      }
-    };
-
-  // =========================
-  // FILTER
+  // FILTER TRANSACTIONS
   // =========================
 
   const filteredTransactions =
     transactions.filter(
       (tx: any) =>
+
         tx.fromEmail
           ?.toLowerCase()
           .includes(
             search.toLowerCase()
-          ) ||
+          )
+
+        ||
+
         tx.toEmail
           ?.toLowerCase()
           .includes(
             search.toLowerCase()
           )
+
     );
 
+
   // =========================
-  // LOADING
+  // MOUNT CHECK
   // =========================
 
   if (!mounted) {
     return null;
   }
 
+
+  // =========================
+  // LOADING
+  // =========================
+
   if (loading) {
+
     return (
+
       <div
         style={{
           minHeight: "100vh",
           background: "#0f172a",
-          display: "flex",
-          justifyContent:
-            "center",
-          alignItems:
-            "center",
           color: "white",
-          fontSize: 24,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          fontSize: 25
         }}
       >
+
         Loading...
+
       </div>
+
     );
+
   }
 
+
+  // =========================
+  // MAIN PAGE
+  // =========================
+
   return (
+
     <div
       style={{
         display: "flex",
+
         background:
           theme === "light"
             ? "#f3f4f6"
             : "#0f172a",
-        minHeight: "100vh",
+
+        minHeight: "100vh"
       }}
     >
+
       <Sidebar />
+
 
       <div
         style={{
           marginLeft: 250,
           padding: 40,
           width: "100%",
-          color:
-            theme === "light"
-              ? "#111827"
-              : "white",
+          color: "white"
         }}
       >
-        {/* HEADER */}
+
+
+        {/* =========================
+            HEADER
+        ========================= */}
 
         <div
           style={{
             display: "flex",
-            justifyContent:
-              "space-between",
-            alignItems:
-              "center",
-            marginBottom: 30,
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 30
           }}
         >
+
           <div>
+
             <h1>
-              🏦 FlowPay Admin Center
+              🛡️ FlowPay Admin Center
             </h1>
 
-            <div
+
+            <p
               style={{
                 marginTop: 10,
-                fontSize: 14,
                 color:
                   socketConnected
                     ? "#16a34a"
-                    : "#dc2626",
+                    : "#dc2626"
               }}
             >
-              {socketConnected
-                ? "🟢 Live monitoring connected"
-                : "🔴 Disconnected"}
-            </div>
+
+              {
+                socketConnected
+                  ? "🟢 Live Connected"
+                  : "🔴 Offline"
+              }
+
+            </p>
+
           </div>
+
 
           <button
             onClick={() => {
@@ -517,90 +729,529 @@ const loadUsers =
 
               window.location.href =
                 "/login";
-            }}
 
+            }}
             style={{
-              padding:
-                "10px 20px",
-              background:
-                "#dc2626",
-              color:
-                "white",
-              border:
-                "none",
-              borderRadius:
-                10,
-              cursor:
-                "pointer",
+              padding: "12px 20px",
+              background: "#dc2626",
+              color: "white",
+              border: "none",
+              borderRadius: 10,
+              cursor: "pointer"
             }}
           >
+
             Logout
+
           </button>
+
         </div>
 
-        {/* ANALYTICS */}
 
-        {analytics && (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns:
-                "repeat(auto-fit, minmax(250px, 1fr))",
-              gap: 20,
-              marginBottom: 40,
-            }}
-          >
-            <Card
-              title="👥 Total Users"
-              value={
-                analytics.totalUsers
+        {/* =========================
+            ANALYTICS
+        ========================= */}
+
+        {
+          analytics && (
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "repeat(auto-fit,minmax(250px,1fr))",
+                gap: 20,
+                marginBottom: 40
+              }}
+            >
+
+              <Card
+                title="👥 Total Users"
+                value={
+                  Number(
+                    analytics.totalUsers || 0
+                  )
+                }
+              />
+
+
+              <Card
+                title="💸 Total Volume"
+                value={
+                  `$${Number(
+                    analytics.totalVolume || 0
+                  ).toFixed(2)}`
+                }
+              />
+
+
+              <Card
+                title="📈 Daily Volume"
+                value={
+                  `$${Number(
+                    analytics.dailyVolume || 0
+                  ).toFixed(2)}`
+                }
+              />
+
+
+              <Card
+                title="📅 Monthly Volume"
+                value={
+                  `$${Number(
+                    analytics.monthlyVolume || 0
+                  ).toFixed(2)}`
+                }
+              />
+
+
+              <Card
+                title="💰 Fees"
+                value={
+                  `$${Number(
+                    analytics.totalFees || 0
+                  ).toFixed(4)}`
+                }
+              />
+
+
+              <Card
+                title="🚨 Fraud"
+                value={
+                  analytics.suspiciousTransactions || 0
+                }
+              />
+
+
+              <Card
+                title="🪪 KYC"
+                value={
+                  analytics.totalKyc || 0
+                }
+              />
+
+
+              <Card
+                title="❄️ Frozen Users"
+                value={
+                  analytics.frozenUsers || 0
+                }
+              />
+
+            </div>
+
+          )
+        }
+
+
+        {/* =========================
+            ACCOUNTING
+        ========================= */}
+
+        {
+          accounting && (
+
+            <div
+              style={{
+                marginBottom: 40
+              }}
+            >
+
+              <h2
+                style={{
+                  marginBottom: 20
+                }}
+              >
+                🏦 Financial & Treasury Control
+              </h2>
+
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns:
+                    "repeat(auto-fit,minmax(240px,1fr))",
+                  gap: 20
+                }}
+              >
+
+                <Card
+                  title="🏦 Treasury Balance"
+                  value={
+                    `$${Number(
+                      accounting.treasuryBalance || 0
+                    ).toFixed(4)}`
+                  }
+                />
+
+
+                <Card
+                  title="💰 Treasury Revenue"
+                  value={
+                    `$${Number(
+                      accounting.treasuryRevenue || 0
+                    ).toFixed(4)}`
+                  }
+                />
+
+
+                <Card
+                  title="💵 Platform Revenue"
+                  value={
+                    `$${Number(
+                      accounting.platformRevenue || 0
+                    ).toFixed(4)}`
+                  }
+                />
+
+
+                <Card
+                  title="🔄 Total Volume"
+                  value={
+                    `$${Number(
+                      accounting.totalVolume || 0
+                    ).toFixed(2)}`
+                  }
+                />
+
+
+                <Card
+                  title="⚠️ Liabilities"
+                  value={
+                    `$${Number(
+                      accounting.liabilities || 0
+                    ).toFixed(4)}`
+                  }
+                />
+
+
+                <Card
+                  title="🛡️ Reserves"
+                  value={
+                    `$${Number(
+                      accounting.reserves || 0
+                    ).toFixed(4)}`
+                  }
+                />
+
+
+                <Card
+                  title="📊 Coverage Ratio"
+                  value={
+                    `${Number(
+                      accounting.coverageRatio || 0
+                    ).toFixed(2)}%`
+                  }
+                />
+
+              </div>
+
+
+              {/* =========================
+                  TREASURY STATUS
+              ========================= */}
+
+              <div
+                style={{
+                  marginTop: 20,
+                  padding: 25,
+                  borderRadius: 20,
+
+                  background:
+                    Number(
+                      accounting.coverageRatio || 0
+                    ) >= 100
+                      ? "#14532d"
+                      : "#7f1d1d",
+
+                  color: "white"
+                }}
+              >
+
+                <h3>
+
+                  {
+                    Number(
+                      accounting.coverageRatio || 0
+                    ) >= 100
+                      ? "🟢 Treasury Coverage Healthy"
+                      : "🔴 Treasury Coverage Critical"
+                  }
+
+                </h3>
+
+
+                <p
+                  style={{
+                    marginTop: 10
+                  }}
+                >
+
+                  Current coverage:
+                  {" "}
+
+                  {
+                    Number(
+                      accounting.coverageRatio || 0
+                    ).toFixed(2)
+                  }%
+
+                </p>
+
+
+                <p
+                  style={{
+                    marginTop: 8
+                  }}
+                >
+
+                  Reserves:
+                  {" "}
+
+                  $
+                  {
+                    Number(
+                      accounting.reserves || 0
+                    ).toFixed(4)
+                  }
+
+                </p>
+
+
+                <p
+                  style={{
+                    marginTop: 8
+                  }}
+                >
+
+                  Liabilities:
+                  {" "}
+
+                  $
+                  {
+                    Number(
+                      accounting.liabilities || 0
+                    ).toFixed(4)
+                  }
+
+                </p>
+
+              </div>
+
+            </div>
+
+          )
+        }
+
+
+        {/* =========================
+            ACCOUNTING LEDGER
+        ========================= */}
+
+        {
+          accounting?.latest && (
+
+            <div
+              style={{
+                background: "#111827",
+                padding: 25,
+                borderRadius: 20,
+                marginBottom: 40
+              }}
+            >
+
+              <h2>
+                📒 Accounting Ledger
+              </h2>
+
+
+              <br />
+
+
+              {
+                accounting.latest.map(
+                  (
+                    entry: any,
+                    index: number
+                  ) => (
+
+                    <div
+                      key={
+                        entry._id || index
+                      }
+                      style={{
+                        background: "#1f2937",
+                        padding: 20,
+                        borderRadius: 15,
+                        marginBottom: 15
+                      }}
+                    >
+
+                      <p>
+                        <strong>
+                          Account:
+                        </strong>
+                        {" "}
+                        {entry.account}
+                      </p>
+
+
+                      <br />
+
+
+                      <p>
+
+                        <strong>
+                          Type:
+                        </strong>
+
+                        {" "}
+
+                        {
+                          entry.type === "credit"
+                            ? "🟢 Credit"
+                            : "🔴 Debit"
+                        }
+
+                      </p>
+
+
+                      <br />
+
+
+                      <p>
+
+                        <strong>
+                          Amount:
+                        </strong>
+
+                        {" "}
+
+                        $
+                        {
+                          Number(
+                            entry.amount || 0
+                          ).toFixed(4)
+                        }
+
+                      </p>
+
+
+                      <br />
+
+
+                      <p>
+
+                        <strong>
+                          Description:
+                        </strong>
+
+                        {" "}
+
+                        {
+                          entry.description ||
+                          "-"
+                        }
+
+                      </p>
+
+
+                      <br />
+
+
+                      <p>
+
+                        <strong>
+                          Date:
+                        </strong>
+
+                        {" "}
+
+                        {
+                          entry.createdAt
+                            ? new Date(
+                                entry.createdAt
+                              ).toLocaleString()
+                            : "-"
+                        }
+
+                      </p>
+
+                    </div>
+
+                  )
+                )
               }
-            />
 
-            <Card
-              title="💸 Total Volume"
-              value={`$${analytics.totalVolume}`}
-            />
+            </div>
 
-            <Card
-              title="📈 Daily Volume"
-              value={`$${analytics.dailyVolume}`}
-            />
+          )
+        }
 
-            <Card
-              title="📊 Monthly Volume"
-              value={`$${analytics.monthlyVolume}`}
-            />
 
-            <Card
-              title="💰 Fees Earned"
-              value={`$${analytics.totalFees}`}
-            />
+        {/* =========================
+            TREASURY HEALTH
+        ========================= */}
 
-            <Card
-              title="🚨 Fraud Alerts"
-              value={
-                analytics.suspiciousTransactions
-              }
-            />
+        {
+          treasuryHealth && (
 
-            <Card
-              title="🪪 Total KYC"
-              value={
-                analytics.totalKyc
-              }
-            />
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "repeat(auto-fit,minmax(250px,1fr))",
+                gap: 20,
+                marginBottom: 40
+              }}
+            >
 
-            <Card
-              title="✅ Approved KYC"
-              value={
-                analytics.approvedKyc
-              }
-            />
-          </div>
-        )}
+              <Card
+                title="🏦 Treasury Status"
+                value={
+                  treasuryHealth.status === "healthy"
+                    ? "🟢 Healthy"
+                    : "🔴 Warning"
+                }
+              />
 
-        {/* CHARTS */}
+
+              <Card
+                title="💳 Treasury Account"
+                value={
+                  treasuryHealth.account || "-"
+                }
+              />
+
+
+              <Card
+                title="💰 Balance"
+                value={
+                  `$${Number(
+                    treasuryHealth.balance || 0
+                  ).toFixed(4)}`
+                }
+              />
+
+
+              <Card
+                title="📈 Revenue"
+                value={
+                  `$${Number(
+                    treasuryHealth.revenue || 0
+                  ).toFixed(4)}`
+                }
+              />
+
+            </div>
+
+          )
+        }
+
+
+        {/* =========================
+            CHARTS
+        ========================= */}
 
         <div
           style={{
@@ -608,43 +1259,34 @@ const loadUsers =
             gridTemplateColumns:
               "1fr 1fr",
             gap: 20,
-            marginBottom: 40,
+            marginBottom: 40
           }}
         >
-          {/* WEEKLY VOLUME */}
 
           <div
             style={{
-              background:
-                theme === "light"
-                  ? "white"
-                  : "#111827",
+              background: "#111827",
               padding: 25,
-              borderRadius: 20,
+              borderRadius: 20
             }}
           >
+
             <h2>
-              📈 Weekly Volume
+              📈 Volume Growth
             </h2>
 
-            <br />
 
             <ResponsiveContainer
               width="100%"
               height={300}
             >
+
               <LineChart
                 data={chartData}
               >
-                <Line
-                  type="monotone"
-                  dataKey="volume"
-                  stroke="#2563eb"
-                  strokeWidth={3}
-                />
 
                 <CartesianGrid
-                  stroke="#374151"
+                  strokeDasharray="3 3"
                 />
 
                 <XAxis
@@ -654,42 +1296,44 @@ const loadUsers =
                 <YAxis />
 
                 <Tooltip />
+
+
+                <Line
+                  type="monotone"
+                  dataKey="volume"
+                />
+
               </LineChart>
+
             </ResponsiveContainer>
+
           </div>
 
-          {/* USER GROWTH */}
 
           <div
             style={{
-              background:
-                theme === "light"
-                  ? "white"
-                  : "#111827",
+              background: "#111827",
               padding: 25,
-              borderRadius: 20,
+              borderRadius: 20
             }}
           >
+
             <h2>
               👥 User Growth
             </h2>
 
-            <br />
 
             <ResponsiveContainer
               width="100%"
               height={300}
             >
+
               <BarChart
                 data={chartData}
               >
-                <Bar
-                  dataKey="users"
-                  fill="#16a34a"
-                />
 
                 <CartesianGrid
-                  stroke="#374151"
+                  strokeDasharray="3 3"
                 />
 
                 <XAxis
@@ -699,317 +1343,208 @@ const loadUsers =
                 <YAxis />
 
                 <Tooltip />
+
+
+                <Bar
+                  dataKey="users"
+                />
+
               </BarChart>
+
             </ResponsiveContainer>
+
           </div>
+
         </div>
-{/* USERS MANAGEMENT */}
 
-<h2>
-  👥 Users Management
-</h2>
 
-<br />
+        {/* =========================
+            USERS MANAGEMENT
+        ========================= */}
 
-<div
-  style={{
-    background:
-      theme === "light"
-        ? "white"
-        : "#111827",
-    padding: 25,
-    borderRadius: 20,
-    marginBottom: 40,
-  }}
->
-  {users.map(
-    (user: any) => (
+        <h2>
+          👥 Users Management
+        </h2>
 
-      <div
-        key={user._id}
-        style={{
-          background:
-            "#1f2937",
-          padding: 20,
-          borderRadius: 15,
-          marginBottom: 15,
-        }}
-      >
-        <p>
-          <strong>
-            Email:
-          </strong>{" "}
-          {user.email}
-        </p>
 
         <br />
 
-        <p>
-          <strong>
-            Balance:
-          </strong>{" "}
-          $
-          {Number(
-            user.balance || 0
-          ).toFixed(2)}
-        </p>
 
-        <br />
-
-        <p>
-          <strong>
-            Role:
-          </strong>{" "}
-          {user.role}
-        </p>
-
-        <br />
-
-        <p>
-          <strong>
-            Status:
-          </strong>{" "}
-          {user.frozen
-            ? "🔴 Frozen"
-            : "🟢 Active"}
-        </p>
-
-        <br />
-
-        {/* FREEZE */}
-
-        <button
-          onClick={async () => {
-
-            const token =
-              localStorage.getItem(
-                "token"
-              );
-
-            await fetch(
-              `${API_URL}/admin/users/${user._id}/freeze`,
-              {
-                method: "PUT",
-
-                headers: {
-                  Authorization:
-                    `Bearer ${token}`,
-                },
-              }
-            );
-
-            loadUsers();
-
-          }}
+        <div
           style={{
-            marginRight: 10,
-            padding:
-              "10px 15px",
-            border: "none",
-            borderRadius: 10,
-            cursor:
-              "pointer",
+            background: "#111827",
+            padding: 25,
+            borderRadius: 20,
+            marginBottom: 40
           }}
         >
-          Freeze
-        </button>
 
-        {/* UNFREEZE */}
+          {
+            users.map(
+              (user: any) => (
 
-        <button
-          onClick={async () => {
+                <div
+                  key={user._id}
+                  style={{
+                    background: "#1f2937",
+                    padding: 20,
+                    borderRadius: 15,
+                    marginBottom: 15
+                  }}
+                >
 
-            const token =
-              localStorage.getItem(
-                "token"
-              );
+                  <p>
+                    <strong>
+                      Email:
+                    </strong>
+                    {" "}
+                    {user.email}
+                  </p>
 
-            await fetch(
-              `${API_URL}/admin/users/${user._id}/unfreeze`,
-              {
-                method: "PUT",
 
-                headers: {
-                  Authorization:
-                    `Bearer ${token}`,
-                },
-              }
-            );
+                  <p>
+                    <strong>
+                      Balance:
+                    </strong>
+                    {" "}
+                    $
+                    {
+                      Number(
+                        user.balance || 0
+                      ).toFixed(2)
+                    }
+                  </p>
 
-            loadUsers();
 
-          }}
-          style={{
-            marginRight: 10,
-            padding:
-              "10px 15px",
-            border: "none",
-            borderRadius: 10,
-            cursor:
-              "pointer",
-          }}
-        >
-          Unfreeze
-        </button>
+                  <p>
+                    <strong>
+                      Role:
+                    </strong>
+                    {" "}
+                    {user.role}
+                  </p>
 
-        {/* EDIT BALANCE */}
 
-        <button
-          onClick={async () => {
+                  <p>
+                    <strong>
+                      Status:
+                    </strong>
+                    {" "}
+                    {
+                      user.frozen
+                        ? "🔴 Frozen"
+                        : "🟢 Active"
+                    }
+                  </p>
 
-            const balance =
-              prompt(
-                "Enter new balance"
-              );
 
-            if (
-              balance === null
-            ) return;
+                  <br />
 
-            const token =
-              localStorage.getItem(
-                "token"
-              );
 
-            await fetch(
-              `${API_URL}/admin/users/${user._id}/balance`,
-              {
-                method: "PUT",
+                  <button
+                    onClick={async () => {
 
-                headers: {
-                  "Content-Type":
-                    "application/json",
+                      try {
 
-                  Authorization:
-                    `Bearer ${token}`,
-                },
+                        const token =
+                          localStorage.getItem(
+                            "token"
+                          );
 
-                body:
-                  JSON.stringify({
-                    balance,
-                  }),
-              }
-            );
+                        await fetch(
+                          `${API_URL}/admin/users/${user._id}/freeze`,
+                          {
+                            method: "PUT",
 
-            loadUsers();
+                            headers: {
+                              Authorization:
+                                `Bearer ${token}`
+                            }
+                          }
+                        );
 
-          }}
-          style={{
-            marginRight: 10,
-            padding:
-              "10px 15px",
-            border: "none",
-            borderRadius: 10,
-            cursor:
-              "pointer",
-          }}
-        >
-          💰 Edit Balance
-        </button>
+                        loadUsers();
 
-        {/* MAKE ADMIN */}
+                      } catch (err) {
 
-        <button
-          onClick={async () => {
+                        console.log(
+                          "Freeze error",
+                          err
+                        );
 
-            const token =
-              localStorage.getItem(
-                "token"
-              );
+                      }
 
-            await fetch(
-              `${API_URL}/admin/users/${user._id}/role`,
-              {
-                method: "PUT",
+                    }}
+                    style={{
+                      padding: "10px 15px",
+                      marginRight: 10,
+                      cursor: "pointer"
+                    }}
+                  >
 
-                headers: {
-                  "Content-Type":
-                    "application/json",
+                    ❄️ Freeze
 
-                  Authorization:
-                    `Bearer ${token}`,
-                },
+                  </button>
 
-                body:
-                  JSON.stringify({
-                    role:
-                      "admin",
-                  }),
-              }
-            );
 
-            loadUsers();
+                  <button
+                    onClick={async () => {
 
-          }}
-          style={{
-            marginRight: 10,
-            padding:
-              "10px 15px",
-            border: "none",
-            borderRadius: 10,
-            cursor:
-              "pointer",
-          }}
-        >
-          👑 Make Admin
-        </button>
+                      try {
 
-        {/* MAKE USER */}
+                        const token =
+                          localStorage.getItem(
+                            "token"
+                          );
 
-        <button
-          onClick={async () => {
+                        await fetch(
+                          `${API_URL}/admin/users/${user._id}/unfreeze`,
+                          {
+                            method: "PUT",
 
-            const token =
-              localStorage.getItem(
-                "token"
-              );
+                            headers: {
+                              Authorization:
+                                `Bearer ${token}`
+                            }
+                          }
+                        );
 
-            await fetch(
-              `${API_URL}/admin/users/${user._id}/role`,
-              {
-                method: "PUT",
+                        loadUsers();
 
-                headers: {
-                  "Content-Type":
-                    "application/json",
+                      } catch (err) {
 
-                  Authorization:
-                    `Bearer ${token}`,
-                },
+                        console.log(
+                          "Unfreeze error",
+                          err
+                        );
 
-                body:
-                  JSON.stringify({
-                    role:
-                      "user",
-                  }),
-              }
-            );
+                      }
 
-            loadUsers();
+                    }}
+                    style={{
+                      padding: "10px 15px",
+                      cursor: "pointer"
+                    }}
+                  >
 
-          }}
-          style={{
-            padding:
-              "10px 15px",
-            border: "none",
-            borderRadius: 10,
-            cursor:
-              "pointer",
-          }}
-        >
-          👤 Make User
-        </button>
+                    🔥 Unfreeze
 
-      </div>
+                  </button>
 
-    )
-  )}
-</div>
+                </div>
 
-        {/* SEARCH */}
+              )
+            )
+          }
+
+        </div>
+
+
+        {/* =========================
+            SEARCH
+        ========================= */}
 
         <input
-          type="text"
           placeholder="Search transaction..."
           value={search}
           onChange={(e) =>
@@ -1021,208 +1556,185 @@ const loadUsers =
             width: "100%",
             padding: 15,
             borderRadius: 12,
-            marginBottom: 30,
-            border: "none",
+            marginBottom: 30
           }}
         />
 
-        {/* FRAUD ALERTS */}
+
+        {/* =========================
+            FRAUD ALERTS
+        ========================= */}
 
         <h2>
           🚨 Fraud Alerts
         </h2>
 
+
         <br />
 
-        {fraudAlerts.map(
-          (
-            alert: any,
-            index: number
-          ) => (
-            <div
-              key={index}
-              style={{
-                background:
-                  "#7f1d1d",
-                padding: 25,
-                borderRadius: 20,
-                marginBottom: 20,
-                color:
-                  "white",
-              }}
-            >
-              <p>
-                <strong>
+
+        {
+          fraudAlerts.map(
+            (
+              alert: any,
+              index: number
+            ) => (
+
+              <div
+                key={
+                  alert._id || index
+                }
+                style={{
+                  background: "#7f1d1d",
+                  padding: 25,
+                  borderRadius: 20,
+                  marginBottom: 20
+                }}
+              >
+
+                <p>
                   Risk Score:
-                </strong>{" "}
-                {alert.riskScore}
-              </p>
+                  {" "}
+                  {alert.riskScore ?? 0}
+                </p>
 
-              <br />
 
-              <p>
-                <strong>
+                <p>
                   Flags:
-                </strong>{" "}
-                {alert.flags.join(
-                  ", "
-                )}
-              </p>
+                  {" "}
+                  {
+                    alert.flags?.join(", ") ||
+                    "-"
+                  }
+                </p>
 
-              <br />
 
-              <p>
-                <strong>
-                  From:
-                </strong>{" "}
-                {
-                  alert.transaction
-                    .fromEmail
-                }
-              </p>
-
-              <br />
-
-              <p>
-                <strong>
-                  To:
-                </strong>{" "}
-                {
-                  alert.transaction
-                    .toEmail
-                }
-              </p>
-
-              <br />
-
-              <p>
-                <strong>
+                <p>
                   Amount:
-                </strong>{" "}
-                $
-                {
-                  alert.transaction
-                    .amount
-                }
-              </p>
-            </div>
-          )
-        )}
+                  {" "}
+                  $
+                  {
+                    Number(
+                      alert.transaction?.amount ||
+                      0
+                    ).toFixed(2)
+                  }
+                </p>
 
-        {/* LIVE TRANSACTIONS */}
+              </div>
+
+            )
+          )
+        }
+
+
+        {/* =========================
+            LIVE TRANSACTIONS
+        ========================= */}
 
         <h2>
           💸 Live Transactions
         </h2>
 
+
         <br />
 
-        {filteredTransactions.map(
-          (
-            tx: any,
-            index: number
-          ) => (
-            <div
-              key={index}
-              style={{
-                background:
-                  theme === "light"
-                    ? "white"
-                    : "#111827",
-                padding: 25,
-                borderRadius: 20,
-                marginBottom: 20,
-              }}
-            >
-              <p>
-                <strong>
-                  From:
-                </strong>{" "}
-                {tx.fromEmail}
-              </p>
 
-              <br />
+        {
+          filteredTransactions.map(
+            (
+              tx: any,
+              index: number
+            ) => (
 
-              <p>
-                <strong>
-                  To:
-                </strong>{" "}
-                {tx.toEmail}
-              </p>
+              <div
+                key={
+                  tx._id ||
+                  tx.transactionId ||
+                  index
+                }
+                style={{
+                  background: "#111827",
+                  padding: 25,
+                  borderRadius: 20,
+                  marginBottom: 20
+                }}
+              >
 
-              <br />
+                <p>
+                  <strong>
+                    From:
+                  </strong>
+                  {" "}
+                  {tx.fromEmail || "-"}
+                </p>
 
-              <p>
-                <strong>
-                  Amount:
-                </strong>{" "}
-$
-{Number(
-  tx.amount || 0
-).toFixed(2)}
-              </p>
 
-              <br />
+                <p>
+                  <strong>
+                    To:
+                  </strong>
+                  {" "}
+                  {tx.toEmail || "-"}
+                </p>
 
-              <p>
-                <strong>
-                  Fee:
-                </strong>{" "}
-$
-{Number(
-  tx.fee || 0
-).toFixed(2)}
-              </p>
 
-              <br />
+                <p>
+                  <strong>
+                    Amount:
+                  </strong>
+                  {" "}
+                  $
+                  {
+                    Number(
+                      tx.amount || 0
+                    ).toFixed(2)
+                  }
+                </p>
 
-              <p>
-                <strong>
-                  Net:
-                </strong>{" "}
-$
-{Number(
-  tx.netAmount || 0
-).toFixed(2)}
-              </p>
 
-              <br />
+                <p>
+                  <strong>
+                    Fee:
+                  </strong>
+                  {" "}
+                  $
+                  {
+                    Number(
+                      tx.fee || 0
+                    ).toFixed(4)
+                  }
+                </p>
 
-              <p>
-                <strong>
-                  Date:
-                </strong>{" "}
-                {new Date(
-                  tx.createdAt
-                ).toLocaleString()}
-              </p>
 
-              <br />
+                <p>
+                  <strong>
+                    Date:
+                  </strong>
+                  {" "}
+                  {
+                    tx.createdAt
+                      ? new Date(
+                          tx.createdAt
+                        ).toLocaleString()
+                      : "-"
+                  }
+                </p>
 
-              {tx.amount >=
-                10000 && (
-                <div
-                  style={{
-                    background:
-                      "#dc2626",
-                    color:
-                      "white",
-                    padding: 15,
-                    borderRadius: 12,
-                    fontWeight:
-                      "bold",
-                  }}
-                >
-                  🚨 Large transaction detected
-                </div>
-              )}
-            </div>
+              </div>
+
+            )
           )
-        )}
+        }
+
       </div>
+
     </div>
+
   );
+
 }
+
 
 // =========================
 // CARD COMPONENT
@@ -1230,29 +1742,34 @@ $
 
 function Card({
   title,
-  value,
+  value
 }: any) {
 
   return (
+
     <div
       style={{
-        background:
-          "#111827",
+        background: "#111827",
         padding: 25,
         borderRadius: 20,
-        color:
-          "white",
+        color: "white"
       }}
     >
+
       <h3>
         {title}
       </h3>
 
+
       <br />
+
 
       <h1>
         {value}
       </h1>
+
     </div>
+
   );
+
 }

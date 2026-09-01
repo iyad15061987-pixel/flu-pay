@@ -1348,6 +1348,69 @@ router.post(
           withdrawal._id
         )}`;
 
+// ==================================================
+// FLOWPAY SIMULATION MODE
+// NEVER CREATE REAL NOWPAYMENTS PAYOUT
+// ==================================================
+
+if (
+  process.env.FLOWPAY_SIMULATION ===
+  "true"
+) {
+
+  console.log(
+    "FLOWPAY SIMULATION: NOWPayments payout NOT created"
+  );
+
+  withdrawal.nowPaymentsStatus =
+    "simulation";
+
+  withdrawal.status =
+    "awaiting_2fa";
+
+  withdrawal.processedBy =
+    req.user.id;
+
+  withdrawal.processedAt =
+    new Date();
+
+  withdrawal.auditTrail =
+    withdrawal.auditTrail || [];
+
+  withdrawal.auditTrail.push({
+    action:
+      "Simulation payout created - external payout not executed",
+
+    performedBy:
+      req.user.email ||
+      String(req.user.id),
+
+    timestamp:
+      new Date(),
+  });
+
+  await withdrawal.save();
+
+  return res.json({
+    success:
+      true,
+
+    simulation:
+      true,
+
+    message:
+      "Simulation mode: payout was NOT sent to NOWPayments.",
+
+    withdrawalId:
+      withdrawal._id,
+
+    status:
+      withdrawal.status,
+
+    nowPaymentsStatus:
+      withdrawal.nowPaymentsStatus,
+  });
+}
 
       // ==================================================
       // CREATE NOWPAYMENTS PAYOUT

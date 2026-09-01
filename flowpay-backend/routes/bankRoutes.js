@@ -1,4 +1,4 @@
-const express =
+﻿const express =
   require("express");
 
 const router =
@@ -10,6 +10,11 @@ const {
 } = require(
   "../middleware/auth"
 );
+
+const BankAccount =
+  require(
+    "../models/BankAccount"
+  );
 
 // =========================
 // GET BANK STATUS
@@ -38,6 +43,51 @@ router.get(
       return res.status(500).json({
         message:
           "Server error",
+      });
+    }
+  }
+);
+
+// =========================
+// GET VERIFIED BANK ACCOUNT
+// =========================
+
+router.get(
+  "/bank/account",
+
+  auth,
+
+  async (req, res) => {
+    try {
+
+      const account =
+        await BankAccount.findOne({
+          verified: true,
+        }).sort({ createdAt: -1 });
+
+      if (!account) {
+        return res.status(404).json({
+          message:
+            "No verified bank account available",
+        });
+      }
+
+      return res.json({
+        success: true,
+        account: {
+          bankName: account.bankName,
+          accountHolder: account.accountHolder,
+          iban: account.iban,
+          swift: account.swift,
+          country: account.country,
+          currency: account.currency,
+        },
+      });
+
+    } catch (err) {
+      console.log(err);
+      return res.status(500).json({
+        message: "Server error",
       });
     }
   }

@@ -33,6 +33,16 @@ export default function DepositPage() {
     paymentId: string;
   } | null>(null);
 
+  const [bankAccount, setBankAccount] =
+    useState<{
+      bankName: string;
+      accountHolder: string;
+      iban: string;
+      swift: string;
+      country: string;
+      currency: string;
+    } | null>(null);
+
   useEffect(() => {
 
     setMounted(true);
@@ -48,17 +58,54 @@ export default function DepositPage() {
 
   }, []);
 
+  useEffect(() => {
+    if (method !== "Bank") {
+      setBankAccount(null);
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+
+    fetch(`${API_URL}/bank/account`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then(async (res) => {
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(
+            data.message || "Bank account unavailable"
+          );
+        }
+
+        setBankAccount(data.account);
+      })
+      .catch((err) => {
+        console.log("BANK ACCOUNT ERROR:", err);
+        setBankAccount(null);
+      });
+  }, [method]);
+
   if (!mounted) {
     return null;
   }
 
+  const numericAmount =
+    Number(amount || 0);
+
   const fee =
-    Number(amount || 0) *
-    0.035;
+    method === "Crypto"
+      ? Math.max(
+          1,
+          numericAmount * 0.01
+        )
+      : numericAmount * 0.035;
 
   const netAmount =
-    Number(amount || 0) -
-    fee;
+    numericAmount - fee;
+
 const createRequest =
   async () => {
 
@@ -178,6 +225,58 @@ alert(
 
   return;
 }
+          // =========================
+      // BANK / CARD — STRIPE
+      // =========================
+
+      if (method === "Bank") {
+
+        const res =
+          await fetch(
+            `${API_URL}/stripe/create-checkout`,
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                Authorization:
+                  `Bearer ${token}`,
+              },
+
+              body: JSON.stringify({
+                amount:
+                  Number(amount),
+              }),
+            }
+          );
+
+        const data =
+          await res.json();
+
+        if (!res.ok) {
+          alert(
+            data.message ||
+            "Stripe checkout failed"
+          );
+
+          return;
+        }
+
+        if (data.url) {
+          window.location.href =
+            data.url;
+
+          return;
+        }
+
+        alert(
+          "Stripe checkout URL not found"
+        );
+
+        return;
+      }
 
       // =========================
       // PAYPAL
@@ -242,7 +341,7 @@ alert(
     }
 
   };
-  
+
   return (
 
     <div
@@ -352,8 +451,49 @@ alert(
 )
 }
 
+
+{bankAccount && method === "Bank" && (
+  <div
+    style={{
+      marginBottom: 20,
+      padding: 25,
+      borderRadius: 15,
+      background: theme === "light" ? "white" : "#111827",
+      border: "1px solid #374151",
+    }}
+  >
+    <h2>Bank Transfer</h2>
+    <br />
+
+    <p><strong>Bank Name:</strong> {bankAccount.bankName}</p>
+    <p><strong>Account Holder:</strong> {bankAccount.accountHolder}</p>
+    <p><strong>IBAN:</strong> {bankAccount.iban}</p>
+    <p><strong>SWIFT:</strong> {bankAccount.swift}</p>
+    <p><strong>Country:</strong> {bankAccount.country}</p>
+    <p><strong>Currency:</strong> {bankAccount.currency}</p>
+
+    <br />
+
+    <button
+      onClick={() => {
+        navigator.clipboard.writeText(bankAccount.iban);
+        alert("IBAN copied");
+      }}
+      style={{
+        padding: "10px 18px",
+        border: "none",
+        borderRadius: 10,
+        cursor: "pointer",
+        fontWeight: "bold",
+      }}
+    >
+      Copy IBAN
+    </button>
+  </div>
+)}
+
 <h1>
-  🏦 Deposit Request
+  ًںڈ¦ Deposit Request
 </h1>
         <br />
 
@@ -397,6 +537,9 @@ alert(
     Crypto
   </option>
 
+ <option value="Bank">
+  Bank / Card
+</option>
 </select>
 
 <input
@@ -433,7 +576,7 @@ alert(
 >
 
   <p>
-    💵 Deposit:
+    ًں’µ Deposit:
     <strong>
       {" "}
       $
@@ -446,7 +589,7 @@ alert(
   <br />
 
   <p>
-    🧾 Fee 3.5%:
+    ًں§¾ Fee 3.5%:
     <strong>
       {" "}
       $
@@ -457,7 +600,7 @@ alert(
   <br />
 
   <p>
-    ✅ Balance Added:
+    âœ… Balance Added:
     <strong>
       {" "}
       $
@@ -484,7 +627,7 @@ alert(
     cursor: "pointer",
   }}
 >
-  Create Deposit Request
+  {method === "Bank" ? "I Have Made the Transfer" : "Create Deposit Request"}
 </button>
 
 <br />
@@ -504,7 +647,7 @@ alert(
 >
 
   <h3>
-    📌 Important
+    ًں“Œ Important
   </h3>
 
   <br />

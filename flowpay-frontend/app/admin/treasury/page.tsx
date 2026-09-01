@@ -7,243 +7,357 @@ import {
 
 import API_URL from "@/lib/api";
 
+
 export default function TreasuryPage() {
-  const [data, setData] =
+
+  const [data,setData] =
     useState<any>(null);
 
-  const [form, setForm] =
-    useState({
-      currency:
-        "USD",
 
-      hotWallet:
-        "",
+  const loadTreasury = async()=>{
 
-      coldWallet:
-        "",
+    try{
 
-      reserveWallet:
-        "",
-    });
-
-  const loadTreasury =
-    async () => {
       const token =
-        localStorage.getItem(
-          "token"
-        );
+        localStorage.getItem("token");
+
 
       const res =
         await fetch(
-          `${API_URL}/admin/treasury`,
+          `${API_URL}/treasury/overview`,
           {
-            headers: {
+            headers:{
               Authorization:
-                `Bearer ${token}`,
+              `Bearer ${token}`,
             },
           }
         );
 
+
       const json =
         await res.json();
 
+
       setData(json);
-    };
 
-  useEffect(() => {
+
+    }catch(err){
+
+      console.log(err);
+
+    }
+
+  };
+
+
+  useEffect(()=>{
+
     loadTreasury();
-  }, []);
 
-  const updateTreasury =
-    async () => {
-      const token =
-        localStorage.getItem(
-          "token"
-        );
+  },[]);
 
-      await fetch(
-        `${API_URL}/admin/update-treasury`,
-        {
-          method: "POST",
 
-          headers: {
-            "Content-Type":
-              "application/json",
 
-            Authorization:
-              `Bearer ${token}`,
-          },
+  if(!data){
 
-          body: JSON.stringify({
-            ...form,
-
-            hotWallet:
-              Number(
-                form.hotWallet
-              ),
-
-            coldWallet:
-              Number(
-                form.coldWallet
-              ),
-
-            reserveWallet:
-              Number(
-                form.reserveWallet
-              ),
-          }),
-        }
-      );
-
-      loadTreasury();
-
-      alert(
-        "Treasury updated"
-      );
-    };
-
-  return (
-    <div
-      style={{
-        padding: 40,
-
-        background:
-          "#0f172a",
-
-        minHeight:
-          "100vh",
-
-        color: "white",
-      }}
-    >
-      <h1>
-        🏦 Treasury
-        Management
-      </h1>
-
-      <br />
+    return (
 
       <div
-        style={{
-          background:
-            "#111827",
-
-          padding: 25,
-
-          borderRadius: 20,
-
-          maxWidth: 500,
-        }}
+      style={{
+        background:"#0f172a",
+        color:"white",
+        minHeight:"100vh",
+        padding:40,
+      }}
       >
-        {[
-          "hotWallet",
 
-          "coldWallet",
+        Loading Treasury...
 
-          "reserveWallet",
-        ].map((field) => (
-          <input
-            key={field}
-            placeholder={field}
-            value={
-              form[
-                field as keyof typeof form
-              ]
-            }
-            onChange={(e) =>
-              setForm({
-                ...form,
-
-                [field]:
-                  e.target
-                    .value,
-              })
-            }
-            style={{
-              width: "100%",
-
-              padding: 15,
-
-              borderRadius: 10,
-
-              marginBottom: 15,
-            }}
-          />
-        ))}
-
-        <button
-          onClick={
-            updateTreasury
-          }
-          style={{
-            width: "100%",
-
-            padding: 15,
-
-            border: "none",
-
-            borderRadius: 10,
-
-            background:
-              "#16a34a",
-
-            color: "white",
-          }}
-        >
-          Update Treasury
-        </button>
       </div>
+
+    );
+
+  }
+
+
+
+  return (
+
+    <div
+
+    style={{
+
+      padding:40,
+
+      background:"#0f172a",
+
+      minHeight:"100vh",
+
+      color:"white",
+
+    }}
+
+    >
+
+
+      <h1>
+        🏦 Treasury Management
+      </h1>
+
 
       <br />
 
-      {data && (
+
+
+      <div
+
+      style={{
+
+        display:"grid",
+
+        gridTemplateColumns:
+        "repeat(auto-fit,minmax(250px,1fr))",
+
+        gap:20,
+
+      }}
+
+      >
+
+
+
         <div
-          style={{
-            background:
-              "#111827",
-
-            padding: 25,
-
-            borderRadius: 20,
-          }}
+        style={{
+          background:"#111827",
+          padding:25,
+          borderRadius:20,
+        }}
         >
+
           <h2>
-            Total
-            Liabilities:
+            Treasury Balance
+          </h2>
+
+          <h1>
             $
-            {
-              data.liabilities?.toFixed(
-                2
-              )
-            }
-          </h2>
+            {Number(
+              data.treasury?.balance || 0
+            ).toFixed(4)}
 
-          <br />
+          </h1>
 
-          <h2>
-            Total
-            Reserves:
-            $
-            {
-              data.reserves?.toFixed(
-                2
-              )
-            }
-          </h2>
-
-          <br />
-
-          <h2>
-            Coverage
-            Ratio:
-            {
-              data.coverageRatio?.toFixed(
-                2
-              )
-            }
-          </h2>
         </div>
-      )}
+
+
+
+
+
+        <div
+        style={{
+          background:"#111827",
+          padding:25,
+          borderRadius:20,
+        }}
+        >
+
+          <h2>
+            Revenue
+          </h2>
+
+          <h1>
+            $
+            {Number(
+              data.treasury?.revenue || 0
+            ).toFixed(4)}
+
+          </h1>
+
+        </div>
+
+
+
+
+
+        <div
+        style={{
+          background:"#111827",
+          padding:25,
+          borderRadius:20,
+        }}
+        >
+
+          <h2>
+            Total Fees
+          </h2>
+
+          <h1>
+            $
+            {Number(
+              data.totalFees || 0
+            ).toFixed(4)}
+
+          </h1>
+
+        </div>
+
+
+
+
+
+        <div
+        style={{
+          background:"#111827",
+          padding:25,
+          borderRadius:20,
+        }}
+        >
+
+          <h2>
+            Transactions
+          </h2>
+
+          <h1>
+            {
+              data.totalTransactions || 0
+            }
+          </h1>
+
+        </div>
+
+
+      </div>
+
+
+
+
+
+      <br />
+
+
+      <div
+
+      style={{
+
+        background:"#111827",
+
+        padding:25,
+
+        borderRadius:20,
+
+      }}
+
+      >
+
+
+        <h2>
+          Treasury Account
+        </h2>
+
+
+        <br />
+
+
+        <p>
+          Email:
+          {" "}
+          {
+            data.treasury?.email
+          }
+        </p>
+
+
+        <br />
+
+
+        <p>
+          Status:
+          {" "}
+          {
+            data.status
+          }
+        </p>
+
+
+        <br />
+
+
+        <p>
+          Total Platform Revenue:
+          {" "}
+          $
+          {
+            Number(
+              data.totalRevenue || 0
+            ).toFixed(4)
+          }
+
+        </p>
+
+
+      </div>
+
+
+
+
+
+      <br />
+
+
+      <div
+
+      style={{
+
+        background:"#111827",
+
+        padding:25,
+
+        borderRadius:20,
+
+      }}
+
+      >
+
+
+        <h2>
+          Latest Accounting Activity
+        </h2>
+
+
+        <br />
+
+
+        <p>
+          Treasury is connected with:
+        </p>
+
+
+        <ul>
+
+          <li>
+            ✅ Wallet System
+          </li>
+
+          <li>
+            ✅ Ledger
+          </li>
+
+          <li>
+            ✅ Accounting Entries
+          </li>
+
+          <li>
+            ✅ Transfer Fees
+          </li>
+
+        </ul>
+
+
+      </div>
+
+
+
     </div>
+
   );
+
 }

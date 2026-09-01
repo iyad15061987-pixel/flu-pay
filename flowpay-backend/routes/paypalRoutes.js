@@ -1,4 +1,4 @@
-const express =
+﻿const express =
   require("express");
 
 const axios =
@@ -43,6 +43,13 @@ const createNotification =
   require(
     "../utils/createNotification"
   );
+
+  const {
+  calculateExternalFee,
+} = require(
+  "../utils/fees"
+);
+
 // =========================
 // CREATE PAYPAL ORDER
 // =========================
@@ -121,6 +128,69 @@ router.post(
 
       }
 
+// ==================================================
+// FLOWPAY SIMULATION MODE
+// DO NOT CONTACT PAYPAL
+// ==================================================
+
+if (
+  process.env.FLOWPAY_SIMULATION ===
+  "true"
+) {
+
+  const simulationReference =
+    `SIM-PAYPAL-${Date.now()}-${String(
+      user._id
+    )}`;
+
+  await DepositRequest.create({
+
+    userId:
+      user._id,
+
+    email:
+      user.email,
+
+    amount:
+      numericAmount,
+
+    method:
+      "paypal",
+
+    reference:
+      simulationReference,
+
+    status:
+      "Pending",
+
+    type:
+      "Deposit",
+
+  });
+
+  console.log(
+    "FLOWPAY SIMULATION: PayPal order NOT created"
+  );
+
+  return res.json({
+
+    success:
+      true,
+
+    simulation:
+      true,
+
+    message:
+      "Simulation mode: PayPal order was NOT created.",
+
+    orderId:
+      simulationReference,
+
+    status:
+      "Pending",
+
+  });
+}
 
       // =========================
       // PAYPAL TOKEN
@@ -269,6 +339,9 @@ router.post(
       });
 
 
+      console.log("PAYPAL ORDER ID:", response.data.id);
+      console.log("PAYPAL LINKS:", JSON.stringify(response.data.links, null, 2));
+
       const approveUrl =
         response.data.links.find(
 
@@ -348,6 +421,10 @@ router.post(
       } = req.body;
 
 
+      // =========================
+      // VALIDATE ORDER ID
+      // =========================
+
       if (!orderId) {
 
         return res.status(400).json({
@@ -358,16 +435,245 @@ router.post(
       }
 
 
+      // =========================
+      // USER
+      // =========================
+
+      const user =
+        await User.findById(
+          req.user.id
+        );
+
+      if (!user) {
+
+        return res.status(404).json({
+          message:
+            "User not found",
+        });
+
+      }
+
+      // ==================================================
+// FLOWPAY SIMULATION MODE
+// DO NOT CONTACT PAYPAL
+// ==================================================
+
+if (
+  process.env.FLOWPAY_SIMULATION ===
+  "true"
+) {
+
+  const request =
+    await DepositRequest.findOne({
+      reference:
+        orderId,
+
+      userId:
+        user._id,
+
+    });
+
+  if (!request) {
+
+    return res.status(404).json({
+
+      message:
+        "PayPal deposit request not found",
+
+    });
+
+  }
+
+  if (
+    request.status !==
+    "Pending"
+  ) {
+
+    return res.status(400).json({
+
+      message:
+        "PayPal deposit request is not pending",
+
+    });
+
+  }
+
+  console.log(
+    "FLOWPAY SIMULATION: PayPal capture NOT executed"
+  );
+
+  return res.json({
+
+    success:
+      true,
+
+    simulation:
+      true,
+
+    message:
+      "Simulation mode: PayPal capture was NOT executed.",
+
+    orderId:
+      orderId,
+
+    status:
+      "Pending",
+
+  });
+}
+
+      // =========================
+      // GET PAYPAL TOKEN
+      // =========================
+
       const accessToken =
         await getAccessToken();
 
 
+      // =========================
+      // GET PAYPAL ORDER
+      // =========================
+
+      const orderUrl =
+        process.env.PAYPAL_ENV === "live"
+
+          ? `https://api-m.paypal.com/v2/checkout/orders/${orderId}`
+
+          : `https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderId}`;
+
+
+      const orderResponse =
+        await axios.get(
+
+          orderUrl,
+
+          {
+            headers: {
+              Authorization:
+                `Bearer ${accessToken}`,
+
+              "Content-Type":
+                "application/json",
+            },
+          }
+
+        );
+
+
+      const paypalOrder =
+        orderResponse.data;
+
+
+      // =========================
+      // FIND DEPOSIT REQUEST
+      // =========================
+
+      const request =
+        await DepositRequest.findOne({
+
+          reference:
+            orderId,
+
+          userId:
+            user._id,
+
+        });
+
+
+      if (!request) {
+
+        return res.status(404).json({
+
+          message:
+            "PayPal deposit request not found",
+
+        });
+
+      }
+
+
+      // =========================
+      // PREVENT DUPLICATE CREDIT
+      // =========================
+
+      if (
+        request.status ===
+        "Approved"
+      ) {
+
+        return res.status(400).json({
+
+          message:
+            "PayPal payment already credited",
+
+        });
+
+      }
+
+
+      if (
+        request.status !==
+        "Pending"
+      ) {
+
+        return res.status(400).json({
+
+          message:
+            "PayPal deposit request is not pending",
+
+        });
+
+      }
+
+
+      // =========================
+      // VERIFY PAYPAL AMOUNT
+      // =========================
+
+      const paypalAmount =
+        Number(
+          paypalOrder
+            .purchase_units?.[0]
+            ?.amount?.value
+        );
+
+
+      const requestedAmount =
+        Number(
+          request.amount
+        );
+
+
+      if (
+        !Number.isFinite(
+          paypalAmount
+        ) ||
+        paypalAmount !==
+          Number(
+            requestedAmount.toFixed(2)
+          )
+      ) {
+
+        return res.status(400).json({
+
+          message:
+            "PayPal amount does not match deposit request",
+
+        });
+
+      }
+
+
+      // =========================
+      // CAPTURE PAYPAL PAYMENT
+      // =========================
+
       const captureUrl =
         process.env.PAYPAL_ENV === "live"
 
-        ? `https://api-m.paypal.com/v2/checkout/orders/${orderId}/capture`
+          ? `https://api-m.paypal.com/v2/checkout/orders/${orderId}/capture`
 
-        : `https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderId}/capture`;
+          : `https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderId}/capture`;
 
 
       const response =
@@ -390,6 +696,10 @@ router.post(
         );
 
 
+      // =========================
+      // VERIFY CAPTURE
+      // =========================
+
       if (
         response.data.status !==
         "COMPLETED"
@@ -408,31 +718,9 @@ router.post(
       }
 
 
-
-      const request =
-        await DepositRequest.findOne({
-
-          reference:
-            orderId,
-
-          status:
-            "Pending",
-
-        });
-
-
-      if (!request) {
-
-        return res.status(404).json({
-
-          message:
-            "Deposit request already processed or not found",
-
-        });
-
-      }
-
-
+      // =========================
+      // PREVENT DUPLICATE
+      // =========================
 
       const duplicated =
         await Transaction.findOne({
@@ -461,39 +749,48 @@ router.post(
       }
 
 
+      // =========================
+      // FEE
+      // =========================
 
-      const user =
-        await User.findById(
-          request.userId
+    const fee =
+  Number(
+    calculateExternalFee(
+      requestedAmount
+    ).toFixed(2)
+  );
+
+
+      // =========================
+      // NET AMOUNT
+      // =========================
+
+      const netAmount =
+        Number(
+          (
+            requestedAmount -
+            fee
+          ).toFixed(2)
         );
 
 
-      if (!user) {
+      if (
+        netAmount < 0
+      ) {
 
-        return res.status(404).json({
+        return res.status(400).json({
 
           message:
-            "User not found",
+            "Invalid PayPal deposit fee",
 
         });
 
       }
 
 
-
-      const fee =
-        Number(
-          (request.amount * 0.035)
-          .toFixed(2)
-        );
-
-
-      const netAmount =
-        Number(
-          (request.amount - fee)
-          .toFixed(2)
-        );
-
+      // =========================
+      // BALANCE BEFORE
+      // =========================
 
       const balanceBefore =
         Number(
@@ -501,14 +798,44 @@ router.post(
         );
 
 
+      // =========================
+      // TREASURY
+      // =========================
+
+      const treasury =
+        await User.findOne({
+
+          accountType:
+            "treasury",
+
+        });
+
+
+      if (!treasury) {
+
+        throw new Error(
+          "Treasury account not found"
+        );
+
+      }
+
+
+      const treasuryBefore =
+        Number(
+          treasury.balance || 0
+        );
+
+
+      // =========================
+      // UPDATE USER BALANCE
+      // =========================
 
       user.balance =
         Number(
           (
             balanceBefore +
             netAmount
-          )
-          .toFixed(8)
+          ).toFixed(8)
         );
 
 
@@ -516,14 +843,39 @@ router.post(
         Number(
           user.totalDeposits || 0
         ) +
+        requestedAmount;
+
+
+      // =========================
+      // UPDATE TREASURY
+      // =========================
+
+      treasury.balance =
         Number(
-          request.amount
+          (
+            treasuryBefore +
+            fee
+          ).toFixed(8)
+        );
+
+
+      treasury.revenue =
+        Number(
+          (
+            (treasury.revenue || 0) +
+            fee
+          ).toFixed(8)
         );
 
 
       await user.save();
 
+      await treasury.save();
 
+
+      // =========================
+      // MARK REQUEST APPROVED
+      // =========================
 
       request.status =
         "Approved";
@@ -538,43 +890,52 @@ router.post(
       await request.save();
 
 
+      // =========================
+      // TRANSACTION
+      // =========================
 
-      await Transaction.create({
+      const transaction =
+        await Transaction.create({
 
-        fromEmail:
-          "PAYPAL",
+          fromEmail:
+            "PAYPAL",
 
-        toEmail:
-          user.email,
+          toEmail:
+            user.email,
 
-        amount:
-          request.amount,
+          amount:
+            requestedAmount,
 
-        fee,
+          fee:
+            fee,
 
-        netAmount,
+          netAmount:
+            netAmount,
 
-        feeType:
-          "paypal",
+          feeType:
+            "paypal",
 
-        feeRate:
-          0.035,
+          feeRate:
+            0.035,
 
-        type:
-          "PayPal Deposit",
+          type:
+            "PayPal Deposit",
 
-        method:
-          "paypal",
+          method:
+            "paypal",
 
-        reference:
-          orderId,
+          reference:
+            orderId,
 
-        status:
-          "completed",
+          status:
+            "completed",
 
-      });
+        });
 
 
+      // =========================
+      // LEDGER
+      // =========================
 
       await createLedgerEntry({
 
@@ -590,7 +951,8 @@ router.post(
         amount:
           netAmount,
 
-        balanceBefore,
+        balanceBefore:
+          balanceBefore,
 
         balanceAfter:
           user.balance,
@@ -599,11 +961,14 @@ router.post(
           orderId,
 
         description:
-          "PayPal Live payment completed",
+          "PayPal payment completed",
 
       });
 
 
+      // =========================
+      // NOTIFICATION
+      // =========================
 
       await createNotification({
 
@@ -614,11 +979,21 @@ router.post(
           "PayPal Deposit Completed",
 
         message:
-          `Your PayPal deposit of $${request.amount} has been completed.`,
+          "Your PayPal deposit of $" +
+          requestedAmount.toFixed(2) +
+          " has been completed. " +
+          "Fee: $" +
+          fee.toFixed(2) +
+          ". Net amount: $" +
+          netAmount.toFixed(2) +
+          ".",
 
       });
 
 
+      // =========================
+      // RESPONSE
+      // =========================
 
       return res.json({
 
@@ -629,17 +1004,24 @@ router.post(
           "PayPal deposit completed successfully",
 
         amount:
-          request.amount,
+          requestedAmount,
 
-        fee,
+        fee:
+          fee,
 
-        netAmount,
+        netAmount:
+          netAmount,
 
         balance:
           user.balance,
 
-      });
+        treasuryFee:
+          fee,
 
+        transactionId:
+          transaction._id,
+
+      });
 
 
     } catch (err) {
@@ -668,6 +1050,7 @@ router.post(
     }
 
   }
+
 );
 
 module.exports =

@@ -1,3 +1,6 @@
+const mongoose =
+  require("mongoose");
+
 const emit =
   require(
     "../socket/emitter"
@@ -43,6 +46,12 @@ const amlEngine =
     "../utils/amlEngine"
   );
 
+const {
+  calculateFee,
+} = require(
+  "../utils/fees"
+);
+
 // =========================
 // CREATE WITHDRAWAL
 // =========================
@@ -50,100 +59,164 @@ const amlEngine =
 exports.createWithdrawal =
   async (req, res) => {
 
-    try {
+    const {
+      amount,
+      destination,
+      method,
+      payoutCurrency,
+    } = req.body;
 
-      const {
+    console.log(
+      "WITHDRAW REQUEST BODY:",
+      {
         amount,
         destination,
         method,
-      } = req.body;
+        payoutCurrency,
+      }
+    );
 
-      const user =
+    try {
+
+      // =========================
+      // BASIC USER VALIDATION
+      // =========================
+
+      let user =
         await User.findById(
           req.user.id
         );
 
       if (!user) {
-
         return res.status(404).json({
           message:
             "User not found",
         });
-
       }
 
       // =========================
-// KYC REQUIRED
-// =========================
+      // KYC
+      // =========================
 
-if (
-  !user.verified
-) {
+      if (!user.verified) {
+        return res.status(403).json({
+          message:
+            "KYC verification required",
+        });
+      }
 
-  return res.status(403).json({
-    message:
-      "KYC verification required",
-  });
+      // =========================
+      // ACCOUNT STATUS
+      // =========================
 
-}
-
-      if (
-        user.frozen
-      ) {
-
+      if (user.frozen) {
         return res.status(403).json({
           message:
             "Account frozen",
         });
-
       }
+
+      // =========================
+      // AMOUNT
+      // =========================
 
       const numericAmount =
         Number(amount);
 
       if (
-        isNaN(
+        !Number.isFinite(
           numericAmount
         ) ||
-        numericAmount <= 0
+        numericAmount < 1
       ) {
-
         return res.status(400).json({
           message:
-            "Invalid amount",
+            "Minimum withdrawal amount is $1",
         });
-
       }
-const availableBalance =
-  user.balance -
-  (user.reservedBalance || 0);
 
+      // =========================
+      // METHOD
+      // =========================
 
-if (
-  availableBalance <
-  numericAmount
-) {
+      const normalizedMethod =
+        String(method || "paypal")
+          .toLowerCase()
+          .trim();
 
-  return res.status(400).json({
-    message:
-      "Insufficient available balance",
-  });
+      const normalizedPayoutCurrency =
+        String(
+          payoutCurrency || ""
+        )
+          .toUpperCase()
+          .trim();
 
-}
+      // =========================
+      // CRYPTO VALIDATION
+      // =========================
+
+      if (
+        normalizedMethod === "crypto" &&
+        ![
+          "BTC",
+          "USDT TRC20",
+          "ETH",
+        ].includes(
+          normalizedPayoutCurrency
+        )
+      ) {
+        return res.status(400).json({
+          message:
+            "Invalid cryptocurrency",
+        });
+      }
+
+      // =========================
+      // BALANCE CHECK
+      // =========================
+
+      const availableBalance =
+        Number(user.balance || 0) -
+        Number(
+          user.reservedBalance || 0
+        );
+
+      if (
+        availableBalance <
+        numericAmount
+      ) {
+        return res.status(400).json({
+          message:
+            "Insufficient available balance",
+        });
+      }
+
+      // =========================
+      // FEE
+      // =========================
 
       const fee =
-        numericAmount *
-        0.01;
+        calculateFee(
+          numericAmount,
+          normalizedMethod
+        );
 
       const netAmount =
-        numericAmount -
-        fee;
+        numericAmount - fee;
+
+      // =========================
+      // AML
+      // =========================
 
       await amlEngine({
         user,
         amount:
           numericAmount,
       });
+
+      // =========================
+      // RISK
+      // =========================
 
       const risk =
         await riskEngine({
@@ -152,148 +225,282 @@ if (
             numericAmount,
         });
 
-      const beforeBalance =
-        user.balance;
-
-user.reservedBalance =
-  (user.reservedBalance || 0) +
-  numericAmount;
-
-await user.save();
-
       // =========================
-      // WITHDRAWAL RECORD
+      // DATABASE TRANSACTION
       // =========================
 
-      const withdrawal =
-        await Withdrawal.create({
+      const session =
+        await mongoose.startSession();
+
+      let withdrawal;
+
+      try {
+
+        session.startTransaction();
+
+        // =========================
+        // RELOAD USER INSIDE SESSION
+        // =========================
+
+        user =
+          await User.findById(
+            req.user.id
+          ).session(session);
+
+        if (!user) {
+          const error =
+            new Error(
+              "User not found"
+            );
+
+          error.statusCode = 404;
+
+          throw error;
+        }
+
+        // =========================
+        // FINAL BALANCE CHECK
+        // =========================
+
+        const currentAvailable =
+          Number(
+            user.balance || 0
+          ) -
+          Number(
+            user.reservedBalance || 0
+          );
+
+        if (
+          currentAvailable <
+          numericAmount
+        ) {
+          const error =
+            new Error(
+              "Insufficient available balance"
+            );
+
+          error.statusCode = 400;
+
+          throw error;
+        }
+
+        // =========================
+        // RESERVE FUNDS
+        // =========================
+
+        const beforeBalance =
+          Number(
+            user.balance || 0
+          );
+
+        user.reservedBalance =
+          Number(
+            user.reservedBalance || 0
+          ) +
+          numericAmount;
+
+        await user.save({
+          session,
+        });
+
+        console.log(
+          "FUNDS RESERVED:",
+          numericAmount
+        );
+
+        // =========================
+        // WITHDRAWAL RECORD
+        // =========================
+
+        const withdrawalDocs =
+          await Withdrawal.create(
+            [{
+              userId:
+                user._id,
+
+              email:
+                user.email,
+
+              amount:
+                numericAmount,
+
+              fee,
+
+              netAmount,
+
+              method:
+                normalizedMethod,
+
+              payoutCurrency:
+                normalizedMethod ===
+                "crypto"
+                  ? normalizedPayoutCurrency
+                  : null,
+
+              destination,
+
+              riskLevel:
+                risk.level,
+
+              requiresManualReview:
+                risk.level ===
+                "high",
+
+              ipAddress:
+                req.ip,
+            }],
+            {
+              session,
+            }
+          );
+
+        withdrawal =
+          withdrawalDocs[0];
+
+        console.log(
+          "WITHDRAWAL CREATED:",
+          withdrawal._id
+        );
+
+        // =========================
+        // TRANSACTION RECORD
+        // =========================
+
+        await Transaction.create(
+          [{
+            fromEmail:
+              user.email,
+
+            toEmail:
+              "SYSTEM",
+
+            amount:
+              numericAmount,
+
+            fee,
+
+            netAmount,
+
+            type:
+              "Withdrawal",
+
+            method:
+              normalizedMethod,
+
+            reference:
+              destination,
+
+            status:
+              "pending",
+          }],
+          {
+            session,
+          }
+        );
+
+        console.log(
+          "TRANSACTION CREATED"
+        );
+
+        // =========================
+        // LEDGER
+        // =========================
+
+        await createLedgerEntry({
           userId:
             user._id,
 
           email:
             user.email,
 
+          type:
+            "Withdrawal Request",
+
           amount:
             numericAmount,
 
-          fee,
+          balanceBefore:
+            beforeBalance,
 
-          netAmount,
+          balanceAfter:
+            user.balance,
 
-          method:
-            method ||
-            "paypal",
+          reference:
+            destination,
 
-          destination,
+          description:
+            "Withdrawal submitted",
 
-          riskLevel:
-            risk.level,
-
-          requiresManualReview:
-            risk.level ===
-            "high",
-
-          ipAddress:
-            req.ip,
+          session,
         });
 
         console.log(
-  "WITHDRAWAL CREATED",
-  withdrawal._id
-);
+          "LEDGER CREATED"
+        );
 
-      // =========================
-      // TRANSACTION RECORD
-      // =========================
+        // =========================
+        // COMMIT
+        // =========================
 
-      await Transaction.create({
-        fromEmail:
-          user.email,
+        await session.commitTransaction();
 
-        toEmail:
-          "SYSTEM",
+        console.log(
+          "WITHDRAWAL TRANSACTION COMMITTED"
+        );
 
-        amount:
-          numericAmount,
+      } catch (transactionError) {
 
-        fee,
+        try {
+          await session.abortTransaction();
+        } catch (abortError) {
+          console.error(
+            "WITHDRAWAL ABORT ERROR:",
+            abortError
+          );
+        }
 
-        netAmount,
+        throw transactionError;
 
-        type:
-          "Withdrawal",
+      } finally {
 
-        method:
-          method ||
-          "paypal",
+        await session.endSession();
 
-        reference:
-          destination,
-
-        status:
-  "pending",
-  
-      });
-
-      console.log(
-  "TRANSACTION CREATED"
-);
-
-      // =========================
-      // LEDGER
-      // =========================
-
-      await createLedgerEntry({
-        userId:
-          user._id,
-
-        email:
-          user.email,
-
-        type:
-          "Withdrawal Request",
-
-        amount:
-          numericAmount,
-
-        balanceBefore:
-          beforeBalance,
-
-        balanceAfter:
-          user.balance,
-
-        reference:
-          destination,
-
-        description:
-          "Withdrawal submitted",
-      });
-
-      console.log(
-  "LEDGER CREATED"
-);
+      }
 
       // =========================
       // NOTIFICATION
+      // AFTER COMMIT
       // =========================
 
-      await createNotification({
-        email:
-          user.email,
+      try {
 
-        title:
-          "Withdrawal Submitted",
+        await createNotification({
+          email:
+            user.email,
 
-        message:
-          `Withdrawal request for $${numericAmount} submitted`,
-      });
+          title:
+            "Withdrawal Submitted",
 
-      console.log(
-  "NOTIFICATION CREATED"
-);
+          message:
+            `Withdrawal request for $${numericAmount} submitted`,
+        });
+
+        console.log(
+          "NOTIFICATION CREATED"
+        );
+
+      } catch (notificationError) {
+
+        console.error(
+          "NOTIFICATION ERROR:",
+          notificationError
+        );
+
+      }
 
       // =========================
       // REALTIME EVENTS
+      // AFTER COMMIT
       // =========================
 
       emit(
@@ -325,8 +532,9 @@ await user.save();
       // RESPONSE
       // =========================
 
-      res.json({
-        success: true,
+      return res.json({
+        success:
+          true,
 
         message:
           "Withdrawal submitted",
@@ -337,24 +545,25 @@ await user.save();
     } catch (err) {
 
       console.error(
-  "WITHDRAWAL ERROR:"
-);
+        "WITHDRAWAL ERROR:"
+      );
 
-console.error(err);
+      console.error(err);
 
-console.error(
-  err.stack
-);
+      console.error(
+        err.stack
+      );
 
-      res.status(500).json({
+      return res.status(
+        err.statusCode || 500
+      ).json({
         message:
-          "Withdrawal failed",
+          err.statusCode
+            ? err.message
+            : "Withdrawal failed",
       });
-
     }
-
   };
-
 // =========================
 // USER WITHDRAWALS
 // =========================
@@ -472,7 +681,7 @@ console.log(
   "BALANCE BEFORE:",
   user.balance
 );
-// منع الموافقة المكررة
+// ظ…ظ†ط¹ ط§ظ„ظ…ظˆط§ظپظ‚ط© ط§ظ„ظ…ظƒط±ط±ط©
 if (
   withdrawal.status !== "pending"
 ) {
@@ -485,12 +694,12 @@ if (
 }
 
 
-// خصم الرصيد النهائي
+// ط®طµظ… ط§ظ„ط±طµظٹط¯ ط§ظ„ظ†ظ‡ط§ط¦ظٹ
 user.balance -=
   withdrawal.amount;
 
 
-// تحرير المبلغ المحجوز
+// طھط­ط±ظٹط± ط§ظ„ظ…ط¨ظ„ط؛ ط§ظ„ظ…ط­ط¬ظˆط²
 user.reservedBalance =
   Math.max(
     0,
@@ -615,21 +824,26 @@ exports.rejectWithdrawal =
           withdrawal.userId
         );
 
-      if (user) {
+     if (user) {
 
-        console.log(
-          "REFUNDING",
-          withdrawal.amount,
-          "TO",
-          user.email
-        );
+  console.log(
+    "RELEASING RESERVED BALANCE",
+    withdrawal.amount,
+    "FROM",
+    user.email
 
-        user.balance +=
-          withdrawal.amount;
+  );
 
-        await user.save();
+  user.reservedBalance =
+    Math.max(
+      0,
+      Number(user.reservedBalance || 0) -
+      Number(withdrawal.amount || 0)
+    );
 
-      }
+  await user.save();
+
+}
 
       withdrawal.status =
         "rejected";

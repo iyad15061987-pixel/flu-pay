@@ -1,4 +1,4 @@
-// ======================================================
+﻿// ======================================================
 // FLOWPAY FEES
 // ======================================================
 
@@ -45,7 +45,7 @@ const calculateExternalFee = (amount) => {
 // Configurable from .env:
 //
 // CRYPTO_FEE_RATE=0.01
-// CRYPTO_MIN_FEE=0.10
+// CRYPTO_MIN_FEE=1.00
 // ======================================================
 
 const calculateCryptoFee = (amount) => {
@@ -78,7 +78,7 @@ const calculateCryptoFee = (amount) => {
     Number.isFinite(minimumFee) &&
     minimumFee >= 0
       ? minimumFee
-      : 0.10;
+      : 1.00;
 
   const percentageFee =
     numericAmount * feeRate;

@@ -19,6 +19,16 @@ const withdrawRequestSchema =
         default: "Pending",
       },
 
+      approvedBy: {
+  type: String,
+  default: null,
+},
+
+approvedAt: {
+  type: Date,
+  default: null,
+},
+
       type: {
         type: String,
         default: "Withdraw",

@@ -7,120 +7,134 @@ import {
 
 import API_URL from "@/lib/api";
 
-export default function ActivityPage() {
-  const [logs, setLogs] =
+
+export default function ActivityPage(){
+
+  const [activities,setActivities] =
     useState<any[]>([]);
 
-  const loadLogs =
-    async () => {
-      const token =
-        localStorage.getItem(
-          "token"
-        );
+  const loadActivity =
+    async()=>{
 
-      const res =
-        await fetch(
-          `${API_URL}/admin/activity-logs`,
-          {
-            headers: {
-              Authorization:
+      try{
+
+        const token =
+          localStorage.getItem("token");
+
+
+        const res =
+          await fetch(
+            `${API_URL}/admin/activity`,
+            {
+              headers:{
+                Authorization:
                 `Bearer ${token}`,
-            },
-          }
+              },
+            }
+          );
+
+
+        const data =
+          await res.json();
+
+
+        setActivities(
+          Array.isArray(data)
+          ? data
+          : data.activities || []
         );
 
-      const data =
-        await res.json();
 
-      setLogs(data);
+      }catch(err){
+
+        console.log(err);
+
+      }
+
     };
 
-  useEffect(() => {
-    loadLogs();
-  }, []);
 
-  return (
+  useEffect(()=>{
+
+    loadActivity();
+
+  },[]);
+
+
+  return(
+
     <div
-      style={{
-        background:
-          "#0f172a",
-
-        minHeight:
-          "100vh",
-
-        color: "white",
-
-        padding: 40,
-      }}
+    style={{
+      padding:40,
+      background:"#0f172a",
+      minHeight:"100vh",
+      color:"white"
+    }}
     >
+
       <h1>
-        📋 Activity
-        Logs
+        📋 Admin Activity
       </h1>
 
-      <br />
 
-      {logs.map(
-        (
-          log,
-          index
-        ) => (
+      <br/>
+
+
+      <div
+      style={{
+        background:"#111827",
+        padding:25,
+        borderRadius:20
+      }}
+      >
+
+
+      {
+        activities.map(
+          (item:any)=>(
+
           <div
-            key={index}
-            style={{
-              background:
-                "#111827",
-
-              padding: 20,
-
-              borderRadius: 20,
-
-              marginBottom: 20,
-            }}
+          key={item._id}
+          style={{
+            padding:15,
+            borderBottom:
+            "1px solid #374151"
+          }}
           >
+
             <h3>
-              {
-                log.action
-              }
+              {item.action}
             </h3>
 
-            <br />
 
             <p>
-              User:
-              {
-                log.email
-              }
+              {item.description}
             </p>
 
-            <p>
-              Role:
+
+            <small>
               {
-                log.role
+                new Date(
+                  item.createdAt
+                )
+                .toLocaleString()
               }
-            </p>
+            </small>
 
-            <p>
-              IP:
-              {
-                log.ip
-              }
-            </p>
 
-            <br />
-
-            <pre>
-              {JSON.stringify(
-                log.metadata,
-
-                null,
-
-                2
-              )}
-            </pre>
           </div>
+
+          )
+
         )
-      )}
+      }
+
+
+      </div>
+
+
     </div>
+
   );
+
 }

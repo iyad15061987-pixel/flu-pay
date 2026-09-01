@@ -1,4 +1,4 @@
-const express =
+﻿const express =
   require("express");
 
 const router =
@@ -23,6 +23,7 @@ const {
   getDepositRequests,
   getWithdrawRequests,
   approveDeposit,
+  rejectDeposit,
   approveWithdraw,
 } = require(
   "../controllers/adminController"
@@ -106,6 +107,21 @@ router.post(
   adminOnly,
 
   approveDeposit
+);
+
+
+// =========================
+// REJECT DEPOSIT
+// =========================
+
+router.post(
+  "/reject-deposit",
+
+  auth,
+
+  adminOnly,
+
+  rejectDeposit
 );
 
 // =========================
