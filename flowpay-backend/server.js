@@ -533,7 +533,8 @@ app.use(
       "http://localhost:3000",
       "https://flu-pay-beta.vercel.app",
       "https://flu-pay.vercel.app",
-      "https://www.flowpay.com"
+      "https://www.flowpay.com",
+      "https://flowpay.g-m-foundation.com"
     ],
 
     methods: [
