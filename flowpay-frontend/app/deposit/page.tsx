@@ -589,7 +589,7 @@ alert(
   <br />
 
   <p>
-    Fee 3.5%:
+    {method === "Crypto" ? "Fee 1% (min $1):" : "Fee 3.5%:"}
     <strong>
       {" "}
       $
