@@ -493,7 +493,7 @@ alert(
 )}
 
 <h1>
-  ًںڈ¦ Deposit Request
+  Deposit Request
 </h1>
         <br />
 
@@ -576,7 +576,7 @@ alert(
 >
 
   <p>
-    ًں’µ Deposit:
+    Deposit:
     <strong>
       {" "}
       $
@@ -589,7 +589,7 @@ alert(
   <br />
 
   <p>
-    ًں§¾ Fee 3.5%:
+    Fee 3.5%:
     <strong>
       {" "}
       $
@@ -600,7 +600,7 @@ alert(
   <br />
 
   <p>
-    âœ… Balance Added:
+    Balance Added:
     <strong>
       {" "}
       $
@@ -647,7 +647,7 @@ alert(
 >
 
   <h3>
-    ًں“Œ Important
+    Important
   </h3>
 
   <br />
