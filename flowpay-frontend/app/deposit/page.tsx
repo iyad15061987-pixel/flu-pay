@@ -33,15 +33,6 @@ export default function DepositPage() {
     paymentId: string;
   } | null>(null);
 
-  const [bankAccount, setBankAccount] =
-    useState<{
-      bankName: string;
-      accountHolder: string;
-      iban: string;
-      swift: string;
-      country: string;
-      currency: string;
-    } | null>(null);
 
   useEffect(() => {
 
@@ -58,35 +49,6 @@ export default function DepositPage() {
 
   }, []);
 
-  useEffect(() => {
-    if (method !== "Bank") {
-      setBankAccount(null);
-      return;
-    }
-
-    const token = localStorage.getItem("token");
-
-    fetch(`${API_URL}/bank/account`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then(async (res) => {
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(
-            data.message || "Bank account unavailable"
-          );
-        }
-
-        setBankAccount(data.account);
-      })
-      .catch((err) => {
-        console.log("BANK ACCOUNT ERROR:", err);
-        setBankAccount(null);
-      });
-  }, [method]);
 
   if (!mounted) {
     return null;
@@ -226,7 +188,7 @@ alert(
   return;
 }
           // =========================
-      // BANK / CARD â€” STRIPE
+      // BANK / CARD ط£آ¢أ¢â€ڑآ¬أ¢â‚¬â€Œ STRIPE
       // =========================
 
       if (method === "Bank") {
@@ -451,47 +413,6 @@ alert(
 )
 }
 
-
-{bankAccount && method === "Bank" && (
-  <div
-    style={{
-      marginBottom: 20,
-      padding: 25,
-      borderRadius: 15,
-      background: theme === "light" ? "white" : "#111827",
-      border: "1px solid #374151",
-    }}
-  >
-    <h2>Bank Transfer</h2>
-    <br />
-
-    <p><strong>Bank Name:</strong> {bankAccount.bankName}</p>
-    <p><strong>Account Holder:</strong> {bankAccount.accountHolder}</p>
-    <p><strong>IBAN:</strong> {bankAccount.iban}</p>
-    <p><strong>SWIFT:</strong> {bankAccount.swift}</p>
-    <p><strong>Country:</strong> {bankAccount.country}</p>
-    <p><strong>Currency:</strong> {bankAccount.currency}</p>
-
-    <br />
-
-    <button
-      onClick={() => {
-        navigator.clipboard.writeText(bankAccount.iban);
-        alert("IBAN copied");
-      }}
-      style={{
-        padding: "10px 18px",
-        border: "none",
-        borderRadius: 10,
-        cursor: "pointer",
-        fontWeight: "bold",
-      }}
-    >
-      Copy IBAN
-    </button>
-  </div>
-)}
-
 <h1>
   Deposit Request
 </h1>
@@ -627,7 +548,7 @@ alert(
     cursor: "pointer",
   }}
 >
-  {method === "Bank" ? "I Have Made the Transfer" : "Create Deposit Request"}
+  {method === "Bank" ? "Continue to Card / Bank Payment" : "Create Deposit Request"}
 </button>
 
 <br />
