@@ -646,66 +646,117 @@ setInvoices(
 
           return;
         }
+// =========================
+// BANK / CARD - STRIPE
+// =========================
 
-        // =========================
-        // BANK / CRYPTO
-        // =========================
+if (depositMethod.toLowerCase() === "bank") {
+  const stripeRes =
+    await fetch(
+      `${API_URL}/stripe/create-checkout`,
+      {
+        method: "POST",
 
-        const res =
-          await fetch(
-            `${API_URL}/deposits`,
-            {
-              method:
-                "POST",
+        headers: {
+          "Content-Type":
+            "application/json",
 
-              headers: {
-                "Content-Type":
-                  "application/json",
+          Authorization:
+            `Bearer ${token}`,
+        },
 
-                Authorization:
-                  `Bearer ${token}`,
-              },
+        body:
+          JSON.stringify({
+            amount:
+              numericAmount,
+          }),
+      }
+    );
 
-              body:
-                JSON.stringify({
-                  amount:
-                    numericAmount,
+  const stripeData =
+    await stripeRes.json();
 
-                  method:
-                    depositMethod,
+  if (!stripeRes.ok) {
+    alert(
+      stripeData.message ||
+      "Stripe checkout failed"
+    );
 
-                  reference:
-                    "Wallet Funding",
-                }),
-            }
-          );
+    return;
+  }
 
-        const data =
-          await res.json();
+  if (stripeData.url) {
+    window.location.href =
+      stripeData.url;
 
-        if (!res.ok) {
+    return;
+  }
 
-          alert(
-            data.message ||
-            "Deposit failed"
-          );
+  alert(
+    "Stripe checkout URL not found"
+  );
 
-          return;
-        }
+  return;
+}
 
-        alert(
-          data.message ||
-          "Deposit created successfully"
-        );
+// =========================
+// CRYPTO - EXISTING FLOW
+// =========================
 
-        setDepositAmount("");
+const res =
+  await fetch(
+    `${API_URL}/deposits`,
+    {
+      method:
+        "POST",
 
-        loadUser();
+      headers: {
+        "Content-Type":
+          "application/json",
 
-        loadDeposits();
+        Authorization:
+          `Bearer ${token}`,
+      },
 
-        loadAnalytics();
+      body:
+        JSON.stringify({
+          amount:
+            numericAmount,
 
+          method:
+            depositMethod,
+
+          reference:
+            "Wallet Funding",
+        }),
+    }
+  );
+
+const data =
+  await res.json();
+
+if (!res.ok) {
+
+  alert(
+    data.message ||
+    "Deposit failed"
+  );
+
+  return;
+}
+
+alert(
+  data.message ||
+  "Deposit created successfully"
+);
+
+setDepositAmount("");
+
+loadUser();
+
+loadDeposits();
+
+loadAnalytics();
       } catch (err) {
 
         console.error(
@@ -1198,7 +1249,7 @@ setInvoices(
             </option>
 
             <option value="bank">
-              Bank Transfer
+              Bank / Card
             </option>
 
             <option value="crypto">
