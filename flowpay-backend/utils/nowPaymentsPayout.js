@@ -286,6 +286,8 @@ async function createPayout({
 
   address,
 
+  currency = "trx",
+
   amount,
 
   uniqueExternalId,
@@ -353,7 +355,7 @@ async function createPayout({
     address,
 
     currency:
-      "trx",
+      String(currency).toLowerCase(),
 
     amount:
       amountString,

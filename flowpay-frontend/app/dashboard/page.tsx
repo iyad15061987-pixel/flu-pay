@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import socket from "@/lib/socket";
 
@@ -854,7 +854,59 @@ setDepositAmount("");
           localStorage.getItem(
             "token"
           );
+if (withdrawalMethod === "crypto") {
 
+  const res =
+    await fetch(
+      `${API_URL}/crypto-withdraw`,
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type":
+            "application/json",
+
+          Authorization:
+            `Bearer ${token}`,
+        },
+
+        body: JSON.stringify({
+          amount:
+            withdrawalAmount,
+
+          walletAddress:
+            withdrawalDestination,
+
+          coin:
+            withdrawalCryptoCurrency,
+        }),
+      }
+    );
+
+  const data =
+    await res.json();
+
+  alert(
+    data.message ||
+    "Crypto withdrawal request failed"
+  );
+
+  if (res.ok) {
+
+    setWithdrawalAmount("");
+
+    setWithdrawalDestination(
+      ""
+    );
+
+    loadUser();
+
+    loadWithdrawals();
+
+  }
+
+  return;
+}
         const res =
           await fetch(
             `${API_URL}/withdrawals`,
@@ -1193,7 +1245,7 @@ setDepositAmount("");
   <div>
 
     <h1>
-      ًMerchant Dashboard
+      �Merchant Dashboard
     </h1>
 
     <br />
@@ -1517,7 +1569,7 @@ Available Balance
                 USDT TRC20
               </option>
 
-              <option value="USDT ERC20">
+              <option value="usdterc20">
                 USDT ERC20
               </option>
 
@@ -1531,7 +1583,38 @@ Available Balance
 
               <option value="usdc">
                 USDC
-              </option>
+</option>
+<option value="trx">
+  TRON (TRX)
+</option>
+
+<option value="ltc">
+  Litecoin (LTC)
+</option>
+
+<option value="doge">
+  Dogecoin (DOGE)
+</option>
+
+<option value="xrp">
+  XRP
+</option>
+
+<option value="sol">
+  Solana (SOL)
+</option>
+
+<option value="ada">
+  Cardano (ADA)
+</option>
+
+<option value="usdtbsc">
+  USDT BSC
+</option>
+
+<option value="usdtsol">
+  USDT Solana
+</option>
 
             </select>
 
@@ -1649,23 +1732,23 @@ Available Balance
                   }}
                 >
 
-                  <option value="USDT TRC20">
+                  <option value="usdttrc20">
                     USDT TRC20
                   </option>
 
-                  <option value="USDT ERC20">
+                  <option value="usdterc20">
                     USDT ERC20
                   </option>
 
-                  <option value="BTC">
+                  <option value="btc">
                     Bitcoin
                   </option>
 
-                  <option value="ETH">
+                  <option value="eth">
                     Ethereum
                   </option>
 
-                  <option value="USDC">
+                  <option value="usdc">
                     USDC
                   </option>
 
@@ -2413,44 +2496,3 @@ Available Balance
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -119,24 +119,34 @@ router.post(
           .trim()
           .toLowerCase();
 
-
       // ==================================================
-      // NOWPAYMENTS / FLOWPAY CURRENTLY SUPPORTS TRX
+      // NOWPAYMENTS / FLOWPAY SUPPORTED CRYPTO CURRENCIES
       // ==================================================
 
       if (
-        normalizedCoin !==
-        "trx"
+        ![
+          "trx",
+          "btc",
+          "eth",
+          "ltc",
+          "doge",
+          "xrp",
+          "sol",
+          "ada",
+          "usdttrc20",
+          "usdterc20",
+          "usdtbsc",
+          "usdtsol",
+          "usdc",
+        ].includes(normalizedCoin)
       ) {
 
         return res.status(400).json({
           message:
-            "Only TRX crypto withdrawals are currently supported",
+            "Unsupported cryptocurrency",
         });
 
       }
-
-
       // ==================================================
       // USER
       // ==================================================
@@ -278,14 +288,14 @@ router.post(
       }
 
       // ==================================================
-      // USD → TRX ESTIMATE
+      // USD → CRYPTO ESTIMATE
       // ==================================================
       //
       // IMPORTANT:
       // FlowPay balance remains USD.
-      // NOWPayments receives the actual TRX amount.
+      // NOWPayments receives the actual crypto amount.
       //
-      // We calculate the TRX amount once when the
+      // We calculate the crypto amount once when the
       // withdrawal request is created and store it.
       //
       // ==================================================
@@ -303,24 +313,22 @@ router.post(
             currencyFrom:
               "usd",
 
-            currencyTo:
-              "trx",
+         currencyTo: normalizedCoin,
 
           });
 
       } catch (estimateError) {
 
-        console.error(
-          "NOWPAYMENTS USD TO TRX ESTIMATE ERROR:",
-          estimateError.response?.data ||
-          estimateError.message
-        );
+       console.error(
+  "NOWPAYMENTS USD TO CRYPTO ESTIMATE ERROR:",
+  estimateError.response?.data ||
+  estimateError.message
+);
 
-        return res.status(502).json({
-          message:
-            "Unable to calculate TRX payout amount",
-        });
-
+return res.status(502).json({
+  message:
+    "Unable to calculate crypto payout amount",
+});
       }
 
       // ==================================================
@@ -334,27 +342,27 @@ router.post(
           ""
         ).toLowerCase() !==
           "usd" ||
-        String(
-          estimate.currency_to ||
-          ""
-        ).toLowerCase() !==
-          "trx"
+       String(
+  estimate.currency_to ||
+  ""
+).toLowerCase() !==
+  normalizedCoin
       ) {
 
         console.error(
-          "Invalid NOWPayments estimate response:",
+"Invalid USD to crypto conversion response",
           estimate
         );
 
         return res.status(502).json({
           message:
-            "Invalid USD to TRX conversion response",
+"Invalid USD to crypto conversion response",
         });
 
       }
 
       // ==================================================
-      // TRX PAYOUT AMOUNT
+      // CRYPTO PAYOUT AMOUNT
       // ==================================================
 
       const payoutAmount =
@@ -374,19 +382,19 @@ router.post(
       ) {
 
         console.error(
-          "Invalid TRX payout amount:",
+"Invalid crypto payout amount:",
           estimate
         );
 
         return res.status(502).json({
           message:
-            "Unable to calculate a valid TRX payout amount",
+"Unable to calculate a valid crypto payout amount",
         });
 
       }
 
       // ==================================================
-      // TRX DECIMAL NORMALIZATION
+      // CRYPTO DECIMAL NORMALIZATION
       // ==================================================
       //
       // NOWPayments payout currently uses up to 6
@@ -408,7 +416,7 @@ router.post(
 
         return res.status(502).json({
           message:
-            "Invalid normalized TRX payout amount",
+"Invalid normalized crypto payout amount",
         });
 
       }
@@ -434,7 +442,7 @@ router.post(
 
         return res.status(502).json({
           message:
-            "Invalid USD to TRX exchange rate",
+"Invalid crypto exchange rate",
         });
 
       }
@@ -443,9 +451,8 @@ router.post(
       // FINAL PAYOUT DATA
       // ==================================================
 
-      const payoutCurrency =
-        "TRX";
-
+   const payoutCurrency =
+  normalizedCoin.toUpperCase();
       if (
         payoutCurrency !==
         normalizedCoin.toUpperCase()
@@ -473,8 +480,8 @@ router.post(
 
             payoutCurrency,
 
-            payoutAmountTRX:
-              normalizedPayoutAmount,
+payoutAmount:
+  normalizedPayoutAmount,
 
             exchangeRate,
 
@@ -613,10 +620,8 @@ if (
 
             currency:
               "USD",
-
-              payoutCurrency:
-  "TRX",
-
+payoutCurrency:
+  payoutCurrency,
 payoutAmount:
   normalizedPayoutAmount,
 
@@ -833,24 +838,26 @@ exchangeRate:
 
   amount:
     numericAmount,
+currency:
 
-  currency:
-    "USD",
+  "USD",
 
-  fee,
+fee,
 
-  netAmount,
+netAmount,
 
-  payoutCurrency:
-    "TRX",
+payoutCurrency:
+
+  payoutCurrency,
 
 payoutAmount:
+
   normalizedPayoutAmount,
 
-  exchangeRate,
+exchangeRate,
 
-  coin:
-    "TRX",
+coin:
+  payoutCurrency,
 
   walletAddress,
 
@@ -1118,7 +1125,7 @@ router.post(
 
 
       // ==================================================
-      // ONLY TRX IS CURRENTLY SUPPORTED
+      // SUPPORTED CRYPTO PAYOUT CURRENCIES
       // ==================================================
 
       const payoutCurrency =
@@ -1129,16 +1136,27 @@ router.post(
           .toUpperCase();
 
 
-      if (
-        payoutCurrency !==
-        "TRX"
-      ) {
-
+     if (
+  ![
+    "TRX",
+    "BTC",
+    "ETH",
+    "LTC",
+    "DOGE",
+    "XRP",
+    "SOL",
+    "ADA",
+    "USDTTRC20",
+    "USDTERC20",
+    "USDTBSC",
+    "USDTSOL",
+    "USDC",
+  ].includes(payoutCurrency)
+) {
         return res.status(400).json({
 
           message:
-            "Only TRX payout currency is currently supported",
-
+"Unsupported cryptocurrency payout currency",
         });
 
       }
@@ -1170,7 +1188,7 @@ router.post(
 
 
       // ==================================================
-      // VALIDATE FLOWPAY USD AMOUNT
+     // VALIDATE STORED CRYPTO PAYOUT AMOUNT
       // ==================================================
 
       const netAmount =
@@ -1189,15 +1207,14 @@ router.post(
         return res.status(400).json({
 
           message:
-            "Invalid withdrawal net amount",
-
+"Invalid crypto payout amount:",
         });
 
       }
 
 
       // ==================================================
-      // VALIDATE STORED TRX PAYOUT AMOUNT
+      // VALIDATE STORED CRYPTO PAYOUT AMOUNT
       // ==================================================
 
       const payoutAmount =
@@ -1214,15 +1231,14 @@ router.post(
       ) {
 
         console.error(
-          "Invalid TRX payout amount:",
+"Invalid crypto payout amount",
           withdrawal.payoutAmount
         );
 
         return res.status(400).json({
 
           message:
-            "Invalid TRX payout amount",
-
+"Invalid crypto payout amount",
         });
 
       }
@@ -1246,7 +1262,7 @@ router.post(
       ) {
 
         console.error(
-          "Invalid stored exchange rate:",
+"Stored crypto payout amount does not match the stored exchange rate",
           withdrawal.exchangeRate
         );
 
@@ -1310,15 +1326,14 @@ router.post(
         return res.status(409).json({
 
           message:
-            "Stored TRX payout amount does not match the stored exchange rate",
-
+"Stored crypto payout amount does not match the stored exchange rate",
         });
 
       }
 
 
       // ==================================================
-      // VALIDATE TRX ADDRESS WITH NOWPAYMENTS
+     // VALIDATE CRYPTO ADDRESS WITH NOWPAYMENTS
       // ==================================================
 
       const validation =
@@ -1327,14 +1342,13 @@ router.post(
           address:
             destination,
 
-          currency:
-            "trx",
-
+        currency:
+  payoutCurrency.toLowerCase(),
         });
 
 
       console.log(
-        "NOWPAYMENTS TRX ADDRESS VALIDATION:",
+"NOWPAYMENTS CRYPTO ADDRESS VALIDATION:",
         validation
       );
 
@@ -1416,25 +1430,27 @@ if (
       // CREATE NOWPAYMENTS PAYOUT
       //
       // IMPORTANT:
-      // amount is TRX, NOT USD.
+      // amount is the selected crypto currency, NOT USD.
       // ==================================================
 
       const payout =
-        await createPayout({
+      await createPayout({
+  address:
+    destination,
 
-          address:
-            destination,
+  currency:
+    payoutCurrency.toLowerCase(),
 
-          amount:
-            payoutAmount,
+  amount:
+    payoutAmount,
 
           uniqueExternalId,
 
           ipnCallbackUrl:
             NOWPAYMENTS_IPN_URL,
 
-          description:
-            `FlowPay TRX withdrawal ${withdrawal._id}`,
+         description:
+  `FlowPay ${payoutCurrency} withdrawal ${withdrawal._id}`,
 
         });
 
@@ -1611,8 +1627,8 @@ try {
             "Crypto Withdrawal Awaiting 2FA",
 
           message:
-            `Your TRX withdrawal of $${Number(
-              withdrawal.amount
+`Your ${payoutCurrency} withdrawal of $${Number(
+                withdrawal.amount
             ).toFixed(
               2
             )} has been approved and is awaiting payout verification.`,
@@ -2054,8 +2070,8 @@ if (
             "Crypto Withdrawal Processing",
 
           message:
-            `Your TRX withdrawal of $${Number(
-              withdrawal.amount
+`Your ${payoutCurrency} withdrawal of $${Number(
+                withdrawal.amount
             ).toFixed(
               2
             )} has passed payout verification and is now processing.`,
@@ -2416,7 +2432,7 @@ await Transaction.findOneAndUpdate(
               "Crypto Withdrawal Completed",
 
             message:
-              `Your TRX crypto withdrawal of $${Number(
+             `Your ${payoutCurrency} crypto withdrawal of $${Number(
                 withdrawal.amount || 0
               ).toFixed(
                 2
