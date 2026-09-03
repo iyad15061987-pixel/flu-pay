@@ -64,6 +64,15 @@ exports.createWithdrawal =
       destination,
       method,
       payoutCurrency,
+      bankName,
+      accountHolder,
+      iban,
+      swiftCode,
+      bankCountry,
+      bankTransferType,
+      accountNumber,
+      routingNumber,
+      sortCode,
     } = req.body;
 
     console.log(
@@ -160,7 +169,9 @@ exports.createWithdrawal =
         ![
           "BTC",
           "USDT TRC20",
+          "USDT ERC20",
           "ETH",
+          "USDC",
         ].includes(
           normalizedPayoutCurrency
         )
@@ -172,7 +183,93 @@ exports.createWithdrawal =
       }
 
       // =========================
-      // BALANCE CHECK
+      // DESTINATION VALIDATION
+      // =========================
+
+      if (
+        normalizedMethod === "paypal" &&
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+          destination
+        )
+      ) {
+        return res.status(400).json({
+          message:
+            "Invalid PayPal email",
+        });
+      }
+
+
+
+      if (
+        normalizedMethod === "crypto" &&
+        !destination
+      ) {
+        return res.status(400).json({
+          message:
+            "Crypto wallet address required",
+        });
+      }
+
+
+      // =========================
+      
+          // =========================
+          // BANK TRANSFER VALIDATION
+          // =========================
+
+          if (normalizedMethod === "bank") {
+
+            const country =
+              String(bankCountry || "")
+                .toUpperCase()
+                .trim();
+
+
+            if (
+              country === "USA" &&
+              (!bankName || !accountHolder || !accountNumber || !routingNumber)
+            ) {
+              return res.status(400).json({
+                message:
+                  "USA bank requires bank name, account holder, account number and routing number",
+              });
+            }
+
+
+            if (
+              country === "UK" &&
+              (!bankName || !accountHolder || !accountNumber || !sortCode)
+            ) {
+              return res.status(400).json({
+                message:
+                  "UK bank requires bank name, account holder, account number and sort code",
+              });
+            }
+
+
+                if (
+                  [
+                    "EU",
+                    "SA",
+                    "AE",
+                    "PS",
+                    "EG",
+                    "JO",
+                    "MA",
+                    "TN",
+                    "DZ",
+                    "LB"
+                  ].includes(country) &&
+                  (!accountHolder || !iban)
+                ) {
+                  return res.status(400).json({
+                    message:
+                      "This bank country requires account holder and IBAN",
+                  });
+                }
+
+          }
+// BALANCE CHECK
       // =========================
 
       const availableBalance =
@@ -338,6 +435,51 @@ exports.createWithdrawal =
                   : null,
 
               destination,
+
+              bankName:
+                normalizedMethod === "bank"
+                  ? bankName
+                  : null,
+
+              accountHolder:
+                normalizedMethod === "bank"
+                  ? accountHolder
+                  : null,
+
+              iban:
+                normalizedMethod === "bank"
+                  ? iban
+                  : null,
+
+              swiftCode:
+                normalizedMethod === "bank"
+                  ? swiftCode
+                  : null,
+
+              bankCountry:
+                normalizedMethod === "bank"
+                  ? bankCountry
+                  : null,
+
+              bankTransferType:
+                normalizedMethod === "bank"
+                  ? bankTransferType
+                  : null,
+
+              accountNumber:
+                normalizedMethod === "bank"
+                  ? accountNumber
+                  : null,
+
+              routingNumber:
+                normalizedMethod === "bank"
+                  ? routingNumber
+                  : null,
+
+              sortCode:
+                normalizedMethod === "bank"
+                  ? sortCode
+                  : null,
 
               riskLevel:
                 risk.level,
@@ -877,3 +1019,13 @@ exports.rejectWithdrawal =
     }
 
   };
+
+
+
+
+
+
+
+
+
+

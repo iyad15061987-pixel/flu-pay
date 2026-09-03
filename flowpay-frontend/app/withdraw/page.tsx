@@ -27,6 +27,33 @@ export default function WithdrawPage() {
   const [cryptoCurrency, setCryptoCurrency] =
     useState("USDT TRC20");
 
+        const [bankCountry, setBankCountry] =
+          useState("");
+
+        const [bankName, setBankName] =
+          useState("");
+
+        const [accountHolder, setAccountHolder] =
+          useState("");
+
+        const [iban, setIban] =
+          useState("");
+
+        const [swiftCode, setSwiftCode] =
+          useState("");
+
+        const [accountNumber, setAccountNumber] =
+          useState("");
+
+        const [routingNumber, setRoutingNumber] =
+          useState("");
+
+        const [sortCode, setSortCode] =
+          useState("");
+
+        const [bankTransferType, setBankTransferType] =
+          useState("");
+
 
   useEffect(() => {
     setMounted(true);
@@ -94,16 +121,64 @@ export default function WithdrawPage() {
                   `Bearer ${token}`,
               },
 
-           body: JSON.stringify({
-  amount,
-  method,
-  destination: wallet,
-  payoutCurrency:
-    method === "crypto"
-      ? cryptoCurrency
-      : null,
-}),
+                body: JSON.stringify({
+                  amount,
 
+                  method,
+
+                  destination: wallet,
+
+                  payoutCurrency:
+                    method === "crypto"
+                      ? cryptoCurrency
+                      : null,
+
+                  bankCountry:
+                    method === "bank"
+                      ? bankCountry
+                      : null,
+
+                  bankTransferType:
+                    method === "bank"
+                      ? bankTransferType
+                      : null,
+
+                  bankName:
+                    method === "bank"
+                      ? bankName
+                      : null,
+
+                  accountHolder:
+                    method === "bank"
+                      ? accountHolder
+                      : null,
+
+                  iban:
+                    method === "bank"
+                      ? iban
+                      : null,
+
+                  swiftCode:
+                    method === "bank"
+                      ? swiftCode
+                      : null,
+
+                  accountNumber:
+                    method === "bank"
+                      ? accountNumber
+                      : null,
+
+                  routingNumber:
+                    method === "bank"
+                      ? routingNumber
+                      : null,
+
+                  sortCode:
+                    method === "bank"
+                      ? sortCode
+                      : null,
+
+                }),
             }
           );
 
@@ -115,6 +190,16 @@ export default function WithdrawPage() {
         setAmount("");
 
         setWallet("");
+
+setBankCountry("");
+setBankName("");
+setAccountHolder("");
+setIban("");
+setSwiftCode("");
+setAccountNumber("");
+setRoutingNumber("");
+setSortCode("");
+setBankTransferType("");
 
       } catch (err) {
         alert("Server error");
@@ -259,53 +344,116 @@ export default function WithdrawPage() {
             </>
           )}
 
-          <label style={{
-            display: "block",
-            marginBottom: 8,
-            fontWeight: "600",
-          }}>
-            {method === "paypal"
-              ? "PayPal Email"
-              : method === "bank"
-                ? "Bank Account / IBAN"
-                : `${cryptoCurrency} Wallet Address`}
-          </label>
+              {method === "bank" ? (
+                <>
+                  <label style={{
+                    display: "block",
+                    marginBottom: 8,
+                    fontWeight: "600",
+                  }}>
+                    Bank Country
+                  </label>
 
-          <input
-            type="text"
-            placeholder={
-              method === "paypal"
-                ? "Enter PayPal email"
-                : method === "bank"
-                  ? "Enter Bank Account / IBAN"
-                  : `Enter ${cryptoCurrency} wallet address`
-            }
-            value={wallet}
-            onChange={(e) =>
-              setWallet(
-                e.target.value
-              )
-            }
-            style={{
-              width: "100%",
-              padding: 15,
-              borderRadius: 10,
-              border: "none",
-              marginBottom: 15,
+                  <select
+                    value={bankCountry}
+                    onChange={(e)=>setBankCountry(e.target.value)}
+                    style={{
+                      width:"100%",
+                      padding:15,
+                      borderRadius:10,
+                      marginBottom:15
+                    }}
+                  >
+                    <option value="">Select Country</option>
+                    <option value="PS">Palestine</option>
+                    <option value="SA">Saudi Arabia</option>
+                    <option value="AE">UAE</option>
+                    <option value="EG">Egypt</option>
+                    <option value="JO">Jordan</option>
+                    <option value="EU">European Union</option>
+                    <option value="USA">United States</option>
+                    <option value="UK">United Kingdom</option>
+                  </select>
 
-              background:
-                theme === "light"
-                  ? "#f9fafb"
-                  : "#1f2937",
+                  <input
+                    placeholder="Account Holder Name"
+                    value={accountHolder}
+                    onChange={(e)=>setAccountHolder(e.target.value)}
+                    style={{width:"100%",padding:15,borderRadius:10,marginBottom:15}}
+                  />
 
-              color:
-                theme === "light"
-                  ? "#111827"
-                  : "white",
+                  {bankCountry !== "USA" && bankCountry !== "UK" && (
+                    <input
+                      placeholder="IBAN"
+                      value={iban}
+                      onChange={(e)=>setIban(e.target.value)}
+                      style={{width:"100%",padding:15,borderRadius:10,marginBottom:15}}
+                    />
+                  )}
 
-              fontSize: 16,
-            }}
-          />
+                  {(bankCountry === "USA" || bankCountry === "UK") && (
+                    <input
+                      placeholder="Bank Name"
+                      value={bankName}
+                      onChange={(e)=>setBankName(e.target.value)}
+                      style={{width:"100%",padding:15,borderRadius:10,marginBottom:15}}
+                    />
+                  )}
+
+                  {bankCountry === "USA" && (
+                    <>
+                      <input
+                        placeholder="Account Number"
+                        value={accountNumber}
+                        onChange={(e)=>setAccountNumber(e.target.value)}
+                        style={{width:"100%",padding:15,borderRadius:10,marginBottom:15}}
+                      />
+                      <input
+                        placeholder="Routing Number"
+                        value={routingNumber}
+                        onChange={(e)=>setRoutingNumber(e.target.value)}
+                        style={{width:"100%",padding:15,borderRadius:10,marginBottom:15}}
+                      />
+                    </>
+                  )}
+
+                  {bankCountry === "UK" && (
+                    <>
+                      <input
+                        placeholder="Account Number"
+                        value={accountNumber}
+                        onChange={(e)=>setAccountNumber(e.target.value)}
+                        style={{width:"100%",padding:15,borderRadius:10,marginBottom:15}}
+                      />
+                      <input
+                        placeholder="Sort Code"
+                        value={sortCode}
+                        onChange={(e)=>setSortCode(e.target.value)}
+                        style={{width:"100%",padding:15,borderRadius:10,marginBottom:15}}
+                      />
+                    </>
+                  )}
+
+                  <input
+                    placeholder="SWIFT / BIC (Optional)"
+                    value={swiftCode}
+                    onChange={(e)=>setSwiftCode(e.target.value)}
+                    style={{width:"100%",padding:15,borderRadius:10,marginBottom:15}}
+                  />
+                </>
+              ) : (
+                <input
+                  type="text"
+                  placeholder={
+                    method === "paypal"
+                      ? "Enter PayPal email"
+                      : `Enter ${cryptoCurrency} wallet address`
+                  }
+                  value={wallet}
+                  onChange={(e)=>setWallet(e.target.value)}
+                  style={{width:"100%",padding:15,borderRadius:10,marginBottom:15}}
+                />
+              )}
 
           <label style={{
             display: "block",
@@ -470,3 +618,6 @@ export default function WithdrawPage() {
     </div>
   );
 }
+
+
+

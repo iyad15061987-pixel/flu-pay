@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import socket from "@/lib/socket";
 
@@ -15,6 +15,8 @@ import MerchantAnalytics
   from "../components/MerchantAnalytics";
 
 import API_URL from "@/lib/api";
+
+import { QRCodeCanvas } from "qrcode.react";
 
 interface Transaction {
   _id: string;
@@ -111,10 +113,25 @@ const [balance, setBalance] =
     setDepositMethod,
   ] = useState("paypal");
 
+      const [
+        cryptoCurrency,
+        setCryptoCurrency,
+      ] = useState("usdttrc20");
+
   const [
     deposits,
     setDeposits,
   ] = useState<any[]>([]);
+
+  const [
+    cryptoPayment,
+    setCryptoPayment,
+  ] = useState<{
+    address: string;
+    amount: number;
+    currency: string;
+        paymentId: string;
+      } | null>(null);
 
   // =========================
   // WITHDRAWAL
@@ -134,6 +151,56 @@ const [balance, setBalance] =
     withdrawalDestination,
     setWithdrawalDestination,
   ] = useState("");
+
+      const [
+        bankName,
+        setBankName,
+      ] = useState("");
+
+      const [
+        accountHolder,
+        setAccountHolder,
+      ] = useState("");
+
+      const [
+        iban,
+        setIban,
+      ] = useState("");
+
+      const [
+        swiftCode,
+        setSwiftCode,
+      ] = useState("");
+
+          const [
+            bankCountry,
+            setBankCountry,
+          ] = useState("");
+
+          const [
+            bankTransferType,
+            setBankTransferType,
+          ] = useState("");
+
+          const [
+            accountNumber,
+            setAccountNumber,
+          ] = useState("");
+
+          const [
+            routingNumber,
+            setRoutingNumber,
+          ] = useState("");
+
+          const [
+            sortCode,
+            setSortCode,
+          ] = useState("");
+
+      const [
+        withdrawalCryptoCurrency,
+        setWithdrawalCryptoCurrency,
+      ] = useState("usdttrc20");
 
   const [
     withdrawals,
@@ -700,12 +767,13 @@ if (depositMethod.toLowerCase() === "bank") {
 }
 
 // =========================
-// CRYPTO - EXISTING FLOW
+ // =========================
+// CRYPTO - NOWPAYMENTS
 // =========================
 
-const res =
+const cryptoRes =
   await fetch(
-    `${API_URL}/deposits`,
+    `${API_URL}/crypto/create-payment`,
     {
       method:
         "POST",
@@ -723,40 +791,41 @@ const res =
           amount:
             numericAmount,
 
-          method:
-            depositMethod,
-
-          reference:
-            "Wallet Funding",
+          payCurrency: cryptoCurrency,
         }),
     }
   );
 
-const data =
-  await res.json();
+const cryptoData =
+  await cryptoRes.json();
 
-if (!res.ok) {
+if (!cryptoRes.ok) {
 
   alert(
-    data.message ||
-    "Deposit failed"
+    cryptoData.message ||
+    "Crypto payment failed"
   );
 
   return;
 }
 
-alert(
-  data.message ||
-  "Deposit created successfully"
-);
+setCryptoPayment({
+
+  address:
+    cryptoData.payment.pay_address,
+
+  amount:
+    cryptoData.payment.pay_amount,
+
+  currency:
+    cryptoData.payment.pay_currency,
+
+  paymentId:
+    cryptoData.payment.payment_id,
+
+});
 
 setDepositAmount("");
-
-loadUser();
-
-loadDeposits();
-
-loadAnalytics();
       } catch (err) {
 
         console.error(
@@ -809,6 +878,36 @@ loadAnalytics();
 
                 destination:
                   withdrawalDestination,
+
+                    payoutCurrency:
+                      withdrawalCryptoCurrency,
+
+                    bankCountry:
+                      bankCountry,
+
+                    bankTransferType:
+                      bankTransferType,
+
+                    bankName:
+                      bankName,
+
+                    accountHolder:
+                      accountHolder,
+
+                    iban:
+                      iban,
+
+                    swiftCode:
+                      swiftCode,
+
+                    accountNumber:
+                      accountNumber,
+
+                    routingNumber:
+                      routingNumber,
+
+                    sortCode:
+                      sortCode,
               }),
             }
           );
@@ -998,7 +1097,19 @@ loadAnalytics();
 
     loadMerchantAnalytics();
 
-    return () => {
+  
+  const copyCryptoAddress = async () => {
+
+    if (!cryptoPayment?.address)
+      return;
+
+    await navigator.clipboard.writeText(
+      cryptoPayment.address
+    );
+
+    alert("Wallet address copied");
+  };
+  return () => {
 
       socket.off(
         "wallet_update"
@@ -1020,6 +1131,18 @@ loadAnalytics();
     return null;
   }
 
+
+  const copyCryptoAddress = async () => {
+
+    if (!cryptoPayment?.address)
+      return;
+
+    await navigator.clipboard.writeText(
+      cryptoPayment.address
+    );
+
+    alert("Wallet address copied");
+  };
   return (
     <div
       style={{
@@ -1070,7 +1193,7 @@ loadAnalytics();
   <div>
 
     <h1>
-      🚀 Merchant Dashboard
+      ًMerchant Dashboard
     </h1>
 
     <br />
@@ -1103,7 +1226,7 @@ loadAnalytics();
         marginBottom: 8,
       }}
     >
-💰 Available Balance
+Available Balance
     </div>
 
     <div
@@ -1148,7 +1271,122 @@ loadAnalytics();
 
         </div>
 
-        {/* 2FA */}
+        {cryptoPayment && (
+
+          <div
+            style={{
+              background:
+                "linear-gradient(135deg,#111827,#1f2937)",
+              padding: 30,
+              borderRadius: 24,
+              marginBottom: 30,
+              boxShadow:
+                "0 10px 30px rgba(0,0,0,0.25)",
+            }}
+          >
+
+            <h2
+              style={{
+                marginBottom: 20,
+                fontSize: 26,
+              }}
+            >
+              Crypto Payment
+            </h2>
+
+
+            <div
+              style={{
+                textAlign: "center",
+                marginBottom: 20,
+              }}
+            >
+
+              <QRCodeCanvas
+                value={cryptoPayment.address}
+                size={200}
+              />
+
+            </div>
+
+
+            <div
+              style={{
+                background: "#0f172a",
+                padding: 15,
+                borderRadius: 12,
+                marginBottom: 15,
+              }}
+            >
+
+              <p>
+                Currency:
+                {" "}
+                <strong>
+                  {cryptoPayment.currency}
+                </strong>
+              </p>
+
+              <p>
+                Amount:
+                {" "}
+                <strong>
+                  {cryptoPayment.amount}
+                </strong>
+              </p>
+
+              <p>
+                Payment ID:
+                {" "}
+                <strong>
+                  {cryptoPayment.paymentId}
+                </strong>
+              </p>
+
+            </div>
+
+
+            <p>
+              Wallet Address:
+            </p>
+
+
+            <textarea
+              readOnly
+              value={cryptoPayment.address}
+              style={{
+                width: "100%",
+                padding: 12,
+                borderRadius: 12,
+                height: 100,
+                background: "#020617",
+                color: "white",
+                border: "1px solid #374151",
+              }}
+            />
+
+
+            <button
+              onClick={copyCryptoAddress}
+              style={{
+                marginTop: 15,
+                width: "100%",
+                padding: 14,
+                background: "#2563eb",
+                color: "white",
+                border: "none",
+                borderRadius: 12,
+                cursor: "pointer",
+                fontWeight: "bold",
+              }}
+            >
+              Copy Wallet Address
+            </button>
+
+
+          </div>
+
+        )}        {/* 2FA */}
 
         <div
           style={{
@@ -1161,7 +1399,7 @@ loadAnalytics();
         >
 
           <h2>
-            🔐 Security
+            Security
           </h2>
 
           <br />
@@ -1201,7 +1439,7 @@ loadAnalytics();
         >
 
           <h2>
-            💳 Add Funds
+            Add Funds
           </h2>
 
           <br />
@@ -1258,6 +1496,47 @@ loadAnalytics();
 
           </select>
 
+
+          {depositMethod === "crypto" && (
+
+            <select
+              value={cryptoCurrency}
+              onChange={(e) =>
+                setCryptoCurrency(e.target.value)
+              }
+              style={{
+                width: "100%",
+                padding: 15,
+                borderRadius: 12,
+                border: "none",
+                marginBottom: 15,
+              }}
+            >
+
+              <option value="usdttrc20">
+                USDT TRC20
+              </option>
+
+              <option value="USDT ERC20">
+                USDT ERC20
+              </option>
+
+              <option value="btc">
+                Bitcoin
+              </option>
+
+              <option value="eth">
+                Ethereum
+              </option>
+
+              <option value="usdc">
+                USDC
+              </option>
+
+            </select>
+
+          )}
+
           <button
             onClick={
               createDeposit
@@ -1297,7 +1576,7 @@ loadAnalytics();
         >
 
           <h2>
-            💸 Withdraw Funds
+            Withdraw Funds
           </h2>
 
           <br />
@@ -1354,25 +1633,247 @@ loadAnalytics();
 
           </select>
 
-          <input
-            type="text"
-            placeholder="Destination Address / Email"
-            value={
-              withdrawalDestination
-            }
-            onChange={(e) =>
-              setWithdrawalDestination(
-                e.target.value
-              )
-            }
-            style={{
-              width: "100%",
-              padding: 15,
-              borderRadius: 12,
-              border: "none",
-              marginBottom: 15,
-            }}
-          />
+              {withdrawalMethod === "crypto" && (
+
+                <select
+                  value={withdrawalCryptoCurrency}
+                  onChange={(e) =>
+                    setWithdrawalCryptoCurrency(e.target.value)
+                  }
+                  style={{
+                    width: "100%",
+                    padding: 15,
+                    borderRadius: 12,
+                    border: "none",
+                    marginBottom: 15,
+                  }}
+                >
+
+                  <option value="USDT TRC20">
+                    USDT TRC20
+                  </option>
+
+                  <option value="USDT ERC20">
+                    USDT ERC20
+                  </option>
+
+                  <option value="BTC">
+                    Bitcoin
+                  </option>
+
+                  <option value="ETH">
+                    Ethereum
+                  </option>
+
+                  <option value="USDC">
+                    USDC
+                  </option>
+
+                </select>
+
+              )}
+
+              {withdrawalMethod === "bank" ? (
+
+                <>
+
+                  <select
+                    value={bankCountry}
+                    onChange={(e) => setBankCountry(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: 15,
+                      borderRadius: 12,
+                      border: "none",
+                      marginBottom: 15,
+                    }}
+                  >
+                        <option value="">Select Bank Country</option>
+
+                        <option value="EU">European Union</option>
+                        <option value="USA">United States</option>
+                        <option value="UK">United Kingdom</option>
+                        <option value="SA">Saudi Arabia</option>
+                        <option value="AE">United Arab Emirates</option>
+                        <option value="PS">Palestine</option>
+                        <option value="EG">Egypt</option>
+                        <option value="JO">Jordan</option>
+                        <option value="MA">Morocco</option>
+                        <option value="TN">Tunisia</option>
+                        <option value="DZ">Algeria</option>
+                        <option value="LB">Lebanon</option>
+                  </select>
+
+                  <input
+                    type="text"
+                    placeholder="Account Holder Name"
+                    value={accountHolder}
+                    onChange={(e) => setAccountHolder(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: 15,
+                      borderRadius: 12,
+                      border: "none",
+                      marginBottom: 15,
+                    }}
+                  />
+
+                  {[
+  "USA",
+  "UK",
+  "PS",
+  "EG",
+  "LB",
+  "MA",
+  "TN",
+  "DZ"
+].includes(bankCountry) && (
+                    <input
+                      type="text"
+                      placeholder="Bank Name"
+                      value={bankName}
+                      onChange={(e) => setBankName(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: 15,
+                        borderRadius: 12,
+                        border: "none",
+                        marginBottom: 15,
+                      }}
+                    />
+                  )}
+
+                  {[
+  "EU",
+  "SA",
+  "AE",
+  "PS",
+  "EG",
+  "JO",
+  "MA",
+  "TN",
+  "DZ",
+  "LB"
+].includes(bankCountry) && (
+                    <>
+                      <input
+                        type="text"
+                        placeholder="IBAN"
+                        value={iban}
+                        onChange={(e) => setIban(e.target.value)}
+                        style={{
+                          width: "100%",
+                          padding: 15,
+                          borderRadius: 12,
+                          border: "none",
+                          marginBottom: 15,
+                        }}
+                      />
+
+                      <input
+                        type="text"
+                        placeholder="SWIFT / BIC Code"
+                        value={swiftCode}
+                        onChange={(e) => setSwiftCode(e.target.value)}
+                        style={{
+                          width: "100%",
+                          padding: 15,
+                          borderRadius: 12,
+                          border: "none",
+                          marginBottom: 15,
+                        }}
+                      />
+                    </>
+                  )}
+
+                  {bankCountry === "USA" && (
+                    <>
+                      <input
+                        type="text"
+                        placeholder="Account Number"
+                        value={accountNumber}
+                        onChange={(e) => setAccountNumber(e.target.value)}
+                        style={{
+                          width: "100%",
+                          padding: 15,
+                          borderRadius: 12,
+                          border: "none",
+                          marginBottom: 15,
+                        }}
+                      />
+
+                      <input
+                        type="text"
+                        placeholder="Routing Number"
+                        value={routingNumber}
+                        onChange={(e) => setRoutingNumber(e.target.value)}
+                        style={{
+                          width: "100%",
+                          padding: 15,
+                          borderRadius: 12,
+                          border: "none",
+                          marginBottom: 15,
+                        }}
+                      />
+                    </>
+                  )}
+
+                  {bankCountry === "UK" && (
+                    <>
+                      <input
+                        type="text"
+                        placeholder="Account Number"
+                        value={accountNumber}
+                        onChange={(e) => setAccountNumber(e.target.value)}
+                        style={{
+                          width: "100%",
+                          padding: 15,
+                          borderRadius: 12,
+                          border: "none",
+                          marginBottom: 15,
+                        }}
+                      />
+
+                      <input
+                        type="text"
+                        placeholder="Sort Code"
+                        value={sortCode}
+                        onChange={(e) => setSortCode(e.target.value)}
+                        style={{
+                          width: "100%",
+                          padding: 15,
+                          borderRadius: 12,
+                          border: "none",
+                          marginBottom: 15,
+                        }}
+                      />
+                    </>
+                  )}
+
+                </>
+
+              ) : (
+
+
+                <input
+                  type="text"
+                  placeholder={
+                    withdrawalMethod === "paypal"
+                      ? "PayPal Email"
+                      : "Crypto Wallet Address"
+                  }
+                  value={withdrawalDestination}
+                  onChange={(e) => setWithdrawalDestination(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: 15,
+                    borderRadius: 12,
+                    border: "none",
+                    marginBottom: 15,
+                  }}
+                />
+
+              )}
 
           <button
             onClick={
@@ -1413,7 +1914,7 @@ loadAnalytics();
 >
 
   <h2>
-    💸 Send Money
+    Send Money
   </h2>
 
   <br />
@@ -1523,7 +2024,7 @@ loadAnalytics();
     }}
   >
     <h2>
-      🔗 Payment Links
+      Payment Links
     </h2>
 
     <br />
@@ -1544,7 +2045,7 @@ loadAnalytics();
     }}
   >
     <h2>
-      💰 Payment Revenue
+      Payment Revenue
     </h2>
 
     <br />
@@ -1566,7 +2067,7 @@ loadAnalytics();
     }}
   >
     <h2>
-      📜 Transactions
+      Transactions
     </h2>
 
     <br />
@@ -1586,7 +2087,7 @@ loadAnalytics();
     }}
   >
     <h2>
-      📈 Revenue
+      Revenue
     </h2>
 
     <br />
@@ -1614,7 +2115,7 @@ loadAnalytics();
         >
 
           <h2>
-            💰 Deposit History
+            Deposit History
           </h2>
 
           <br />
@@ -1681,7 +2182,7 @@ loadAnalytics();
   }}
 >
   <h2>
-    📜 Transaction History
+    Transaction History
   </h2>
 
   <br />
@@ -1781,7 +2282,7 @@ loadAnalytics();
         >
 
           <h2>
-            🏦 Withdrawal History
+            Withdrawal History
           </h2>
 
           <br />
@@ -1912,3 +2413,44 @@ loadAnalytics();
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

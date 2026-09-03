@@ -1,4 +1,4 @@
-const mongoose =
+﻿const mongoose =
   require("mongoose");
 
 const withdrawalSchema =
@@ -117,6 +117,64 @@ const withdrawalSchema =
 
         trim: true,
       },
+
+          // ==================================================
+          // BANK TRANSFER DETAILS
+          // ==================================================
+
+
+              // ==================================================
+              // GLOBAL BANK TRANSFER DETAILS
+              // ==================================================
+
+              bankCountry: {
+                type: String,
+                default: null,
+              },
+
+              bankTransferType: {
+                type: String,
+                default: null,
+              },
+
+              accountNumber: {
+                type: String,
+                default: null,
+              },
+
+              routingNumber: {
+                type: String,
+                default: null,
+              },
+
+              sortCode: {
+                type: String,
+                default: null,
+              },
+          bankName: {
+            type: String,
+
+            default: null,
+          },
+
+          accountHolder: {
+            type: String,
+
+            default: null,
+          },
+
+          iban: {
+            type: String,
+
+            default: null,
+          },
+
+          swiftCode: {
+            type: String,
+
+            default: null,
+          },
+
 
 
       // ==================================================
@@ -375,3 +433,4 @@ module.exports =
     "Withdrawal",
     withdrawalSchema
   );
+
