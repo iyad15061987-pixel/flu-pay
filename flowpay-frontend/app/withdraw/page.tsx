@@ -107,6 +107,41 @@ export default function WithdrawPage() {
             "email"
           );
 
+          if (method === "crypto") {
+  const cryptoRes = await fetch(
+    `${API_URL}/crypto-withdraw`,
+    {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+
+      body: JSON.stringify({
+        amount,
+        walletAddress: wallet,
+        coin: cryptoCurrency,
+      }),
+    }
+  );
+
+  const cryptoData =
+    await cryptoRes.json();
+
+  alert(
+    cryptoData.message ||
+    "Crypto withdrawal request failed"
+  );
+
+  if (cryptoRes.ok) {
+    setAmount("");
+    setWallet("");
+  }
+
+  return;
+}
+
         const res =
           await fetch(
             `${API_URL}/withdrawals`,
