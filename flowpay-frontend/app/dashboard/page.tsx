@@ -1752,6 +1752,37 @@ Available Balance
                     USDC
                   </option>
 
+<option value="trx">
+  TRON (TRX)
+</option>
+
+<option value="ltc">
+  Litecoin (LTC)
+</option>
+
+<option value="doge">
+  Dogecoin (DOGE)
+</option>
+
+<option value="xrp">
+  XRP
+</option>
+
+<option value="sol">
+  Solana (SOL)
+</option>
+
+<option value="ada">
+  Cardano (ADA)
+</option>
+
+<option value="usdtbsc">
+  USDT BSC
+</option>
+
+<option value="usdtsol">
+  USDT Solana
+</option>
                 </select>
 
               )}
