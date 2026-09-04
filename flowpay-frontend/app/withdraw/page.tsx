@@ -25,8 +25,7 @@ export default function WithdrawPage() {
   const [wallet, setWallet] =
     useState("");
   const [cryptoCurrency, setCryptoCurrency] =
-    useState("USDT TRC20");
-
+useState("usdttrc20");
         const [bankCountry, setBankCountry] =
           useState("");
 
