@@ -45,7 +45,7 @@ const {
 
 const NOWPAYMENTS_IPN_URL =
   process.env.NOWPAYMENTS_IPN_URL ||
-  "https://flowpay-backend-prod.onrender.com/api/crypto-webhook";
+  "https://flowpay-backend-oak4.onrender.com/api/crypto-webhook";
 
 
 // ======================================================
