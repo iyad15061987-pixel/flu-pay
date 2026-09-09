@@ -1,5 +1,25 @@
+﻿function sortObject(obj) {
+  if (obj === null || typeof obj !== "object") {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map((item) => sortObject(item));
+  }
+
+  return Object.keys(obj)
+    .sort()
+    .reduce((result, key) => {
+      result[key] = sortObject(obj[key]);
+      return result;
+    }, {});
+}
+
 const express =
   require("express");
+
+const mongoose =
+  require("mongoose");
 
 const router =
   express.Router();
@@ -7,6 +27,11 @@ const router =
 const User =
   require(
     "../models/User"
+  );
+
+const Withdrawal =
+  require(
+    "../models/Withdrawal"
   );
 
 const Transaction =
@@ -37,6 +62,13 @@ const {
 
 const crypto =
   require("crypto");
+
+const {
+  settleCryptoWithdrawal,
+  refundCryptoWithdrawal,
+} = require(
+  "../utils/cryptoWithdrawalSettlement"
+);
 
 
 // =========================
@@ -100,12 +132,14 @@ router.post(
             secret
           )
           .update(
-            JSON.stringify(data)
+            JSON.stringify(sortObject(data))
           )
           .digest("hex");
 
 
       if (
+        !signature ||
+        signature.length !== hmac.length ||
         !crypto.timingSafeEqual(
           Buffer.from(hmac),
           Buffer.from(signature)
@@ -131,7 +165,363 @@ router.post(
 
 
       // =========================
+      // =========================
+      // =========================
+      // NOWPAYMENTS PAYOUT WEBHOOK
+      // =========================
+
+      if (data.payout_status) {
+
+        console.log(
+          "NOWPAYMENTS PAYOUT WEBHOOK:",
+          data
+        );
+
+        const payoutStatus =
+          String(
+            data.payout_status ||
+            data.status ||
+            ""
+          ).toLowerCase();
+
+        const payoutId =
+          data.id ||
+          data.payout_id ||
+          null;
+
+        const batchId =
+          data.batchId ||
+          data.batch_id ||
+          null;
+
+        const uniqueExternalId =
+          data.uniqueExternalId ||
+          data.unique_external_id ||
+          null;
+
+        if (
+          !payoutId &&
+          !batchId &&
+          !uniqueExternalId
+        ) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "NOWPayments payout webhook identifiers are missing",
+          });
+        }
+
+        const payoutWithdrawal =
+          await Withdrawal.findOne({
+            method: "crypto",
+            $or: [
+              ...(payoutId
+                ? [{
+                    nowPaymentsWithdrawalId:
+                      String(payoutId),
+                  }]
+                : []),
+
+              ...(batchId
+                ? [{
+                    nowPaymentsBatchId:
+                      String(batchId),
+                  }]
+                : []),
+
+              ...(uniqueExternalId
+                ? [{
+                    nowPaymentsExternalId:
+                      String(uniqueExternalId),
+                  }]
+                : []),
+            ],
+          });
+
+        if (!payoutWithdrawal) {
+
+          console.error(
+            "NOWPAYMENTS PAYOUT WITHDRAWAL NOT FOUND:",
+            {
+              payoutId,
+              batchId,
+              uniqueExternalId,
+              payoutStatus,
+            }
+          );
+
+          return res.status(404).json({
+            success: false,
+            message:
+              "FlowPay crypto withdrawal not found",
+          });
+        }
+
+        console.log(
+          "NOWPAYMENTS PAYOUT MATCHED:",
+          {
+            withdrawalId:
+              String(payoutWithdrawal._id),
+            payoutId,
+            batchId,
+            uniqueExternalId,
+            payoutStatus,
+          }
+        );
+
+        if (payoutId) {
+          payoutWithdrawal.nowPaymentsWithdrawalId =
+            String(payoutId);
+        }
+
+        if (batchId) {
+          payoutWithdrawal.nowPaymentsBatchId =
+            String(batchId);
+        }
+
+        if (uniqueExternalId) {
+          payoutWithdrawal.nowPaymentsExternalId =
+            String(uniqueExternalId);
+        }
+
+        payoutWithdrawal.nowPaymentsStatus =
+          payoutStatus;
+
+        await payoutWithdrawal.save();
+
+
+        // =========================
+        // SUCCESSFUL PAYOUT
+        // =========================
+
+        if (
+          payoutStatus === "finished" ||
+          payoutStatus === "completed" ||
+          payoutStatus === "success" ||
+          payoutStatus === "successful"
+        ) {
+
+          try {
+
+            const settlement =
+              await settleCryptoWithdrawal(
+                payoutWithdrawal._id,
+                payoutStatus
+              );
+
+            console.log(
+              "NOWPAYMENTS PAYOUT SETTLEMENT RESULT:",
+              {
+                withdrawalId:
+                  String(
+                    payoutWithdrawal._id
+                  ),
+                status:
+                  settlement.status,
+                alreadyProcessed:
+                  settlement.alreadyProcessed,
+              }
+            );
+
+            if (
+              settlement.user &&
+              settlement.amount
+            ) {
+
+              try {
+
+                await Notification.create({
+                  userId:
+                    settlement.user._id,
+                  type:
+                    "withdrawal",
+                  title:
+                    "Crypto withdrawal completed",
+                  message:
+                    `Your crypto withdrawal of $${Number(
+                      settlement.amount
+                    ).toFixed(2)} has been completed.`,
+                  read:
+                    false,
+                });
+
+              } catch (notificationError) {
+
+                console.error(
+                  "CRYPTO WEBHOOK NOTIFICATION ERROR:",
+                  notificationError
+                );
+
+              }
+
+            }
+
+            return res.json({
+              success: true,
+              message:
+                "NOWPayments payout completed and FlowPay withdrawal settled",
+              payoutStatus,
+              withdrawalId:
+                payoutWithdrawal._id,
+              nowPaymentsWithdrawalId:
+                payoutWithdrawal.nowPaymentsWithdrawalId,
+              nowPaymentsBatchId:
+                payoutWithdrawal.nowPaymentsBatchId,
+              nowPaymentsExternalId:
+                payoutWithdrawal.nowPaymentsExternalId,
+              alreadyProcessed:
+                settlement.alreadyProcessed,
+            });
+
+          } catch (settlementError) {
+
+            console.error(
+              "NOWPAYMENTS PAYOUT SETTLEMENT ERROR:",
+              settlementError
+            );
+
+            return res.status(500).json({
+              success: false,
+              message:
+                "NOWPayments payout completed but FlowPay settlement failed",
+              error:
+                settlementError.message,
+              withdrawalId:
+                payoutWithdrawal._id,
+            });
+
+          }
+
+        }
+
+
+        // =========================
+        // FAILED PAYOUT
+        // =========================
+
+        if (
+          payoutStatus === "failed" ||
+          payoutStatus === "rejected" ||
+          payoutStatus === "cancelled" ||
+          payoutStatus === "canceled"
+        ) {
+
+          try {
+
+            const refund =
+              await refundCryptoWithdrawal(
+                payoutWithdrawal._id,
+                payoutStatus
+              );
+
+            console.log(
+              "NOWPAYMENTS PAYOUT REFUND RESULT:",
+              {
+                withdrawalId:
+                  String(
+                    payoutWithdrawal._id
+                  ),
+                status:
+                  refund.status,
+                alreadyProcessed:
+                  refund.alreadyProcessed,
+              }
+            );
+
+            if (
+              refund.user &&
+              refund.amount
+            ) {
+
+              try {
+
+                await Notification.create({
+                  userId:
+                    refund.user._id,
+                  type:
+                    "withdrawal",
+                  title:
+                    "Crypto withdrawal refunded",
+                  message:
+                    `Your crypto withdrawal of $${Number(
+                      refund.amount
+                    ).toFixed(2)} was rejected and the USD funds were released.`,
+                  read:
+                    false,
+                });
+
+              } catch (notificationError) {
+
+                console.error(
+                  "CRYPTO WEBHOOK REFUND NOTIFICATION ERROR:",
+                  notificationError
+                );
+
+              }
+
+            }
+
+            return res.json({
+              success: true,
+              message:
+                "NOWPayments payout failed and FlowPay funds were refunded",
+              payoutStatus,
+              withdrawalId:
+                payoutWithdrawal._id,
+              nowPaymentsWithdrawalId:
+                payoutWithdrawal.nowPaymentsWithdrawalId,
+              nowPaymentsBatchId:
+                payoutWithdrawal.nowPaymentsBatchId,
+              nowPaymentsExternalId:
+                payoutWithdrawal.nowPaymentsExternalId,
+              alreadyProcessed:
+                refund.alreadyProcessed,
+            });
+
+          } catch (refundError) {
+
+            console.error(
+              "NOWPAYMENTS PAYOUT REFUND ERROR:",
+              refundError
+            );
+
+            return res.status(500).json({
+              success: false,
+              message:
+                "NOWPayments payout failed but FlowPay refund failed",
+              error:
+                refundError.message,
+              withdrawalId:
+                payoutWithdrawal._id,
+            });
+
+          }
+
+        }
+
+
+        // =========================
+        // NON-TERMINAL STATUS
+        // =========================
+
+        return res.json({
+          success: true,
+          message:
+            "NOWPayments payout status recorded",
+          payoutStatus,
+          withdrawalId:
+            payoutWithdrawal._id,
+          nowPaymentsWithdrawalId:
+            payoutWithdrawal.nowPaymentsWithdrawalId,
+          nowPaymentsBatchId:
+            payoutWithdrawal.nowPaymentsBatchId,
+          nowPaymentsExternalId:
+            payoutWithdrawal.nowPaymentsExternalId,
+        });
+
+      }
       // SUCCESS ONLY
+      // =========================
       // =========================
 
       if (
@@ -265,8 +655,6 @@ payment.confirmations =
           data.price_amount
         );
 
-payment.priceAmount =
-  amount;
 
       if (
         !Number.isFinite(amount) ||
@@ -279,6 +667,9 @@ payment.priceAmount =
         });
 
       }
+
+      payment.priceAmount =
+        amount;
 
 
       // =========================
@@ -350,133 +741,342 @@ payment.priceAmount =
 
 
       // =========================
-      // UPDATE BALANCES
+      // ATOMIC CRYPTO DEPOSIT
       // =========================
 
-      user.balance =
-        before +
-        netAmount;
+      let transaction = null;
+      let creditedUser = null;
 
+      let depositSession = null;
+      let depositCommitted = false;
 
-      user.totalDeposits =
-        (user.totalDeposits || 0) +
-        amount;
+      try {
 
+        depositSession =
+          await mongoose.startSession();
 
-      treasury.balance =
-        (treasury.balance || 0) +
-        fee;
+        depositSession.startTransaction();
 
+        const depositPayment =
+          await CryptoPayment.findOne({
+            _id:
+              payment._id,
+            paymentId:
+              String(
+                data.payment_id
+              ),
+          }).session(
+            depositSession
+          );
 
-      treasury.revenue =
-        (treasury.revenue || 0) +
-        fee;
+        if (!depositPayment) {
 
+          throw new Error(
+            "Payment not found during crypto deposit settlement"
+          );
 
-      await user.save();
+        }
 
-      await treasury.save();
+        const duplicateTransaction =
+          await Transaction.findOne({
+            reference:
+              String(
+                data.payment_id
+              ),
+          }).session(
+            depositSession
+          );
 
+        if (
+          duplicateTransaction ||
+          depositPayment.credited === true
+        ) {
 
-      // =========================
-      // TRANSACTION
-      // =========================
+          await depositSession.abortTransaction();
 
-      const transaction =
-        await Transaction.create({
+          return res.json({
+            success:
+              true,
+            message:
+              "Crypto deposit already processed",
+          });
 
-          fromEmail:
-            "Blockchain",
+        }
 
-          toEmail:
-            user.email,
+        const depositUser =
+          await User.findById(
+            depositPayment.userId
+          ).session(
+            depositSession
+          );
 
-          amount:
+        if (!depositUser) {
 
-            amount,
+          throw new Error(
+            "User not found during crypto deposit settlement"
+          );
 
-          fee:
+        }
 
-            fee,
+        const depositTreasury =
+          await User.findOne({
+            accountType:
+              "treasury",
+          }).session(
+            depositSession
+          );
 
-          netAmount:
+        if (!depositTreasury) {
 
-            netAmount,
+          throw new Error(
+            "Treasury account not found"
+          );
+
+        }
+
+        const balanceBefore =
+          Number(
+            depositUser.balance || 0
+          );
+
+        const totalDepositsBefore =
+          Number(
+            depositUser.totalDeposits || 0
+          );
+
+        const treasuryBalanceBefore =
+          Number(
+            depositTreasury.balance || 0
+          );
+
+        const treasuryRevenueBefore =
+          Number(
+            depositTreasury.revenue || 0
+          );
+
+        if (
+          !Number.isFinite(
+            balanceBefore
+          ) ||
+          !Number.isFinite(
+            totalDepositsBefore
+          ) ||
+          !Number.isFinite(
+            treasuryBalanceBefore
+          ) ||
+          !Number.isFinite(
+            treasuryRevenueBefore
+          )
+        ) {
+
+          throw new Error(
+            "Invalid balance data during crypto deposit settlement"
+          );
+
+        }
+
+        depositUser.balance =
+          balanceBefore +
+          netAmount;
+
+        depositUser.totalDeposits =
+          totalDepositsBefore +
+          amount;
+
+        depositTreasury.balance =
+          treasuryBalanceBefore +
+          fee;
+
+        depositTreasury.revenue =
+          treasuryRevenueBefore +
+          fee;
+
+        await depositUser.save({
+          session:
+            depositSession,
+        });
+
+        await depositTreasury.save({
+          session:
+            depositSession,
+        });
+
+        const createdTransactions =
+          await Transaction.create(
+            [{
+              fromEmail:
+                "Blockchain",
+
+              toEmail:
+                depositUser.email,
+
+              amount:
+                amount,
+
+              fee:
+                fee,
+
+              netAmount:
+                netAmount,
+
+              type:
+                "Crypto Deposit",
+
+              method:
+                "crypto",
+
+              reference:
+                String(
+                  data.payment_id
+                ),
+
+              status:
+                "completed",
+
+            }],
+            {
+              session:
+                depositSession,
+            }
+          );
+
+        transaction =
+          createdTransactions[0];
+
+        if (!transaction) {
+
+          throw new Error(
+            "Crypto deposit transaction was not created"
+          );
+
+        }
+
+        depositPayment.priceAmount =
+          amount;
+
+        depositPayment.credited =
+          true;
+
+        depositPayment.creditedAt =
+          new Date();
+
+        depositPayment.status =
+          "finished";
+
+        depositPayment.paymentStatus =
+          "finished";
+
+        depositPayment.cryptoReceived =
+          Number(
+            data.actually_paid || 0
+          );
+
+        depositPayment.transactionHash =
+          data.payin_hash ||
+          data.txid ||
+          null;
+
+        depositPayment.confirmations =
+          Number(
+            data.confirmations || 0
+          );
+
+        await depositPayment.save({
+          session:
+            depositSession,
+        });
+
+        await createLedgerEntry({
+
+          userId:
+            depositUser._id,
+
+          email:
+            depositUser.email,
 
           type:
-
             "Crypto Deposit",
 
-          method:
+          amount:
+            netAmount,
 
-            "crypto",
+          balanceBefore:
+            balanceBefore,
+
+          balanceAfter:
+            depositUser.balance,
 
           reference:
-
             String(
               data.payment_id
             ),
 
-          status:
+          description:
+            `Automatic blockchain deposit - ${fee.toFixed(4)} USD crypto fee`,
 
-            "completed",
+          session:
+            depositSession,
 
         });
 
+        await depositSession.commitTransaction();
 
-      // =========================
-      // MARK PAYMENT CREDITED
-      // =========================
+        depositCommitted =
+          true;
 
-     payment.credited =
-  true;
-
-payment.creditedAt =
-  new Date();
-
-payment.status =
-  "finished";
-
-payment.paymentStatus =
-  "finished";
-
-await payment.save();
-
-      // =========================
-      // LEDGER
-      // =========================
-
-      await createLedgerEntry({
-
-        userId:
-          user._id,
-
-        email:
-          user.email,
-
-        type:
-          "Crypto Deposit",
-
-        amount:
-          netAmount,
-
-        balanceBefore:
-          before,
-
-        balanceAfter:
-          user.balance,
-
-        reference:
-          String(
-            data.payment_id
-          ),
-
-        description:
-          `Automatic blockchain deposit - ${fee.toFixed(4)} USD crypto fee`,
-
-      });
+        creditedUser =
+          depositUser;
 
 
+      } catch (depositError) {
+
+        console.error(
+          "CRYPTO DEPOSIT SETTLEMENT ERROR:",
+          depositError
+        );
+
+        if (
+          depositSession &&
+          !depositCommitted
+        ) {
+
+          try {
+
+            await depositSession.abortTransaction();
+
+          } catch (abortError) {
+
+            console.error(
+              "CRYPTO DEPOSIT SETTLEMENT ABORT ERROR:",
+              abortError
+            );
+
+          }
+
+        }
+
+        throw depositError;
+
+      } finally {
+
+        if (depositSession) {
+
+          try {
+
+            await depositSession.endSession();
+
+          } catch (sessionError) {
+
+            console.error(
+              "CRYPTO DEPOSIT SETTLEMENT SESSION ERROR:",
+              sessionError
+            );
+
+          }
+
+        }
+
+      }
       // =========================
       // NOTIFICATION
       // =========================
@@ -484,7 +1084,7 @@ await payment.save();
       await Notification.create({
 
         email:
-          user.email,
+          creditedUser.email,
 
         title:
           "Crypto Deposit",
@@ -508,10 +1108,10 @@ await payment.save();
           {
 
             email:
-              user.email,
+              creditedUser.email,
 
             balance:
-              user.balance,
+              creditedUser.balance,
 
           }
         );
@@ -547,7 +1147,7 @@ await payment.save();
           netAmount,
 
         balance:
-          user.balance,
+          creditedUser.balance,
 
         transactionId:
           transaction._id,
@@ -584,3 +1184,23 @@ await payment.save();
 
 module.exports =
   router;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

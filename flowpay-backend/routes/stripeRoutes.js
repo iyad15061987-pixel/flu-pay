@@ -46,10 +46,7 @@ const createNotification =
 
 
 
-const stripe =
-  new Stripe(
-    process.env.STRIPE_SECRET_KEY
-  );
+const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
 
 
 
@@ -109,6 +106,13 @@ router.post(
       }
 
 
+
+      if (!stripe) {
+        return res.status(503).json({
+          message:
+            "Stripe is not configured on this server",
+        });
+      }
 
       const session =
         await stripe.checkout.sessions.create({
@@ -280,6 +284,13 @@ router.post(
 
 
   async (req,res)=>{
+      if (!stripe) {
+        return res.status(503).json({
+          message:
+            "Stripe is not configured on this server",
+        });
+      }
+
 
 
     try {
@@ -766,3 +777,4 @@ router.post(
 
 module.exports =
   router;
+

@@ -214,6 +214,11 @@ const withdrawalSchema =
         default: null,
       },
 
+      nowPaymentsExternalId: {
+        type: String,
+        default: null,
+      },
+
       nowPaymentsStatus: {
         type: String,
 
@@ -223,6 +228,9 @@ const withdrawalSchema =
 // ==================================================
 // NOWPAYMENTS PAYOUT SECURITY
 // ==================================================
+
+verificationInProgress: { type: Boolean, default: false },
+verificationStartedAt: { type: Date, default: null },
 
 payoutAttempted: {
   type: Boolean,
@@ -369,6 +377,11 @@ payoutError: {
         default: false,
       },
 
+      fundsSettled: {
+  type: Boolean,
+  default: false,
+},
+
       refundedAt: {
         type: Date,
 
@@ -433,4 +446,7 @@ module.exports =
     "Withdrawal",
     withdrawalSchema
   );
+
+
+
 

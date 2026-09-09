@@ -103,6 +103,16 @@ const transactionSchema =
       // STATUS
       // =========================
 
+      // =========================
+      // WITHDRAWAL LINK
+      // =========================
+
+      withdrawalId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Withdrawal",
+        default: null,
+      },
+
       status: {
         type: String,
 

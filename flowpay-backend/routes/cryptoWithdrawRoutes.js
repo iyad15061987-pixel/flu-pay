@@ -1,5 +1,8 @@
-const express =
+﻿const express =
   require("express");
+
+  const mongoose =
+  require("mongoose");
 
 const router =
   express.Router();
@@ -9,7 +12,7 @@ const {
   adminOnly,
 } = require("../middleware/auth");
 
-const User =
+let user =
   require("../models/User");
 
 const Withdrawal =
@@ -42,7 +45,7 @@ const {
 
 const NOWPAYMENTS_IPN_URL =
   process.env.NOWPAYMENTS_IPN_URL ||
-  "https://flu-pay.onrender.com/api/crypto-webhook";
+  "https://flowpay-backend-prod.onrender.com/api/crypto-webhook";
 
 
 // ======================================================
@@ -54,6 +57,9 @@ router.post(
   auth,
 
   async (req, res) => {
+
+let session = null;
+let transactionCommitted = false;
 
     try {
 
@@ -147,24 +153,27 @@ router.post(
         });
 
       }
+
       // ==================================================
       // USER
       // ==================================================
 
-      const user =
-        await User.findById(
-          req.user.id
-        );
+let user =
+  await User.findById(
+    req.user.id
+  );
 
 
       if (!user) {
 
-        return res.status(404).json({
-          message:
-            "User not found",
-        });
+  return res.status(404).json({
 
-      }
+    message:
+      "User not found",
+
+  });
+
+}
 
 
       // ==================================================
@@ -270,25 +279,28 @@ router.post(
         });
 
       }
+      // ==================================================
+      // AVAILABLE BALANCE CHECK
+      // ==================================================
 
-      // ==================================================
-      // BALANCE CHECK
-      // ==================================================
+      const availableBalance =
+        Number(user.balance || 0) -
+        Number(user.reservedBalance || 0);
 
       if (
-        Number(user.balance || 0) <
+        availableBalance <
         numericAmount
       ) {
 
         return res.status(400).json({
           message:
-            "Insufficient balance",
+            "Insufficient available balance",
         });
 
       }
 
       // ==================================================
-      // USD → CRYPTO ESTIMATE
+      // USD أ¢â€ â€™ CRYPTO ESTIMATE
       // ==================================================
       //
       // IMPORTANT:
@@ -563,7 +575,46 @@ if (
 
       }
 
+// ==================================================
+// DATABASE TRANSACTION
+// ==================================================
 
+session =
+  await mongoose.startSession();
+session.startTransaction();
+
+user =
+  await User.findById(
+    req.user.id
+  ).session(session);
+
+if (!user) {
+  const error =
+    new Error(
+      "User not found"
+    );
+
+  error.statusCode = 404;
+
+  throw error;
+}
+const currentAvailable =
+  Number(user.balance || 0) -
+  Number(user.reservedBalance || 0);
+
+if (
+  currentAvailable <
+  numericAmount
+) {
+  const error =
+    new Error(
+      "Insufficient available balance"
+    );
+
+  error.statusCode = 400;
+
+  throw error;
+}
       // ==================================================
       // BALANCE BEFORE
       // ==================================================
@@ -578,19 +629,19 @@ if (
       // RESERVE FUNDS
       // ==================================================
 
-      user.balance =
+     user.reservedBalance =
+  Number(user.reservedBalance || 0) +
+  numericAmount;
+
+user.totalWithdrawals =
   Number(
-    (beforeBalance - numericAmount).toFixed(8)
-  );
+    user.totalWithdrawals || 0
+  ) +
+  numericAmount;
 
-      user.totalWithdrawals =
-        Number(
-          user.totalWithdrawals || 0
-        ) +
-        numericAmount;
-
-
-      await user.save();
+await user.save({
+  session,
+});
 
 
       // ==================================================
@@ -602,148 +653,136 @@ if (
 
       try {
 
-        withdrawal =
-          await Withdrawal.create({
+       withdrawal =
+  (
+    await Withdrawal.create(
+      [{
 
-            userId:
-              user._id,
+        userId:
+          user._id,
 
-            email:
+        email:
+          user.email,
+
+        amount:
+          numericAmount,
+
+        fee,
+
+        netAmount,
+
+        currency:
+          "USD",
+
+        payoutCurrency:
+          payoutCurrency,
+
+        payoutAmount:
+          normalizedPayoutAmount,
+
+        exchangeRate:
+          exchangeRate,
+
+        method:
+          "crypto",
+
+        destination:
+          walletAddress,
+
+        status:
+          "pending",
+
+        riskLevel:
+          "low",
+
+        requiresManualReview:
+          true,
+
+        ipAddress:
+          req.ip,
+
+        auditTrail: [
+          {
+            action:
+              "Crypto withdrawal requested",
+
+            performedBy:
               user.email,
 
-            amount:
-              numericAmount,
+            timestamp:
+              new Date(),
+          },
+        ],
 
-            fee,
+      }],
+      {
+        session,
+      }
+    )
+  )[0];
 
-            netAmount,
-
-            currency:
-              "USD",
-payoutCurrency:
-  payoutCurrency,
-payoutAmount:
-  normalizedPayoutAmount,
-
-exchangeRate:
-  exchangeRate,
-
-            method:
-              "crypto",
-
-            destination:
-              walletAddress,
-
-            status:
-              "pending",
-
-            riskLevel:
-              "low",
-
-            requiresManualReview:
-              true,
-
-            ipAddress:
-              req.ip,
-
-            auditTrail: [
-              {
-                action:
-                  "Crypto withdrawal requested",
-
-                performedBy:
-                  user.email,
-
-                timestamp:
-                  new Date(),
-              },
-            ],
-
-          });
-
-      } catch (withdrawalError) {
-
-        user.balance =
-          beforeBalance;
-
-        user.totalWithdrawals =
-          Math.max(
-            0,
-            Number(
-              user.totalWithdrawals || 0
-            ) -
-            numericAmount
-          );
-
-        await user.save();
-
+          } catch (withdrawalError) {
         throw withdrawalError;
       }
 
+// ==================================================
+// TRANSACTION
+// ==================================================
 
-      // ==================================================
-      // TRANSACTION
-      // ==================================================
+let transaction;
 
-      let transaction;
+try {
 
+  transaction =
+    (
+      await Transaction.create(
+        [{
+          withdrawalId: withdrawal._id,
+          fromEmail:
+            user.email,
 
-      try {
+          toEmail:
+            "BLOCKCHAIN",
 
-        transaction =
-          await Transaction.create({
+          amount:
+            numericAmount,
 
-            fromEmail:
-              user.email,
+          fee,
 
-            toEmail:
-              "BLOCKCHAIN",
+          netAmount,
 
-            amount:
-              numericAmount,
+          type:
+            "Crypto Withdrawal",
 
-            fee,
+          method:
+            "crypto",
 
-            netAmount,
+          reference:
+            walletAddress,
 
-            type:
-              "Crypto Withdrawal",
+          status:
+            "pending",
 
-            method:
-              "crypto",
+        }],
+        {
+          session,
+        }
+      )
+    )[0];
 
-            reference:
-              walletAddress,
+} catch (transactionError) {
+  await Withdrawal.deleteOne(
+    {
+      _id:
+        withdrawal._id,
+    },
+    {
+      session,
+    }
+  );
 
-            status:
-              "pending",
-
-          });
-
-      } catch (transactionError) {
-
-        user.balance =
-          beforeBalance;
-
-        user.totalWithdrawals =
-          Math.max(
-            0,
-            Number(
-              user.totalWithdrawals || 0
-            ) -
-            numericAmount
-          );
-
-        await user.save();
-
-        await Withdrawal.findByIdAndDelete(
-          withdrawal._id
-        );
-
-        throw transactionError;
-      }
-
-
+  throw transactionError;
+}
       // ==================================================
       // LEDGER
       // ==================================================
@@ -776,6 +815,8 @@ exchangeRate:
           description:
             `Crypto withdrawal request - ${normalizedCoin.toUpperCase()}`,
 
+          session,
+
         });
 
       } catch (ledgerError) {
@@ -784,9 +825,16 @@ exchangeRate:
           "Crypto withdrawal ledger error:",
           ledgerError
         );
+        throw ledgerError;
 
       }
 
+      // ==================================================
+      // COMMIT DATABASE TRANSACTION
+      // ==================================================
+
+      await session.commitTransaction();
+transactionCommitted = true;
 
       // ==================================================
       // NOTIFICATION
@@ -875,25 +923,60 @@ coin:
       });
 
 
-    } catch (err) {
+   } catch (err) {
+
+  console.error(
+    "CRYPTO WITHDRAWAL ERROR:",
+    err
+  );
+
+if (session && !transactionCommitted) {
+
+    try {
+
+      await session.abortTransaction();
+
+    } catch (abortError) {
 
       console.error(
-        "CRYPTO WITHDRAWAL ERROR:",
-        err
+        "CRYPTO WITHDRAWAL ABORT ERROR:",
+        abortError
       );
-
-      return res.status(500).json({
-
-        message:
-          "Crypto withdrawal failed",
-
-        error:
-          err.message,
-
-      });
 
     }
 
+  }
+
+  return res.status(
+    err.statusCode || 500
+  ).json({
+
+    message:
+      err.message ||
+      "Crypto withdrawal failed",
+
+  });
+
+} finally {
+
+  if (session) {
+
+    try {
+
+      await session.endSession();
+
+    } catch (sessionError) {
+
+      console.error(
+        "CRYPTO WITHDRAWAL SESSION ERROR:",
+        sessionError
+      );
+
+    }
+
+  }
+
+}
   }
 );
 
@@ -1053,7 +1136,7 @@ router.post(
       // FIND WITHDRAWAL
       // ==================================================
 
-      const withdrawal =
+      let withdrawal =
         await Withdrawal.findOne({
 
           _id:
@@ -1427,6 +1510,40 @@ if (
 }
 
       // ==================================================
+      // ATOMIC PAYOUT ATTEMPT LOCK
+      // Prevent duplicate NOWPayments payout creation
+
+      const payoutAttemptClaim = await Withdrawal.findOneAndUpdate(
+        {
+          _id: withdrawal._id,
+          method: "crypto",
+          status: "pending",
+          nowPaymentsWithdrawalId: null,
+          nowPaymentsBatchId: null,
+          payoutAttempted: { $ne: true },
+        },
+        {
+          $set: {
+            payoutAttempted: true,
+            lastPayoutAttemptAt: new Date(),
+            payoutError: null,
+          },
+          $inc: {
+            payoutAttemptCount: 1,
+          },
+        },
+        { new: true }
+      );
+
+      if (!payoutAttemptClaim) {
+        return res.status(409).json({
+          message: "This crypto withdrawal is already being processed or has already received a payout attempt.",
+          withdrawalId: withdrawal._id,
+        });
+      }
+
+      withdrawal = payoutAttemptClaim;
+
       // CREATE NOWPAYMENTS PAYOUT
       //
       // IMPORTANT:
@@ -1529,6 +1646,9 @@ try {
   withdrawal.nowPaymentsWithdrawalId =
     String(payoutWithdrawalId);
 
+  withdrawal.nowPaymentsExternalId =
+    uniqueExternalId;
+
 
   withdrawal.externalTransactionId =
     String(payoutWithdrawalId);
@@ -1552,8 +1672,7 @@ try {
 
 
   withdrawal.processedBy =
-    req.user.email ||
-    String(req.user.id);
+    req.user.id;
 
 
   withdrawal.processedAt =
@@ -1690,23 +1809,47 @@ try {
         err
       );
 
+      const nowPaymentsError =
+        err.response?.data ||
+        err.message ||
+        "Unknown NOWPayments error";
 
       console.error(
         "NOWPAYMENTS ERROR:",
-        err.response?.data ||
-        err.message
+        nowPaymentsError
       );
 
+      try {
+        await Withdrawal.updateOne(
+          {
+            _id: withdrawal._id,
+            method: "crypto",
+          },
+          { ["$set"]: {
+              payoutAttempted: true,
+              lastPayoutAttemptAt: new Date(),
+              payoutError: String(
+                typeof nowPaymentsError === "string"
+                  ? nowPaymentsError
+                  : JSON.stringify(nowPaymentsError)
+              ),
+            }
+          }
+        );
+      } catch (updateError) {
+        console.error(
+          "FAILED TO SAVE NOWPAYMENTS PAYOUT ERROR:",
+          updateError
+        );
+      }
 
       return res.status(502).json({
-
         message:
-          "NOWPayments crypto payout creation failed",
-
+          "NOWPayments crypto payout creation failed. Manual review required.",
         error:
-          err.response?.data ||
-          err.message,
-
+          nowPaymentsError,
+        withdrawalId:
+          withdrawal._id,
       });
 
     }
@@ -1726,13 +1869,13 @@ try {
 // Flow:
 //
 // awaiting_2fa
-//      ↓
+//      أ¢â€ â€œ
 // NOWPayments verify
-//      ↓
+//      أ¢â€ â€œ
 // processing / waiting
-//      ↓
+//      أ¢â€ â€œ
 // status endpoint / webhook
-//      ↓
+//      أ¢â€ â€œ
 // completed
 //
 // ======================================================
@@ -1776,7 +1919,7 @@ router.post(
       // FIND WITHDRAWAL
       // ==================================================
 
-      const withdrawal =
+      let withdrawal =
         await Withdrawal.findOne({
 
           _id:
@@ -1820,24 +1963,24 @@ router.post(
 
 
       // ==================================================
+      // ==================================================
       // REQUIRED NOWPAYMENTS IDS
       // ==================================================
 
       if (
-        !withdrawal.nowPaymentsWithdrawalId
+        !withdrawal.nowPaymentsWithdrawalId ||
+        !withdrawal.nowPaymentsBatchId
       ) {
 
         return res.status(400).json({
 
           message:
-            "NOWPayments withdrawal ID is missing",
+            "NOWPayments payout IDs are missing",
 
         });
 
       }
 
-
-      // ==================================================
       // PREVENT INVALID PAYOUT STATE
       // ==================================================
 
@@ -1868,11 +2011,47 @@ router.post(
       // VERIFY NOWPAYMENTS 2FA
       // ==================================================
 
+      // ==================================================
+      // ATOMIC 2FA VERIFICATION LOCK
+      // ==================================================
+
+      const verificationClaim = await Withdrawal.findOneAndUpdate(
+        {
+          _id: withdrawal._id,
+          method: "crypto",
+          status: "awaiting_2fa",
+          $or: [
+            { verificationInProgress: { $ne: true } },
+            {
+              verificationInProgress: true,
+              verificationStartedAt: {
+                $lt: new Date(Date.now() - 10 * 60 * 1000),
+              },
+            },
+          ],
+        },
+        {
+          $set: {
+            verificationInProgress: true,
+            verificationStartedAt: new Date(),
+          },
+        },
+        { new: true }
+      );
+
+      if (!verificationClaim) {
+        return res.status(409).json({
+          message: "This crypto withdrawal is already being verified or is no longer awaiting 2FA.",
+          withdrawalId: withdrawal._id,
+        });
+      }
+
+      withdrawal = verificationClaim;
+
       const verification =
         await verifyPayout({
 
-          batchWithdrawalId:
-            withdrawal.nowPaymentsWithdrawalId,
+          batchWithdrawalId: verificationClaim.nowPaymentsBatchId,
 
           verificationCode,
 
@@ -1897,13 +2076,36 @@ router.post(
         !verification
       ) {
 
-        return res.status(502).json({
+        try {
+          await Withdrawal.updateOne(
+            {
+              _id:
+                withdrawal._id,
+              method:
+                "crypto",
+              status:
+                "awaiting_2fa",
+            },
+            {
+              $set: {
+                verificationInProgress:
+                  false,
+                verificationStartedAt:
+                  null,
+              },
+            }
+          );
+        } catch (lockReleaseError) {
+          console.error(
+            "FAILED TO RELEASE 2FA LOCK AFTER EMPTY VERIFICATION RESPONSE:",
+            lockReleaseError
+          );
+        }
 
+        return res.status(502).json({
           message:
             "NOWPayments returned an empty verification response",
-
         });
-
       }
 
 
@@ -1947,96 +2149,69 @@ router.post(
 
       }
 
-if (
-  [
-    "failed",
-    "error",
-    "rejected",
-    "cancelled",
-  ].includes(
-    nowPaymentsStatus
-  )
-) {
-
-
-  withdrawal.status =
-    "failed";
-
-
-  withdrawal.nowPaymentsStatus =
-    nowPaymentsStatus;
-
-
-  withdrawal.processedBy =
-    req.user.id;
-
-
-  withdrawal.processedAt =
-    new Date();
-
-
-  withdrawal.auditTrail =
-    withdrawal.auditTrail || [];
-
-
-  withdrawal.auditTrail.push({
-
-    action:
-      "NOWPayments rejected payout after 2FA verification",
-
-    performedBy:
-      req.user.email ||
-      String(req.user.id),
-
-    timestamp:
-      new Date(),
-
-  });
-
-
-  await withdrawal.save();
-
-
-  return res.status(502).json({
-
-    message:
-      "NOWPayments rejected the payout after 2FA verification",
-
-    nowPaymentsStatus,
-
-    withdrawalId:
-      withdrawal._id,
-
-  });
-
-}
-
+      if (
+        [
+          "failed", "error", "rejected", "cancelled", "canceled"
+        ].includes(nowPaymentsStatus)
+      ) {
+        const refund = await refundCryptoWithdrawal(withdrawal._id, nowPaymentsStatus);
+        if (refund.alreadyProcessed) {
+          return res.status(409).json({ message: "Withdrawal funds have already been refunded", withdrawalId: withdrawal._id });
+        }
+        withdrawal = refund.withdrawal;
+        const refundAmount = Number(withdrawal.amount || 0);
       // ==================================================
-      // UPDATE WITHDRAWAL
+      // ==================================================
+      // REFUND NOTIFICATION
       // ==================================================
 
-      withdrawal.status =
-        internalStatus;
+      try {
 
+        await createNotification({
 
-      withdrawal.nowPaymentsStatus =
-        nowPaymentsStatus;
+          email:
+            withdrawal.email,
 
+          title:
+            "Crypto Withdrawal Failed",
 
-      withdrawal.processedBy =
-        req.user.id;
+          message:
+            `Your crypto withdrawal of $${refundAmount.toFixed(2)} failed after 2FA verification and the reserved USD funds were released.`,
 
+        });
 
-      withdrawal.processedAt =
-        new Date();
+      } catch (
+        notificationError
+      ) {
 
+        console.error(
+          "Crypto 2FA refund notification error:",
+          notificationError
+        );
 
-      withdrawal.auditTrail =
-        withdrawal.auditTrail || [];
+      }
 
+      return res.status(502).json({
 
-      withdrawal.auditTrail.push({
+        message:
+          "NOWPayments rejected the payout after 2FA verification and the reserved USD funds were released",
 
+        nowPaymentsStatus,
+
+        refundedAmount:
+          refundAmount,
+
+        withdrawalId:
+          withdrawal._id,
+
+      });
+
+      }
+
+// UPDATE WITHDRAWAL
+      // ==================================================
+
+      const successAuditEntry = {
         action:
           "NOWPayments payout 2FA verification accepted; payout is processing",
 
@@ -2048,11 +2223,67 @@ if (
 
         timestamp:
           new Date(),
+      };
 
-      });
+      const successClaim = await Withdrawal.findOneAndUpdate(
+        {
+          _id:
+            withdrawal._id,
 
+          method:
+            "crypto",
 
-      await withdrawal.save();
+          status:
+            "awaiting_2fa",
+
+          verificationInProgress:
+            true,
+        },
+
+        {
+          $set: {
+            status:
+              internalStatus,
+
+            verificationInProgress:
+              false,
+
+            verificationStartedAt:
+              null,
+
+            nowPaymentsStatus:
+              nowPaymentsStatus,
+
+            processedBy:
+              req.user.id,
+
+            processedAt:
+              new Date(),
+          },
+
+          $push: {
+            auditTrail:
+              successAuditEntry,
+          },
+        },
+
+        {
+          new:
+            true,
+        }
+      );
+
+      if (!successClaim) {
+        return res.status(409).json({
+          message:
+            "Crypto withdrawal verification state changed before FlowPay could finalize the 2FA result",
+          withdrawalId:
+            withdrawal._id,
+        });
+      }
+
+      withdrawal =
+        successClaim;
 
 
       // ==================================================
@@ -2131,6 +2362,27 @@ if (
         err.message
       );
 
+      try {
+        await Withdrawal.updateOne(
+          {
+            _id: withdrawal._id,
+            method: "crypto",
+            status: "awaiting_2fa",
+          },
+          {
+            $set: {
+              verificationInProgress: false,
+              verificationStartedAt: null,
+            },
+          }
+        );
+      } catch (lockReleaseError) {
+        console.error(
+          "FAILED TO RELEASE 2FA VERIFICATION LOCK:",
+          lockReleaseError
+        );
+      }
+
 
       return res.status(502).json({
 
@@ -2154,15 +2406,15 @@ if (
 // NOWPayments status flow:
 //
 // waiting / pending / processing
-//        ↓
+//        أ¢â€ â€œ
 //     processing
 //
 // finished / completed / confirmed
-//        ↓
+//        أ¢â€ â€œ
 //     completed
 //
 // failed / rejected / cancelled
-//        ↓
+//        أ¢â€ â€œ
 //     rejected + USD refund
 //
 // IMPORTANT:
@@ -2187,7 +2439,7 @@ router.get(
       // FIND WITHDRAWAL
       // ==================================================
 
-      const withdrawal =
+      let withdrawal =
         await Withdrawal.findOne({
 
           _id:
@@ -2352,7 +2604,8 @@ router.get(
 
 
       // ==================================================
-      // COMPLETED
+      // ==================================================
+      // TERMINAL NOWPAYMENTS STATUS
       // ==================================================
 
       if (
@@ -2360,115 +2613,120 @@ router.get(
           "finished",
           "completed",
           "confirmed",
+          "success",
+          "successful",
         ].includes(
           nowStatus
         )
       ) {
 
-        withdrawal.status =
-          "completed";
-
-// ==================================================
-// UPDATE TRANSACTION STATUS
-// ==================================================
-
-await Transaction.findOneAndUpdate(
-
-  {
-    reference:
-      withdrawal.destination,
-
-    type:
-      "Crypto Withdrawal",
-  },
-
-  {
-    status:
-      "completed",
-  }
-
-);
-
-        withdrawal.processedAt =
-          new Date();
-
-
-        withdrawal.auditTrail =
-          withdrawal.auditTrail || [];
-
-
-        withdrawal.auditTrail.push({
-
-          action:
-            `NOWPayments payout completed successfully: ${status.status}`,
-
-          performedBy:
-            req.user.email ||
-            String(
-              req.user.id
-            ),
-
-          timestamp:
-            new Date(),
-
-        });
-
-
-        await withdrawal.save();
-
-
-        // ==============================================
-        // NOTIFICATION
-        // ==============================================
-
         try {
 
-          await createNotification({
+          const settlement =
+            await settleCryptoWithdrawal(
+              withdrawal._id,
+              nowStatus
+            );
 
-            email:
-              withdrawal.email,
+          console.log(
+            "CRYPTO STATUS SETTLEMENT RESULT:",
+            {
+              withdrawalId:
+                String(withdrawal._id),
+              status:
+                settlement.status,
+              alreadyProcessed:
+                settlement.alreadyProcessed,
+            }
+          );
 
-            title:
-              "Crypto Withdrawal Completed",
+          withdrawal =
+            settlement.withdrawal;
+
+          if (
+            settlement.user &&
+            settlement.amount
+          ) {
+
+            try {
+
+              await createNotification({
+
+                email:
+                  settlement.user.email,
+
+                title:
+                  "Crypto Withdrawal Completed",
+
+                message:
+                  `Your ${withdrawal.payoutCurrency || "crypto"} crypto withdrawal of $${Number(
+                    settlement.amount
+                  ).toFixed(
+                    2
+                  )} has been completed successfully.`,
+
+              });
+
+            } catch (
+              notificationError
+            ) {
+
+              console.error(
+                "Crypto completion notification error:",
+                notificationError
+              );
+
+            }
+
+          }
+
+          return res.json({
+
+            success:
+              true,
 
             message:
-             `Your ${payoutCurrency} crypto withdrawal of $${Number(
-                withdrawal.amount || 0
-              ).toFixed(
-                2
-              )} has been completed successfully.`,
+              settlement.alreadyProcessed
+                ? "Crypto payout was already settled"
+                : "Crypto payout completed successfully",
+
+            flowpayStatus:
+              "completed",
+
+            nowPaymentsStatus:
+              status.status,
+
+            withdrawal,
+
+            alreadyProcessed:
+              settlement.alreadyProcessed,
 
           });
 
-        } catch (
-          notificationError
-        ) {
+        } catch (settlementError) {
 
           console.error(
-            "Crypto completion notification error:",
-            notificationError
+            "CHECK CRYPTO PAYOUT SETTLEMENT ERROR:",
+            settlementError
           );
 
+          return res.status(500).json({
+
+            success:
+              false,
+
+            message:
+              "NOWPayments payout completed but FlowPay settlement failed",
+
+            error:
+              settlementError.message,
+
+            withdrawalId:
+              withdrawal._id,
+
+          });
+
         }
-
-
-        return res.json({
-
-          success:
-            true,
-
-          message:
-            "Crypto payout completed successfully",
-
-          flowpayStatus:
-            "completed",
-
-          nowPaymentsStatus:
-            status.status,
-
-          withdrawal,
-
-        });
 
       }
 
@@ -2482,52 +2740,71 @@ await Transaction.findOneAndUpdate(
           "failed",
           "rejected",
           "cancelled",
+          "canceled",
         ].includes(
           nowStatus
         )
       ) {
 
-        // ==============================================
-        // FIND USER
-        // ==============================================
+        try {
 
-        const user =
-          await User.findById(
-            withdrawal.userId
+          const refund =
+            await refundCryptoWithdrawal(
+              withdrawal._id,
+              nowStatus
+            );
+
+          console.log(
+            "CRYPTO STATUS REFUND RESULT:",
+            {
+              withdrawalId:
+                String(withdrawal._id),
+              status:
+                refund.status,
+              alreadyProcessed:
+                refund.alreadyProcessed,
+            }
           );
 
+          withdrawal =
+            refund.withdrawal;
 
-        if (!user) {
+          if (
+            refund.user &&
+            refund.amount
+          ) {
 
-          return res.status(404).json({
+            try {
 
-            message:
-              "User not found for refund",
+              await createNotification({
 
-          });
+                email:
+                  refund.user.email,
 
-        }
+                title:
+                  "Crypto Withdrawal Failed",
 
+                message:
+                  `Your crypto withdrawal of $${Number(
+                    refund.amount
+                  ).toFixed(
+                    2
+                  )} failed and the full USD amount has been returned to your FlowPay balance.`,
 
-        // ==============================================
-        // DOUBLE REFUND PROTECTION
-        // ==============================================
+              });
 
-        if (
-          withdrawal.fundsRefunded ===
-          true
-        ) {
+            } catch (
+              notificationError
+            ) {
 
-          withdrawal.status =
-            "rejected";
+              console.error(
+                "Crypto payout refund notification error:",
+                notificationError
+              );
 
+            }
 
-          withdrawal.nowPaymentsStatus =
-            status.status;
-
-
-          await withdrawal.save();
-
+          }
 
           return res.json({
 
@@ -2535,7 +2812,9 @@ await Transaction.findOneAndUpdate(
               true,
 
             message:
-              "Payout failed; funds were already refunded",
+              refund.alreadyProcessed
+                ? "Payout failed; funds were already refunded"
+                : "Crypto payout failed and USD funds were refunded",
 
             flowpayStatus:
               "rejected",
@@ -2543,279 +2822,43 @@ await Transaction.findOneAndUpdate(
             nowPaymentsStatus:
               status.status,
 
+            refundedAmount:
+              refund.amount || 0,
+
             withdrawal,
 
-          });
-
-        }
-
-
-        // ==============================================
-        // REFUND ORIGINAL USD AMOUNT
-        // ==============================================
-
-        const refundAmount =
-          Number(
-            withdrawal.amount || 0
-          );
-
-
-        if (
-          !Number.isFinite(
-            refundAmount
-          ) ||
-          refundAmount <= 0
-        ) {
-
-          return res.status(500).json({
-
-            message:
-              "Invalid withdrawal amount; refund was not processed",
+            alreadyProcessed:
+              refund.alreadyProcessed,
 
           });
 
-        }
-
-
-        // ==============================================
-        // CURRENT BALANCE
-        // ==============================================
-
-        const balanceBeforeRefund =
-          Number(
-            user.balance || 0
-          );
-
-
-        if (
-          !Number.isFinite(
-            balanceBeforeRefund
-          )
-        ) {
-
-          return res.status(500).json({
-
-            message:
-              "Invalid user balance; refund was not processed",
-
-          });
-
-        }
-
-
-        // ==============================================
-        // ADD USD BACK
-        // ==============================================
-
-        user.balance =
-          balanceBeforeRefund +
-          refundAmount;
-
-
-        user.totalWithdrawals =
-          Math.max(
-
-            0,
-
-            Number(
-              user.totalWithdrawals || 0
-            ) -
-            refundAmount
-
-          );
-
-
-        await user.save();
-
-// ==============================================
-// REFUND LEDGER ENTRY
-// ==============================================
-
-await createLedgerEntry({
-
-  userId:
-    user._id,
-
-  email:
-    user.email,
-
-  type:
-    "Crypto Withdrawal Refund",
-
-  amount:
-    refundAmount,
-
-  balanceBefore:
-    balanceBeforeRefund,
-
-  balanceAfter:
-    user.balance,
-
-  reference:
-    String(withdrawal._id),
-
-  description:
-    "Crypto withdrawal failed - USD funds refunded",
-
-});
-
-        // ==============================================
-        // MARK REFUNDED
-        // ==============================================
-
-        withdrawal.fundsRefunded =
-          true;
-
-
-        withdrawal.refundedAt =
-          new Date();
-
-
-        withdrawal.status =
-          "rejected";
-
-
-        withdrawal.rejectionReason =
-          `NOWPayments payout status: ${status.status}`;
-
-
-        withdrawal.processedBy =
-          req.user.id;
-
-
-        withdrawal.processedAt =
-          new Date();
-
-
-        withdrawal.nowPaymentsStatus =
-          status.status;
-
-
-        withdrawal.auditTrail =
-          withdrawal.auditTrail || [];
-
-
-        withdrawal.auditTrail.push({
-
-          action:
-            `NOWPayments payout failed: ${status.status}; USD funds refunded`,
-
-          performedBy:
-            req.user.email ||
-            String(
-              req.user.id
-            ),
-
-          timestamp:
-            new Date(),
-
-        });
-
-
-        await withdrawal.save();
-
-
-        // ==============================================
-        // REFUND TRANSACTION
-        // ==============================================
-
-        await Transaction.create({
-
-          fromEmail:
-            "BLOCKCHAIN",
-
-          toEmail:
-            user.email,
-
-          amount:
-            refundAmount,
-
-          fee:
-            0,
-
-          netAmount:
-            refundAmount,
-
-          type:
-            "Crypto Withdrawal Refund",
-
-          method:
-            "crypto",
-
-          reference:
-            withdrawal.destination,
-
-          status:
-            "completed",
-
-        });
-
-
-        // ==============================================
-        // NOTIFICATION
-        // ==============================================
-
-        try {
-
-          await createNotification({
-
-            email:
-              user.email,
-
-            title:
-              "Crypto Withdrawal Failed",
-
-            message:
-              `Your crypto withdrawal of $${refundAmount.toFixed(
-                2
-              )} failed and the full USD amount has been returned to your FlowPay balance.`,
-
-          });
-
-        } catch (
-          notificationError
-        ) {
+        } catch (refundError) {
 
           console.error(
-            "Crypto payout refund notification error:",
-            notificationError
+            "CHECK CRYPTO PAYOUT REFUND ERROR:",
+            refundError
           );
 
+          return res.status(500).json({
+
+            success:
+              false,
+
+            message:
+              "NOWPayments payout failed but FlowPay refund failed",
+
+            error:
+              refundError.message,
+
+            withdrawalId:
+              withdrawal._id,
+
+          });
+
         }
-
-
-        // ==============================================
-        // RESPONSE
-        // ==============================================
-
-        return res.json({
-
-          success:
-            true,
-
-          message:
-            "Crypto payout failed and USD funds were refunded",
-
-          flowpayStatus:
-            "rejected",
-
-          nowPaymentsStatus:
-            status.status,
-
-          refundedAmount:
-            refundAmount,
-
-          balance:
-            user.balance,
-
-          withdrawal,
-
-        });
 
       }
 
-
-      // ==================================================
       // STILL PROCESSING
       // ==================================================
 
@@ -2878,354 +2921,376 @@ await createLedgerEntry({
 
 
 // ======================================================
-// ADMIN REJECT CRYPTO WITHDRAWAL
-// ======================================================
-
-router.post(
-  "/admin/crypto-withdrawals/:id/reject",
-
-  auth,
-
-  adminOnly,
-
-  async (req, res) => {
-
-    try {
-
-      // ==================================================
-      // FIND WITHDRAWAL
-      // ==================================================
-
-      const withdrawal =
-        await Withdrawal.findOne({
-
-          _id:
-            req.params.id,
-
-          method:
-            "crypto",
-
-        });
-
-
-      if (!withdrawal) {
-
-        return res.status(404).json({
-
-          message:
-            "Crypto withdrawal not found",
-
-        });
-
-      }
-
-
-      // ==================================================
-      // ONLY PENDING CAN BE REJECTED
-      // ==================================================
-
-      if (
-        withdrawal.status !==
-        "pending"
-      ) {
-
-        return res.status(400).json({
-
-          message:
-            `Withdrawal cannot be rejected from ${withdrawal.status} status`,
-
-        });
-
-      }
-
-
-      // ==================================================
-      // FIND USER
-      // ==================================================
-
-      const user =
-        await User.findById(
-          withdrawal.userId
-        );
-
-
-      if (!user) {
-
-        return res.status(404).json({
-
-          message:
-            "User not found",
-
-        });
-
-      }
-
-
-      // ==================================================
-      // PROTECT AGAINST DOUBLE REFUND
-      // ==================================================
-
-      if (
-        withdrawal.fundsRefunded ===
-        true
-      ) {
-
-        return res.status(400).json({
-
-          message:
-            "Withdrawal funds have already been refunded",
-
-        });
-
-      }
-
-
-      // ==================================================
-      // REFUND RESERVED USD
-      // ==================================================
-
-      const refundAmount =
-        Number(
-          withdrawal.amount || 0
-        );
-
-const balanceBeforeRefund =
-  Number(
-    user.balance || 0
-  );
-
-      if (
-        !Number.isFinite(
-          refundAmount
-        ) ||
-        refundAmount <= 0
-      ) {
-
-        return res.status(400).json({
-
-          message:
-            "Invalid withdrawal amount",
-
-        });
-
-      }
-
-
-      user.balance =
-        Number(
-          user.balance || 0
-        ) +
-        refundAmount;
-
-
-      user.totalWithdrawals =
-        Math.max(
-
-          0,
-
-          Number(
-            user.totalWithdrawals || 0
-          ) -
-          refundAmount
-
-        );
-
-
-      await user.save();
-
-// ==================================================
-// REFUND LEDGER ENTRY
-// ==================================================
-
-await createLedgerEntry({
-
-  userId:
-    user._id,
-
-  email:
-    user.email,
-
-  type:
-    "Crypto Withdrawal Refund",
-
-  amount:
-    refundAmount,
-
-  balanceBefore:
-    balanceBeforeRefund,
-
-  balanceAfter:
-    user.balance,
-
-  reference:
-    String(withdrawal._id),
-
-  description:
-    "Admin rejected crypto withdrawal - USD funds refunded",
-
-});
-
-      // ==================================================
-      // UPDATE WITHDRAWAL
-      // ==================================================
-
-      withdrawal.status =
-        "rejected";
-
-      withdrawal.fundsRefunded =
-        true;
-
-      withdrawal.refundedAt =
-        new Date();
-
-      withdrawal.rejectionReason =
-        req.body?.reason ||
-        "Crypto withdrawal rejected";
-
-      withdrawal.processedBy =
-        req.user.id;
-
-      withdrawal.processedAt =
-        new Date();
-
-      withdrawal.auditTrail =
-        withdrawal.auditTrail || [];
-
-
-      withdrawal.auditTrail.push({
-
-        action:
-          "Crypto withdrawal rejected and USD funds refunded",
-
-        performedBy:
-          req.user.email ||
-          String(req.user.id),
-
-        timestamp:
-          new Date(),
-
-      });
-
-
-      await withdrawal.save();
-
-
-      // ==================================================
-      // REFUND TRANSACTION
-      // ==================================================
-
-      await Transaction.create({
-
-        fromEmail:
-          "BLOCKCHAIN",
-
-        toEmail:
-          user.email,
-
-        amount:
-          refundAmount,
-
-        fee:
-          0,
-
-        netAmount:
-          refundAmount,
-
-        type:
-          "Crypto Withdrawal Refund",
-
-        method:
-          "crypto",
-
-        reference:
-          withdrawal.destination,
-
-        status:
-          "completed",
-
-      });
-
-
-      // ==================================================
-      // NOTIFICATION
-      // ==================================================
-
-      try {
-
-        await createNotification({
-
-          email:
-            user.email,
-
-          title:
-            "Crypto Withdrawal Rejected",
-
-          message:
-            `Your crypto withdrawal of $${refundAmount.toFixed(
-              2
-            )} was rejected and the funds were returned to your FlowPay balance.`,
-
-        });
-
-      } catch (
-        notificationError
-      ) {
-
-        console.error(
-          "Crypto rejection notification error:",
-          notificationError
-        );
-
-      }
-
-
-      // ==================================================
-      // RESPONSE
-      // ==================================================
-
-      return res.json({
-
-        success:
-          true,
-
-        message:
-          "Crypto withdrawal rejected and funds refunded",
-
-        balance:
-          user.balance,
-
-        withdrawal,
-
-      });
-
-
-    } catch (err) {
-
-      console.error(
-        "REJECT CRYPTO WITHDRAWAL ERROR:",
-        err
-      );
-
-
-      return res.status(500).json({
-
-        message:
-          "Server error",
-
-        error:
-          err.message,
-
-      });
-
-    }
-
-  }
-);
-
-
-// ======================================================
+ // ======================================================
+ // ADMIN REJECT CRYPTO WITHDRAWAL
+ // ======================================================
+
+ router.post(
+   "/admin/crypto-withdrawals/:id/reject",
+   auth,
+   adminOnly,
+   async (req, res) => {
+     let session = null;
+     let transactionCommitted = false;
+
+     try {
+       session = await mongoose.startSession();
+       session.startTransaction();
+
+       const withdrawal =
+         await Withdrawal.findOne({
+           _id: req.params.id,
+           method: "crypto",
+         }).session(session);
+
+       if (!withdrawal) {
+         await session.abortTransaction();
+         return res.status(404).json({
+           message: "Crypto withdrawal not found",
+         });
+       }
+
+       if (withdrawal.status !== "pending") {
+         await session.abortTransaction();
+         return res.status(400).json({
+           message:
+             `Withdrawal cannot be rejected from ${withdrawal.status} status`,
+         });
+       }
+
+       if (withdrawal.fundsRefunded === true) {
+         await session.abortTransaction();
+         return res.status(400).json({
+           message:
+             "Withdrawal funds have already been refunded",
+         });
+       }
+
+       if (withdrawal.fundsSettled === true) {
+         await session.abortTransaction();
+         return res.status(400).json({
+           message:
+             "Withdrawal funds have already been settled",
+         });
+       }
+
+       const user =
+         await User.findById(
+           withdrawal.userId
+         ).session(session);
+
+       if (!user) {
+         await session.abortTransaction();
+         return res.status(404).json({
+           message: "User not found",
+         });
+       }
+
+       const refundAmount =
+         Number(withdrawal.amount || 0);
+
+       if (
+         !Number.isFinite(refundAmount) ||
+         refundAmount <= 0
+       ) {
+         await session.abortTransaction();
+         return res.status(400).json({
+           message: "Invalid withdrawal amount",
+         });
+       }
+
+       const balanceBeforeRefund =
+         Number(user.balance || 0);
+
+       const reservedBalanceBeforeRefund =
+         Number(user.reservedBalance || 0);
+
+       if (
+         !Number.isFinite(balanceBeforeRefund) ||
+         !Number.isFinite(reservedBalanceBeforeRefund) ||
+         reservedBalanceBeforeRefund < refundAmount
+       ) {
+         await session.abortTransaction();
+         return res.status(409).json({
+           message:
+             "Insufficient reserved balance for crypto withdrawal refund",
+         });
+       }
+
+       user.reservedBalance =
+         reservedBalanceBeforeRefund -
+           refundAmount;
+       await user.save({
+         session,
+       });
+
+       withdrawal.status =
+         "rejected";
+
+       withdrawal.fundsRefunded =
+         true;
+
+       withdrawal.refundedAt =
+         new Date();
+
+       withdrawal.rejectionReason =
+         req.body?.reason ||
+         "Crypto withdrawal rejected";
+
+       withdrawal.processedBy =
+         req.user.id;
+
+       withdrawal.processedAt =
+         new Date();
+
+       withdrawal.auditTrail =
+         withdrawal.auditTrail || [];
+
+       withdrawal.auditTrail.push({
+         action:
+           "Crypto withdrawal rejected and USD funds refunded",
+         performedBy:
+           req.user.email ||
+           String(req.user.id),
+         timestamp:
+           new Date(),
+       });
+
+       await withdrawal.save({
+         session,
+       });
+
+       const originalWithdrawalTransaction =
+         await Transaction.findOneAndUpdate(
+           {
+             withdrawalId:
+               withdrawal._id,
+             type:
+               "Crypto Withdrawal",
+           },
+           {
+             status:
+               "rejected",
+           },
+           {
+             session,
+             new:
+               true,
+           }
+         );
+
+       if (!originalWithdrawalTransaction) {
+         throw new Error(
+           "Original crypto withdrawal transaction not found during admin rejection"
+         );
+       }
+
+       await createLedgerEntry({
+         userId: user._id,
+         email: user.email,
+         type: "Crypto Withdrawal Refund",
+         amount: refundAmount,
+         balanceBefore: balanceBeforeRefund,
+         balanceAfter: user.balance,
+         reference: String(withdrawal._id),
+         description: "Crypto withdrawal rejected - USD funds refunded",
+         session,
+       });
+
+       await Transaction.create(
+         [{
+           withdrawalId: withdrawal._id,
+
+           fromEmail:
+             "BLOCKCHAIN",
+
+           toEmail:
+             user.email,
+
+           amount:
+             refundAmount,
+
+           fee:
+             0,
+
+           netAmount:
+             refundAmount,
+
+           type:
+             "Crypto Withdrawal Refund",
+
+           method:
+             "crypto",
+
+           reference:
+             withdrawal.destination,
+
+           status:
+             "completed",
+         }],
+         {
+           session,
+         }
+       );
+
+       await session.commitTransaction();
+       transactionCommitted = true;
+
+       try {
+         await createNotification({
+           email:
+             user.email,
+
+           title:
+             "Crypto Withdrawal Rejected",
+
+           message:
+             `Your crypto withdrawal of $${refundAmount.toFixed(
+               2
+             )} was rejected and the funds were returned to your FlowPay balance.`,
+         });
+       } catch (
+         notificationError
+       ) {
+         console.error(
+           "Crypto rejection notification error:",
+           notificationError
+         );
+       }
+
+       return res.json({
+         success:
+           true,
+
+         message:
+           "Crypto withdrawal rejected and funds refunded",
+
+         balance:
+           user.balance,
+
+         withdrawal,
+       });
+
+     } catch (err) {
+       console.error(
+         "REJECT CRYPTO WITHDRAWAL ERROR:",
+         err
+       );
+
+       if (
+         session &&
+         !transactionCommitted
+       ) {
+         try {
+           await session.abortTransaction();
+         } catch (
+           abortError
+         ) {
+           console.error(
+             "REJECT CRYPTO WITHDRAWAL ABORT ERROR:",
+             abortError
+           );
+         }
+       }
+
+       return res.status(500).json({
+         message:
+           "Server error",
+
+         error:
+           err.message,
+       });
+
+     } finally {
+       if (session) {
+         try {
+           await session.endSession();
+         } catch (
+           sessionError
+         ) {
+           console.error(
+             "REJECT CRYPTO WITHDRAWAL SESSION ERROR:",
+             sessionError
+           );
+         }
+       }
+     }
+   }
+ );
 // EXPORT
 // ======================================================
 
 module.exports =
   router;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,4 +1,4 @@
-const axios =
+﻿const axios =
   require("axios");
 
 const NOWPAYMENTS_API =
@@ -126,7 +126,7 @@ async function getPayoutBalance() {
 
 
 // ======================================================
-// ESTIMATE USD → TRX
+// ESTIMATE USD â†’ TRX
 // ======================================================
 
 async function estimateCryptoAmount({
@@ -443,7 +443,7 @@ async function verifyPayout({
 
 }) {
 
-  if (!batchWithdrawalId) {
+  if (!payoutId) {
 
     throw new Error(
       "batchWithdrawalId is required"
@@ -511,7 +511,7 @@ async function getPayoutStatus(
   if (!payoutId) {
 
     throw new Error(
-      "payoutId is required"
+      "batchWithdrawalId is required"
     );
 
   }
@@ -525,7 +525,7 @@ async function getPayoutStatus(
     await axios.get(
 
       `${NOWPAYMENTS_API}/payout/${encodeURIComponent(
-        payoutId
+        batchWithdrawalId
       )}`,
 
       {
@@ -568,3 +568,5 @@ module.exports = {
   getPayoutStatus,
 
 };
+
+
