@@ -443,7 +443,7 @@ async function verifyPayout({
 
 }) {
 
-  if (!payoutId) {
+  if (!batchWithdrawalId) {
 
     throw new Error(
       "batchWithdrawalId is required"
@@ -511,7 +511,7 @@ async function getPayoutStatus(
   if (!payoutId) {
 
     throw new Error(
-      "batchWithdrawalId is required"
+      "payoutId is required"
     );
 
   }
@@ -525,7 +525,7 @@ async function getPayoutStatus(
     await axios.get(
 
       `${NOWPAYMENTS_API}/payout/${encodeURIComponent(
-        batchWithdrawalId
+        payoutId
       )}`,
 
       {
@@ -568,5 +568,8 @@ module.exports = {
   getPayoutStatus,
 
 };
+
+
+
 
 
