@@ -17,12 +17,6 @@ const auth =
 
       if (!token) {
 
-        token =
-          req.query.token;
-      }
-
-      if (!token) {
-
         console.log(
           "NO TOKEN RECEIVED"
         );
