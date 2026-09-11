@@ -35,7 +35,7 @@ const calculateExternalFee = (amount) => {
     return 0;
   }
 
-  return numericAmount * 0.035;
+  return numericAmount * 0.0499;
 };
 
 
@@ -44,8 +44,8 @@ const calculateExternalFee = (amount) => {
 //
 // Configurable from .env:
 //
-// CRYPTO_FEE_RATE=0.01
-// CRYPTO_MIN_FEE=1.00
+// CRYPTO_FEE_RATE=0.0199
+// CRYPTO_MIN_FEE=1.99
 // ======================================================
 
 const calculateCryptoFee = (amount) => {
@@ -72,7 +72,7 @@ const calculateCryptoFee = (amount) => {
     Number.isFinite(rate) &&
     rate >= 0
       ? rate
-      : 0.01;
+      : 0.0199;
 
   const minFee =
     Number.isFinite(minimumFee) &&
@@ -150,7 +150,7 @@ const getFeeRate = (method) => {
   ) {
     return Number(
       process.env.CRYPTO_FEE_RATE
-    ) || 0.01;
+    ) || 0.0199;
   }
 
   if (
@@ -159,7 +159,7 @@ const getFeeRate = (method) => {
     normalized === "bank_transfer" ||
     normalized === "stripe"
   ) {
-    return 0.035;
+    return 0.0499;
   }
 
   if (
@@ -169,7 +169,7 @@ const getFeeRate = (method) => {
     return 0.0001;
   }
 
-  return 0.035;
+  return 0.0499;
 };
 
 

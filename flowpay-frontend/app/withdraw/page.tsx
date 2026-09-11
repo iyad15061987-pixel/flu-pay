@@ -72,8 +72,8 @@ useState("usdttrc20");
 
   const fee =
     method === "crypto"
-      ? Math.max(1.00, numericAmount * 0.01)
-      : numericAmount * 0.035;
+      ? Math.max(1.99, numericAmount * 0.0199)
+      : numericAmount * 0.0499;
 
   const netAmount =
     numericAmount -
@@ -598,8 +598,8 @@ setBankTransferType("");
               <strong>
                 {" "}
                 {method === "crypto"
-                  ? "1% (minimum $1)"
-                  : "3.5%"}
+                  ? "1.99% (minimum $1.99)"
+                  : "4.99%"}
               </strong>
               {" — "}
               <strong>
@@ -672,11 +672,11 @@ setBankTransferType("");
             </p>
 
             <p>
-              • PayPal: 3.5%
+              • PayPal: 4.99%
             </p>
 
             <p>
-              • Bank Transfer: 3.5%
+              • Bank Transfer: 4.99%
             </p>
 
             <p>

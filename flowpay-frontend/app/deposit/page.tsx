@@ -60,10 +60,10 @@ export default function DepositPage() {
   const fee =
     method === "Crypto"
       ? Math.max(
-          1,
-          Math.round(numericAmount * 0.01 * 100) / 100
+          1.99,
+          Math.round(numericAmount * 0.0199 * 100) / 100
         )
-      : Math.round(numericAmount * 0.035 * 100) / 100;
+      : Math.round(numericAmount * 0.0499 * 100) / 100;
 
   const netAmount =
     Math.round((numericAmount - fee) * 100) / 100;
@@ -510,7 +510,7 @@ alert(
   <br />
 
   <p>
-    {method === "Crypto" ? "Fee 1% (min $1):" : "Fee 3.5%:"}
+    {method === "Crypto" ? "Fee 1% (min $1):" : "Fee 4.99%:"}
     <strong>
       {" "}
       $
@@ -586,8 +586,8 @@ alert(
     <strong>
       {" "}
       {method === "Crypto"
-        ? "1% (minimum $1)"
-        : "3.5%"}
+        ? "1.99% (minimum $1.99)"
+        : "4.99%"}
     </strong>
   </p>
 
