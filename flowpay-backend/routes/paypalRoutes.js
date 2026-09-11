@@ -205,11 +205,7 @@ if (
       // =========================
 
       const paypalUrl =
-        process.env.PAYPAL_ENV === "live"
-
-          ? "https://api-m.paypal.com/v2/checkout/orders"
-
-          : "https://api-m.sandbox.paypal.com/v2/checkout/orders";
+        "https://api-m.paypal.com/v2/checkout/orders";
 
 
       const response =
@@ -535,11 +531,7 @@ if (
       // =========================
 
       const orderUrl =
-        process.env.PAYPAL_ENV === "live"
-
-          ? `https://api-m.paypal.com/v2/checkout/orders/${orderId}`
-
-          : `https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderId}`;
+        `https://api-m.paypal.com/v2/checkout/orders/${orderId}`;
 
 
       const orderResponse =
@@ -669,11 +661,7 @@ if (
       // =========================
 
       const captureUrl =
-        process.env.PAYPAL_ENV === "live"
-
-          ? `https://api-m.paypal.com/v2/checkout/orders/${orderId}/capture`
-
-          : `https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderId}/capture`;
+        `https://api-m.paypal.com/v2/checkout/orders/${orderId}/capture`;
 
 
       const response =
@@ -916,7 +904,7 @@ if (
             "paypal",
 
           feeRate:
-            0.035,
+            0.0499,
 
           type:
             "PayPal Deposit",

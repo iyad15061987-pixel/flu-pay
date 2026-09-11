@@ -13,11 +13,7 @@ const getAccessToken =
       await axios({
 
         url:
-          process.env.PAYPAL_ENV === "live"
-
-            ? "https://api-m.paypal.com/v1/oauth2/token"
-
-            : "https://api-m.sandbox.paypal.com/v1/oauth2/token",
+          "https://api-m.paypal.com/v1/oauth2/token",
 
 
         method:
@@ -74,11 +70,7 @@ const verifyPayPalWebhook =
       await axios.post(
 
 
-        process.env.PAYPAL_ENV === "live"
-
-          ? "https://api-m.paypal.com/v1/notifications/verify-webhook-signature"
-
-          : "https://api-m.sandbox.paypal.com/v1/notifications/verify-webhook-signature",
+        "https://api-m.paypal.com/v1/notifications/verify-webhook-signature",
 
 
 

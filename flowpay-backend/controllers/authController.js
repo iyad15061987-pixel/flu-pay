@@ -57,7 +57,7 @@ exports.register =
           email,
         });
 
-      if (exists) {
+      if (exists && exists.verified) {
 
         return res.status(400).json({
           message:
@@ -95,6 +95,38 @@ exports.register =
       // CREATE USER
       // =========================
 
+      if (exists && !exists.verified) {
+
+        exists.password =
+          hashed;
+
+        exists.emailOtp =
+          otp;
+
+        exists.emailOtpExpires =
+          otpExpires;
+
+        await exists.save();
+
+        await sendMail({
+          to: email,
+
+          subject:
+            "FlowPay Verification Code",
+
+          text:
+            "Your verification code is: " + otp,
+        });
+
+        return res.json({
+          message:
+            "Verification code sent",
+
+          requiresVerification:
+            true,
+        });
+
+      }
       await User.create({
   email,
 
