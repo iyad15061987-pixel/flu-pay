@@ -58,3 +58,9 @@ svg {
     padding-top: 70px !important;
   }
 }
+
+@media (max-width: 767px) {
+  body {
+    padding-top: 70px;
+  }
+}

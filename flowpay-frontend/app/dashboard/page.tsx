@@ -1245,7 +1245,7 @@ if (withdrawalMethod === "crypto") {
   <div>
 
     <h1>
-      �Merchant Dashboard
+      🏪 Merchant Dashboard
     </h1>
 
     <br />
