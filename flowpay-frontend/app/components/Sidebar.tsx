@@ -319,7 +319,7 @@ export default function Sidebar() {
                 : "white",
 
             position:
-              "fixed",
+              "sticky",
 
             top: 0,
 
