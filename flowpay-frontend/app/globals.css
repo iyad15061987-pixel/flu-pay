@@ -45,3 +45,16 @@ svg {
     --content-left: 250px;
   }
 }
+@media (max-width: 767px) {
+  [style*="margin-left: var(--content-left)"] {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 767px) {
+  main {
+    padding-top: 70px !important;
+  }
+}

@@ -318,14 +318,17 @@ export default function Sidebar() {
                 ? "#111827"
                 : "white",
 
-            position:
-              "sticky",
+            position: "fixed",
 
             top: 0,
 
             left: 0,
 
             right: 0,
+
+            width: "100vw",
+
+            boxSizing: "border-box",
 
             zIndex: 4000,
 
