@@ -510,7 +510,7 @@ alert(
   <br />
 
   <p>
-    {method === "Crypto" ? "Fee 1% (min $1):" : "Fee 4.99%:"}
+    {method === "Crypto" ? "Fee 1.99% (min $1.99):" : "Fee 4.99%:"}
     <strong>
       {" "}
       $
