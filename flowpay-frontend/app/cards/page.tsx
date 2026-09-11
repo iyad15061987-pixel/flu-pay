@@ -251,7 +251,7 @@ setCards(data);
 
       <div
         style={{
-          marginLeft: 250,
+          marginLeft: "var(--content-left)",
 
           padding: 40,
 

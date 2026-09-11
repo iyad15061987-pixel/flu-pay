@@ -151,7 +151,7 @@ export default function ProfilePage() {
 
       <div
         style={{
-          marginLeft: 250,
+          marginLeft: "var(--content-left)",
 
           padding: 40,
 

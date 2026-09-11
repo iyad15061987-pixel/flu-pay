@@ -327,7 +327,7 @@ export default function PaymentLinksPage() {
 
       <main
         style={{
-          marginLeft: 250,
+          marginLeft: "var(--content-left)",
           padding: "34px 38px 60px",
           width: "100%",
           boxSizing: "border-box",

@@ -673,7 +673,7 @@ export default function AdminPage() {
 
       <div
         style={{
-          marginLeft: 250,
+          marginLeft: "var(--content-left)",
           padding: 40,
           width: "100%",
           color: "white"
