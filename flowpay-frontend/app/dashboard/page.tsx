@@ -315,7 +315,7 @@ const loadUser =
 
       try {
         const kycRes = await fetch(
-          `${API_URL}/kyc/my-kyc-status`,
+          `${API_URL}/my-kyc-status`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -324,6 +324,8 @@ const loadUser =
         );
 
         const kycData = await kycRes.json();
+
+        console.log("KYC STATUS RESPONSE:", kycData);
 
         setKycStatus(
           kycData.status || "required"
@@ -1527,6 +1529,8 @@ Available Balance
                 ? "Verification Required"
                 : kycStatus === "pending"
                 ? "Verification Pending"
+                : kycStatus === "approved"
+                ? "Verified Account"
                 : "Verification Rejected"}
             </h2>
 
@@ -1535,6 +1539,8 @@ Available Balance
                 ? "Please complete your identity verification to use all account features."
                 : kycStatus === "pending"
                 ? "Your identity verification is currently being reviewed."
+                : kycStatus === "approved"
+                ? "Your account has been verified successfully."
                 : "Your identity verification was rejected. Please review your KYC information and submit again."}
             </p>
           </div>

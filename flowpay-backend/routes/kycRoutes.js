@@ -40,12 +40,19 @@ router.get(
   auth,
 
   async (req, res) => {
+    console.log("=== MY KYC STATUS ROUTE ENTERED ===");
+    console.log("AUTH USER:", req.user);
+
     try {
+      console.log("KYC STATUS USER ID:", req.user.id);
+
       const kyc = await Kyc.findOne(
         { userId: req.user.id },
         null,
         { sort: { createdAt: -1 } }
       );
+
+      console.log("KYC STATUS RECORD:", kyc ? { id: kyc._id, userId: kyc.userId, status: kyc.status } : null);
 
       if (!kyc) {
         return res.json({
@@ -92,7 +99,39 @@ router.post(
     try {
 
       // =========================
-      // VALIDATION
+            // =========================
+      // PREVENT DUPLICATE KYC
+      // =========================
+
+      const existingKyc =
+        await Kyc.findOne(
+          { userId: req.user.id },
+          null,
+          { sort: { createdAt: -1 } }
+        );
+
+      if (
+        existingKyc &&
+        existingKyc.status === "pending"
+      ) {
+        return res.status(409).json({
+          message:
+            "Your KYC verification is already pending. Please wait for the review result.",
+          status: "pending",
+        });
+      }
+
+      if (
+        existingKyc &&
+        existingKyc.status === "approved"
+      ) {
+        return res.status(409).json({
+          message:
+            "Your account is already verified. A new KYC submission is not required.",
+          status: "approved",
+        });
+      }
+// VALIDATION
       // =========================
 
       if (
