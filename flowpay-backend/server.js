@@ -8,6 +8,8 @@ require(
 // CORE
 // =========================
 
+const accountRoutes = require("./routes/accountRoutes");
+
 const express =
   require("express");
 
@@ -648,6 +650,7 @@ mongoose
 // =========================
 
 app.use("/api", authRoutes);
+app.use("/api", accountRoutes);
 app.use("/api", transferRoutes);
 app.use(
   "/api",
