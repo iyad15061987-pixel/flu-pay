@@ -114,11 +114,7 @@ router.post(
       await kyc.save();
 
       await User.findByIdAndUpdate(
-        kyc.userId,
-        {
-          verified:
-            true,
-        }
+        kyc.userId, { kycStatus: "approved", verified: true, }
       );
 
       res.json({
@@ -182,13 +178,7 @@ router.post(
         });
       }
 
-      kyc.status =
-        "rejected";
-
-      kyc.rejectionReason =
-        reason;
-
-      await kyc.save();
+      kyc.status = "rejected"; kyc.rejectionReason = reason; await kyc.save(); await User.findByIdAndUpdate(kyc.userId, { kycStatus: "rejected", verified: false, });
 
       res.json({
         message:

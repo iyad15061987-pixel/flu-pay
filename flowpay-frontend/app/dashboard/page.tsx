@@ -87,6 +87,8 @@ export default function DashboardPage() {
 const [balance, setBalance] =
   useState(0);
 
+  const [kycStatus, setKycStatus] = useState("pending");
+
   // =========================
   // TRANSFER
   // =========================
@@ -310,6 +312,26 @@ const loadUser =
           data.balance || 0
         )
       );
+
+      try {
+        const kycRes = await fetch(
+          `${API_URL}/kyc/my-kyc-status`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        const kycData = await kycRes.json();
+
+        setKycStatus(
+          kycData.status || "required"
+        );
+      } catch (kycErr) {
+        console.log("KYC status error:", kycErr);
+        setKycStatus("required");
+      }
 
       setTwoFactorEnabled(
         data.twoFactorEnabled ||
@@ -1478,6 +1500,45 @@ Available Balance
 
         </div>
 
+        {kycStatus !== "approved" && (
+          <div
+            onClick={() => {
+              if (kycStatus === "required") {
+                window.location.href = "/kyc";
+              }
+            }}
+            style={{
+              background: "#111827",
+              padding: 25,
+              borderRadius: 20,
+              marginBottom: 30,
+              cursor:
+                kycStatus === "required"
+                  ? "pointer"
+                  : "default",
+              border:
+                kycStatus === "rejected"
+                  ? "1px solid #ef4444"
+                  : "1px solid #334155",
+            }}
+          >
+            <h2>
+              {kycStatus === "required"
+                ? "Verification Required"
+                : kycStatus === "pending"
+                ? "Verification Pending"
+                : "Verification Rejected"}
+            </h2>
+
+            <p style={{ marginTop: 10 }}>
+              {kycStatus === "required"
+                ? "Please complete your identity verification to use all account features."
+                : kycStatus === "pending"
+                ? "Your identity verification is currently being reviewed."
+                : "Your identity verification was rejected. Please review your KYC information and submit again."}
+            </p>
+          </div>
+        )}
         {/* ADD FUNDS */}
 
         <div

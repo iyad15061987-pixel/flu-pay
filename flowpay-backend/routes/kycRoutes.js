@@ -31,6 +31,43 @@ const Kyc =
   );
 
 // =========================
+// MY KYC STATUS
+// =========================
+
+router.get(
+  "/my-kyc-status",
+
+  auth,
+
+  async (req, res) => {
+    try {
+      const kyc = await Kyc.findOne(
+        { userId: req.user.id },
+        null,
+        { sort: { createdAt: -1 } }
+      );
+
+      if (!kyc) {
+        return res.json({
+          hasKyc: false,
+          status: "required",
+        });
+      }
+
+      return res.json({
+        hasKyc: true,
+        status: kyc.status || "pending",
+      });
+    } catch (err) {
+      console.log(err);
+      return res.status(500).json({
+        message: "Server error",
+      });
+    }
+  }
+);
+
+// =========================
 // UPLOAD KYC
 // =========================
 
