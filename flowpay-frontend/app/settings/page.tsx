@@ -336,6 +336,86 @@ export default function SettingsPage() {
     };
 
   // =========================
+  // DELETE ACCOUNT
+  // =========================
+
+  const deleteAccount =
+    async () => {
+
+      const confirmed =
+        window.confirm(
+          "Are you sure you want to close and delete your FlowPay account? This action cannot be undone."
+        );
+
+      if (!confirmed) {
+        return;
+      }
+
+      try {
+
+        const token =
+          localStorage.getItem(
+            "token"
+          );
+
+        if (!token) {
+          window.location.href =
+            "/login";
+          return;
+        }
+
+        const res =
+          await fetch(
+            `${API_URL}/account`,
+            {
+              method: "DELETE",
+
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
+
+        const data =
+          await res.json();
+
+        if (!res.ok) {
+          alert(
+            data.message ||
+            "Unable to delete the account."
+          );
+          return;
+        }
+
+        localStorage.removeItem(
+          "token"
+        );
+
+        localStorage.removeItem(
+          "email"
+        );
+
+        alert(
+          data.message ||
+          "Your account has been closed."
+        );
+
+        window.location.href =
+          "/login";
+
+      } catch (err) {
+
+        console.log(err);
+
+        alert(
+          "Unable to process account deletion."
+        );
+
+      }
+
+    };
+  // =========================
   // EFFECT
   // =========================
 
@@ -379,9 +459,7 @@ export default function SettingsPage() {
 
         <br />
 
-        {/* ========================= */}
         {/* PASSWORD */}
-        {/* ========================= */}
 
         <div
           style={{
@@ -461,9 +539,7 @@ export default function SettingsPage() {
 
         </div>
 
-        {/* ========================= */}
         {/* 2FA */}
-        {/* ========================= */}
 
         <div
           style={{
@@ -725,5 +801,6 @@ export default function SettingsPage() {
       </div>
 
     </div>
+
   );
 }
