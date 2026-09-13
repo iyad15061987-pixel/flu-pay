@@ -9,6 +9,7 @@ require(
 // =========================
 
 const accountRoutes = require("./routes/accountRoutes");
+const accountDeletionRoutes = require("./routes/accountDeletionRoutes");
 
 const express =
   require("express");
@@ -651,6 +652,7 @@ mongoose
 
 app.use("/api", authRoutes);
 app.use("/api", accountRoutes);
+app.use("/api", accountDeletionRoutes);
 app.use("/api", transferRoutes);
 app.use(
   "/api",
