@@ -25,7 +25,7 @@ export default function Navbar() {
         color: "white",
       }}
     >
-      <h2><img src="/flowpay-logo.png" alt="FlowPay" className="w-6 h-6 object-contain shrink-0" /> FlowPay</h2>
+      <h2><img src="/flowpay-logo.png" alt="FlowPay" style={{width:"32px",height:"32px",maxWidth:"32px",maxHeight:"32px",minWidth:"32px",minHeight:"32px",objectFit:"contain",display:"block",flexShrink:0}} /> FlowPay</h2>
 
       <div
         style={{

@@ -37,7 +37,7 @@ export default function HomePage() {
           marginBottom: 20,
         }}
       >
-        <img src="/flowpay-logo.png" alt="FlowPay" className="w-6 h-6 object-contain shrink-0" /> FlowPay
+        <img src="/flowpay-logo.png" alt="FlowPay" style={{width:"32px",height:"32px",maxWidth:"32px",maxHeight:"32px",minWidth:"32px",minHeight:"32px",objectFit:"contain",display:"block",flexShrink:0}} /> FlowPay
       </h1>
 
       <p
