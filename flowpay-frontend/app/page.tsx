@@ -1,4 +1,5 @@
 "use client";
+import { Wallet } from "lucide-react";
 
 export default function HomePage() {
   return (
@@ -36,7 +37,7 @@ export default function HomePage() {
           marginBottom: 20,
         }}
       >
-        🚀 FlowPay
+        <img src="/flowpay-logo.png" alt="FlowPay" className="w-6 h-6 object-contain shrink-0" /> FlowPay
       </h1>
 
       <p

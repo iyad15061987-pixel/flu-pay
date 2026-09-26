@@ -798,7 +798,54 @@ export default function SettingsPage() {
 
         </div>
 
-      </div>
+
+        {/* ACCOUNT DELETION */}
+
+        <div
+          style={{
+            marginTop: 40,
+            padding: 25,
+            borderRadius: 15,
+            border: "1px solid #7f1d1d",
+            background: "#1f2937",
+          }}
+        >
+          <h2
+            style={{
+              color: "#f87171",
+              marginBottom: 10,
+            }}
+          >
+            Delete Account
+          </h2>
+
+          <p
+            style={{
+              color: "#d1d5db",
+              lineHeight: 1.6,
+              marginBottom: 20,
+            }}
+          >
+            Permanently close your FlowPay account. Your account must have
+            no available or reserved balance and no pending financial
+            operations.
+          </p>
+
+          <button
+            onClick={deleteAccount}
+            style={{
+              padding: "12px 20px",
+              background: "#dc2626",
+              color: "white",
+              border: "none",
+              borderRadius: 10,
+              cursor: "pointer",
+              fontWeight: "bold",
+            }}
+          >
+            Delete My Account
+          </button>
+        </div>      </div>
 
     </div>
 

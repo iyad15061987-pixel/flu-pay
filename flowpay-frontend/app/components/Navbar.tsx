@@ -1,4 +1,5 @@
 "use client";
+import { Wallet } from "lucide-react";
 
 import { useEffect, useState } from "react";
 
@@ -24,7 +25,7 @@ export default function Navbar() {
         color: "white",
       }}
     >
-      <h2>🚀 FlowPay</h2>
+      <h2><img src="/flowpay-logo.png" alt="FlowPay" className="w-6 h-6 object-contain shrink-0" /> FlowPay</h2>
 
       <div
         style={{

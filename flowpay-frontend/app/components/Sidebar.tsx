@@ -1,4 +1,5 @@
 "use client";
+import { Wallet } from "lucide-react";
 
 import Link from "next/link";
 
@@ -339,7 +340,7 @@ export default function Sidebar() {
           }}
         >
           <h2>
-            🚀 FlowPay
+            <img src="/flowpay-logo.png" alt="FlowPay" className="w-6 h-6 object-contain shrink-0" /> FlowPay
           </h2>
 
           <button
@@ -437,7 +438,7 @@ export default function Sidebar() {
             }}
           >
             <h1>
-              🚀 FlowPay
+              <img src="/flowpay-logo.png" alt="FlowPay" className="w-6 h-6 object-contain shrink-0" /> FlowPay
             </h1>
 
             {isMobile && (
